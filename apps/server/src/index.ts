@@ -15,16 +15,36 @@ app.get('/', async (req, res) => {
   res.json({ users })
 })
 
-app.get('/user/:name', async (req, res) => {
-  const { name } = req.params
-  const user = await db.user.create({
+app.get('/project/create', async (req, res) => {
+  const p = await db.project.create({
     data: {
-      name,
-      email: 'tamerlan4ik@gmail.com',
+      title: 'Red Vynroot 🌹',
+      ownerId: 1,
     },
   })
-  res.json({ user })
+  res.json(p)
 })
+
+app.get('/project/:id', async (req, res) => {
+  const id = req.params.id
+  const project = await db.project.findFirst({
+    where: {
+      id: id,
+    },
+  })
+  res.json(project)
+})
+
+// app.get('/user/:name', async (req, res) => {
+//   const { name } = req.params
+//   const user = await db.user.create({
+//     data: {
+//       name,
+//       email: 'tamerlan4ik@gmail.com',
+//     },
+//   })
+//   res.json({ user })
+// })
 
 app.listen(1488)
 

@@ -1,5 +1,7 @@
+import { QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import ReactDOM from 'react-dom/client'
+import { qc } from './query'
 import reportWebVitals from './reportWebVitals'
 import { routeTree } from './routeTree.gen'
 import './styles.css'
@@ -27,7 +29,9 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     // <StrictMode>
-    <RouterProvider router={router} />
+    <QueryClientProvider client={qc}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
     // </StrictMode>
   )
 }

@@ -4,7 +4,9 @@
   "scripts": {
     "server:dev": "nodemon --watch \"src/**\" --ext \"ts,json\" --exec \"tsx src/index.ts\"",
     "prisma:dev": "npx prisma dev",
-    "prisma:gen": "npx prisma generate"
+    "prisma:gen": "npx prisma generate",
+    "prisma:dev:mig-create": "npx prisma migrate dev --create-only",
+    "prisma:dev:mig-run": "npx prisma migrate dev"
   },
   "author": "piscopancer",
   "license": "ISC",

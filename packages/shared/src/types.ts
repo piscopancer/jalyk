@@ -15,3 +15,8 @@ export type ClientDisconntectedWsEvent = {
 }
 
 export type WsEvent = ClientConntectedWsEvent | ClientDisconntectedWsEvent
+
+export type ProjectInfo = {
+  id: string
+  title: string
+}
