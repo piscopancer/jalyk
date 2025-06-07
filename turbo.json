@@ -6,10 +6,10 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["/dist/**"]
     },
-    "check-types": {
-      "dependsOn": ["^check-types"]
-    },
+    "@jalyk/server#server:dev": {},
+    "@jalyk/server#prisma:dev": {},
     "dev": {
+      "with": ["@jalyk/server#server:dev", "@jalyk/server#prisma:dev"],
       "cache": false,
       "persistent": true
     }

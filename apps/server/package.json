@@ -1,21 +1,28 @@
 {
-  "name": "server",
+  "name": "@jalyk/server",
   "version": "0.0.1",
-  "description": "",
   "scripts": {
-    "dev": "nodemon --watch \"src/**\" --ext \"ts,json\" --exec \"tsx src/index.ts\""
+    "server:dev": "nodemon --watch \"src/**\" --ext \"ts,json\" --exec \"tsx src/index.ts\"",
+    "prisma:dev": "npx prisma dev",
+    "prisma:gen": "npx prisma generate"
   },
-  "keywords": [],
   "author": "piscopancer",
   "license": "ISC",
+  "moduleResolution": "bundler",
   "dependencies": {
+    "@faker-js/faker": "^9.8.0",
+    "@prisma/client": "6.9.0",
+    "@repo/shared": "workspace:*",
     "cors": "^2.8.5",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "ws": "^8.18.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
+    "@types/ws": "^8.18.1",
     "nodemon": "^3.1.10",
+    "prisma": "6.9.0",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
