@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker'
-import { ClientData, ClientId, WsEvent } from '@repo/shared'
+import { ClientData, ClientId, FieldUpdateRequest, WsEvent } from '@repo/shared'
+import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
 import { setTimeout } from 'node:timers/promises'
@@ -9,17 +10,79 @@ import { db } from './db'
 const app = express()
 
 app.use(cors({}))
+app.use(bodyParser.json())
 
 app.get('/', async (req, res) => {
   const users = await db.user.findMany({})
+  console.log(users)
   res.json({ users })
+})
+
+app.post('/field/update', async (req, res) => {
+  const {
+    path: [projectId, documentId, name, ...restPath],
+    value,
+  } = req.body as FieldUpdateRequest
+  console.log(req.body)
+
+  // todo slomano :\
+  const updatedDocument = await db.document.upsert({
+    create: {
+      id: documentId,
+      projectId,
+      fields: {
+        create: {
+          name,
+          value: {
+            toJSON() {
+              // todo arrays and objects
+              return value
+            },
+          },
+        },
+      },
+    },
+    update: {
+      fields: {
+        upsert: {
+          where: {
+            documentId_name: {
+              documentId,
+              name,
+            },
+          },
+          create: {
+            name,
+            value: {
+              toJSON() {
+                return value
+              },
+            },
+          },
+          update: {
+            value: {
+              toJSON() {
+                return value
+              },
+            },
+          },
+        },
+      },
+    },
+    where: {
+      id: documentId,
+    },
+  })
+  res.json({})
+  console.log('updated', new Date().toLocaleTimeString(), updatedDocument)
+  // todo inform websocket listeners of the change
 })
 
 app.get('/project/create', async (req, res) => {
   const p = await db.project.create({
     data: {
       title: 'Red Vynroot 🌹',
-      ownerId: 1,
+      // ownerId: ,
     },
   })
   res.json(p)

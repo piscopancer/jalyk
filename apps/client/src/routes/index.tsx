@@ -7,7 +7,7 @@ export const Route = createFileRoute('/')({
 })
 
 const config: projectConfig = {
-  id: 'test',
+  id: 'la',
   schema: [
     {
       name: 'user',

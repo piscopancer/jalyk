@@ -15,17 +15,20 @@
     "@faker-js/faker": "^9.8.0",
     "@prisma/client": "6.9.0",
     "@repo/shared": "workspace:*",
+    "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "ws": "^8.18.2"
   },
   "devDependencies": {
+    "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
     "@types/ws": "^8.18.1",
     "nodemon": "^3.1.10",
     "prisma": "6.9.0",
     "tsx": "^4.19.4",
+    "type-fest": "^4.41.0",
     "typescript": "^5.8.3"
   }
 }

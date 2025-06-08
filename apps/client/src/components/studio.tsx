@@ -14,8 +14,8 @@ export function JalykStudio({ config }: { config: projectConfig }) {
       <Header />
       <ul>
         {userDocDef.fields.map((def) => (
-          <li>
-            <Fieldset field={def} />
+          <li key={def.name}>
+            <Fieldset field={def} documentId={documentId} />
           </li>
         ))}
       </ul>

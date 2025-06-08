@@ -1,15 +1,31 @@
 import { Field } from '@/config'
+import { FieldUpdateRequest } from '@repo/shared'
 import { useId } from 'react'
 import { defaultInputs } from '.'
 import FieldToolbar from './field-toolbar'
 
-export default function Fieldset(props: { field: Field }) {
+export default function Fieldset(props: { documentId: string; field: Field }) {
   const Input = defaultInputs[props.field.type]
   const id = useId()
   return (
     <fieldset className='flex flex-col gap-1'>
       <FieldToolbar inputId={id} field={props.field} />
-      <Input id={id} onChange={(v) => console.log(v)} />
+      <Input
+        id={id}
+        onChange={(v) => {
+          console.log(props, v)
+          fetch('http://localhost:1488/field/update', {
+            method: 'post',
+            headers: {
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+              path: ['la', props.documentId, props.field.name],
+              value: v,
+            } satisfies FieldUpdateRequest),
+          })
+        }}
+      />
     </fieldset>
   )
 }
