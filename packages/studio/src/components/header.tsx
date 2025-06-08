@@ -1,4 +1,4 @@
-import { useProjectInfo } from '@/hooks/useProjectInfo'
+import { useProjectInfo } from '../hooks/use-project-info'
 
 export default function Header() {
   const projectInfo = useProjectInfo()

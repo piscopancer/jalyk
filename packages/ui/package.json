@@ -1,11 +1,9 @@
 {
   "name": "@repo/ui",
-  "description": "",
   "version": "0.0.1",
   "exports": {
     "default": "./index.ts"
   },
-  "keywords": [],
   "author": "piscopancer",
   "license": "ISC",
   "devDependencies": {

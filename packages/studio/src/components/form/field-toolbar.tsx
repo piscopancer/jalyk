@@ -1,5 +1,5 @@
-import { Field } from '@/config'
 import { LucideEllipsis } from 'lucide-react'
+import { Field } from '../../config'
 
 type FieldToolbarProps = {
   inputId: string

@@ -1,7 +1,7 @@
-import { Field } from '@/config'
 import { FieldUpdateRequest } from '@repo/shared'
 import { useId } from 'react'
 import { defaultInputs } from '.'
+import { Field } from '../../config'
 import FieldToolbar from './field-toolbar'
 
 export default function Fieldset(props: { documentId: string; field: Field }) {

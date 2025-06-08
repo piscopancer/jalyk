@@ -13,6 +13,9 @@ importers:
       '@repo/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@repo/studio':
+        specifier: workspace:*
+        version: link:../../packages/studio
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -138,6 +141,43 @@ importers:
       type-fest:
         specifier: ^4.41.0
         version: 4.41.0
+
+  packages/studio:
+    dependencies:
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@tanstack/react-query':
+        specifier: ^5.80.6
+        version: 5.80.6(react@19.1.0)
+      '@tanstack/react-router':
+        specifier: ^1.114.3
+        version: 1.120.16(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      lucide-react:
+        specifier: ^0.511.0
+        version: 0.511.0(react@19.1.0)
+      react:
+        specifier: ^19.0.0
+        version: 19.1.0
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.1.0(react@19.1.0)
+      tailwindcss:
+        specifier: ^4.0.6
+        version: 4.1.8
+    devDependencies:
+      '@types/react':
+        specifier: ^19.0.8
+        version: 19.1.6
+      '@types/react-dom':
+        specifier: ^19.0.3
+        version: 19.1.6(@types/react@19.1.6)
+      type-fest:
+        specifier: ^4.41.0
+        version: 4.41.0
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
 
   packages/ui:
     dependencies:

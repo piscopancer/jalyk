@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { ClientData, ClientId, FieldUpdateRequest, WsEvent } from '@repo/shared'
+import { ClientData, FieldUpdateRequest, WsEvent } from '@repo/shared'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
@@ -115,18 +115,26 @@ app.listen(1488)
 
 const wss = new WebSocketServer({ port: 8000 })
 
-let clients = new Map<ClientId, ClientData>()
+type ProjectId = string
+type ConnectionData = {
+  clientId: string
+  ws: WebSocket
+}
 
+let projectConnections = new Map<ProjectId, ClientData>()
+
+// assume the client is authed and we need to get their id from cookies to register in the map
 wss.on('connection', async (ws, req) => {
+  console.log(req.socket)
   const clientId = faker.string.uuid()
   await setTimeout(500)
   const newClient: ClientData = {
     name: faker.animal.type(),
   }
-  clients.set(clientId, newClient)
+  projectConnections.set(clientId, newClient)
 
   ws.on('close', () => {
-    clients.delete(clientId)
+    projectConnections.delete(clientId)
     wss.clients.forEach((client) => {
       client.send(
         JSON.stringify({
