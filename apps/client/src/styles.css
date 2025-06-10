@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import 'tailwindcss' source('../../..');
 
 body {
   @apply dark:bg-black dark:text-zinc-200;

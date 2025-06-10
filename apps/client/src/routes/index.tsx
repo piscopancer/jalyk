@@ -1,30 +1,11 @@
 import { ClientData, WsEvent } from '@repo/shared'
-import { Studio, StudioConfig } from '@repo/studio'
+import { Button } from '@repo/ui'
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 
 export const Route = createFileRoute('/')({
   component: App,
 })
-
-const config: StudioConfig = {
-  projectId: 'la',
-  schema: [
-    {
-      name: 'user',
-      fields: [
-        {
-          type: 'string',
-          name: 'name',
-        },
-        {
-          type: 'number',
-          name: 'age',
-        },
-      ],
-    },
-  ],
-}
 
 function App() {
   const wsRef = useRef<WebSocket>(null!)
@@ -56,8 +37,7 @@ function App() {
   }, [])
 
   return (
-    // <Button>123</Button>
-    <Studio config={config} />
+    <Button>btn: 123</Button>
     // <div className='text-center'>
     //   <Button IconLeft={LucideBowArrow}>button</Button>
     //   <p>clients</p>
