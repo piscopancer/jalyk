@@ -19,7 +19,7 @@ export default function Header() {
           {usersQuery.data && (
             <DropdownMenu.Content className='p-2 rounded-xl bg-zinc-950 border border-zinc-800'>
               {usersQuery.data.map((user) => (
-                <DropdownMenu.Item key={user.id} className='flex items-center gap-3 p-2 hover:bg-zinc-800'>
+                <DropdownMenu.Item key={user.id} className='flex items-center gap-3 p-2 hover:bg-zinc-800 rounded-md'>
                   <img src={user.photoUrl} className='size-6 rounded-full' />
                   <span className='min-w-24'>{user.name}</span>
                 </DropdownMenu.Item>

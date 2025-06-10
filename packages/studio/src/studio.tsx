@@ -9,7 +9,6 @@ const defaultPath = 'studio'
 
 export function Studio({ config }: { config: StudioConfig }) {
   return (
-    // TODO: DISPATCH IS NULL BCS OF PROVIDER
     <QueryClientProvider client={qc}>
       <studioConfigCtx.Provider value={config}>
         <BrowserRouter>

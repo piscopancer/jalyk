@@ -5,7 +5,6 @@ export default defineConfig((options) => {
     entry: ['index.ts'],
     format: 'esm',
     dts: true,
-    clean: true,
     watch: options.watch,
   }
 })
