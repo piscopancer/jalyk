@@ -8,11 +8,10 @@
     },
     "@jalyk/server#server:dev": {},
     "@jalyk/server#prisma:dev": {},
-    "@repo/studio#dev:dts": {},
     "dev": {
       "cache": false,
       "persistent": true,
-      "with": ["@jalyk/server#server:dev", "@jalyk/server#prisma:dev", "@repo/studio#dev:dts"]
+      "with": ["@jalyk/server#server:dev", "@jalyk/server#prisma:dev"]
     }
   }
 }

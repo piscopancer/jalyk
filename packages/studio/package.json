@@ -2,12 +2,12 @@
   "name": "@repo/studio",
   "version": "0.0.1",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./style.css": "./dist/index.css"
   },
   "scripts": {
-    "dev": "esbuild index.ts --bundle --outfile=dist/index.js --platform=node --format=esm --tsconfig=tsconfig.json --watch",
-    "dev:dts": "tsc --project tsconfig.types.json --watch --preserveWatchOutput",
-    "build": "esbuild index.ts --bundle --outfile=dist/index.js && tsc --project tsconfig.types.json"
+    "dev": "tsup --watch",
+    "build": "tsup"
   },
   "author": "piscopancer",
   "license": "ISC",
@@ -25,11 +25,12 @@
     "tailwindcss": "^4.1.8"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.8",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
-    "esbuild": "^0.25.5",
-    "type-fest": "^4.41.0",
-    "vite": "^6.1.0"
+    "postcss": "^8.5.4",
+    "tsup": "^8.5.0",
+    "type-fest": "^4.41.0"
   }
 }

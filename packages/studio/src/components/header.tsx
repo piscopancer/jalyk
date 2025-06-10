@@ -14,7 +14,7 @@ export default function Header() {
         <DropdownMenu.Root>
           <DropdownMenu.Trigger>
             <LucideUsers2 />
-            <span className='bg-zinc-800 px-2 text-zinc-500'>{usersQuery.data?.length}</span>
+            <span className='bg-zinc-800 px-2 text-zinc-500 rounded-full'>{usersQuery.data?.length}</span>
           </DropdownMenu.Trigger>
           {usersQuery.data && (
             <DropdownMenu.Content className='p-2 rounded-xl bg-zinc-950 border border-zinc-800'>
