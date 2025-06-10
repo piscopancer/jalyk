@@ -1,19 +1,11 @@
-import { useRouter } from '@tanstack/react-router'
-import { useEffect } from 'react'
-import { StudioConfig } from '../config'
+import { StudioConfig } from '@/config'
+import { useParams } from 'react-router'
 import Header from './header'
 
 const documentId = 'eric'
 
 export default function Studio({ config }: { config: StudioConfig }) {
-  const router = useRouter()
-  // const userDocDef = config.schema[0]
-  console.log('router from studio', router)
-
-  // todo router just not working, but it should for page reloads and url state persistence [[...]]
-  useEffect(() => {
-    // router.navigate(`/`, {})
-  }, [])
+  const { '*': catchall } = useParams<'*'>()
 
   return (
     <main>

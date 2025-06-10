@@ -1,9 +1,10 @@
+import { NumberField, StringField } from '@/form'
 import { createContext } from 'react'
-import { NumberField, StringField } from './form'
 
 export const studioConfigCtx = createContext<StudioConfig>(null!)
 
 export type StudioConfig = {
+  studioPath?: string
   projectId: string
   schema: Schema[]
 }

@@ -1,6 +1,6 @@
+import useStudioCtx from '@/hooks/use-project-ctx'
 import { ProjectInfo } from '@repo/shared'
 import { useQuery } from '@tanstack/react-query'
-import useStudioCtx from './use-project-ctx'
 
 export function useProjectInfo() {
   const ctx = useStudioCtx()

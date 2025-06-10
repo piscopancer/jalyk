@@ -1,29 +1,41 @@
-// import { QueryClientProvider } from '@tanstack/react-query'
-// import { createRouter, RouterProvider } from '@tanstack/react-router'
-// import StudioComponent from './components/studio'
-// import { StudioConfig, studioConfigCtx } from './config'
-// import { qc } from './query'
-// import { routeTree } from './routeTree.gen'
+import StudioComponent from '@/components/studio'
+import { StudioConfig, studioConfigCtx } from '@/config'
+import { qc } from '@/query'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { BrowserRouter, Route, Routes, useHref, useNavigate } from 'react-router'
 
-// const router = createRouter({
-//   routeTree,
-// })
+const defaultPath = 'studio'
 
-// declare module '@tanstack/react-router' {
-//   interface Register {
-//     router: typeof router
-//   }
-// }
+export function Studio({ config }: { config: StudioConfig }) {
+  return (
+    // TODO: DISPATCH IS NULL BCS OF PROVIDER
+    <QueryClientProvider client={qc}>
+      <studioConfigCtx.Provider value={config}>
+        <BrowserRouter>
+          <Routes>
+            <Route index path={`/${config.studioPath ?? defaultPath}`} Component={() => <Home config={config} />} />
+            <Route path={`/${config.studioPath ?? defaultPath}/:projectId/*`} Component={() => <StudioComponent config={config} />} />
+          </Routes>
+        </BrowserRouter>
+      </studioConfigCtx.Provider>
+    </QueryClientProvider>
+  )
+}
 
-// export function Studio({ config }: { config: StudioConfig }) {
-//   return (
-//     // @ts-ignore
-//     <RouterProvider router={router}>
-//       <QueryClientProvider client={qc}>
-//         <studioConfigCtx.Provider value={config}>
-//           <StudioComponent config={config} />
-//         </studioConfigCtx.Provider>
-//       </QueryClientProvider>
-//     </RouterProvider>
-//   )
-// }
+function Home({ config }: { config: StudioConfig }) {
+  const nav = useNavigate()
+  const projectHref = useHref(config.projectId)
+
+  return (
+    <div>
+      pls auth 🙏
+      <button
+        onClick={() => {
+          nav(projectHref)
+        }}
+      >
+        to: {config.projectId}
+      </button>
+    </div>
+  )
+}

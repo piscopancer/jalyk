@@ -9,8 +9,8 @@
   },
   "dependencies": {
     "@repo/shared": "workspace:*",
-    "@repo/ui": "workspace:*",
     "@repo/studio": "workspace:*",
+    "@repo/ui": "workspace:*",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/react-query": "^5.80.6",
     "@tanstack/react-router": "^1.114.3",
@@ -30,7 +30,6 @@
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^4.3.4",
     "jsdom": "^26.0.0",
-    "typescript": "^5.7.2",
     "vite": "^6.1.0",
     "vitest": "^3.0.5",
     "web-vitals": "^4.2.4"

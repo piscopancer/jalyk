@@ -12,5 +12,8 @@
   ],
   "license": "ISC",
   "author": "piscopancer",
-  "packageManager": "pnpm@10.11.1"
+  "packageManager": "pnpm@10.11.1",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
 }

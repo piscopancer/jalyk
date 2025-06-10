@@ -1,4 +1,5 @@
 import { ClientData, WsEvent } from '@repo/shared'
+import { TESTTT } from '@repo/studio'
 import { Button } from '@repo/ui'
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
@@ -37,7 +38,9 @@ function App() {
   }, [])
 
   return (
-    <Button>btn: 123</Button>
+    <>
+      <Button>{TESTTT}</Button>
+    </>
     // <div className='text-center'>
     //   <Button IconLeft={LucideBowArrow}>button</Button>
     //   <p>clients</p>

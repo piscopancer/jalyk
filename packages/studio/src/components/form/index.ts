@@ -1,4 +1,4 @@
-import { Field } from '../../config'
+import { Field } from '@/config'
 import NumberInput, { NumberInputProps } from './number-input'
 import StringInput, { StringInputProps } from './string-input'
 

@@ -5,6 +5,8 @@
     "outDir": "dist",
     "jsx": "react-jsx",
     "skipLibCheck": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
     "strict": true,
     "module": "esnext",
     "moduleResolution": "bundler",

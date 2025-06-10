@@ -4,14 +4,15 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["/dist/**"]
+      "outputs": ["dist/**"]
     },
     "@jalyk/server#server:dev": {},
     "@jalyk/server#prisma:dev": {},
+    "@repo/studio#dev:dts": {},
     "dev": {
-      "with": ["@jalyk/server#server:dev", "@jalyk/server#prisma:dev"],
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "with": ["@jalyk/server#server:dev", "@jalyk/server#prisma:dev", "@repo/studio#dev:dts"]
     }
   }
 }

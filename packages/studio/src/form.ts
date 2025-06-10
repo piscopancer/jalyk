@@ -7,3 +7,5 @@ export type NumberField = {
   type: 'number'
   name: string
 }
+
+export const TESTTT = 1488

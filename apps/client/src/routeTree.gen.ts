@@ -12,7 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
-import { Route as AdminSplatImport } from './routes/admin.$'
+import { Route as StudioSplatImport } from './routes/studio.$'
 
 // Create/Update Routes
 
@@ -22,9 +22,9 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const AdminSplatRoute = AdminSplatImport.update({
-  id: '/admin/$',
-  path: '/admin/$',
+const StudioSplatRoute = StudioSplatImport.update({
+  id: '/studio/$',
+  path: '/studio/$',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -39,11 +39,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/admin/$': {
-      id: '/admin/$'
-      path: '/admin/$'
-      fullPath: '/admin/$'
-      preLoaderRoute: typeof AdminSplatImport
+    '/studio/$': {
+      id: '/studio/$'
+      path: '/studio/$'
+      fullPath: '/studio/$'
+      preLoaderRoute: typeof StudioSplatImport
       parentRoute: typeof rootRoute
     }
   }
@@ -53,37 +53,37 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin/$': typeof AdminSplatRoute
+  '/studio/$': typeof StudioSplatRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin/$': typeof AdminSplatRoute
+  '/studio/$': typeof StudioSplatRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/admin/$': typeof AdminSplatRoute
+  '/studio/$': typeof StudioSplatRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin/$'
+  fullPaths: '/' | '/studio/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin/$'
-  id: '__root__' | '/' | '/admin/$'
+  to: '/' | '/studio/$'
+  id: '__root__' | '/' | '/studio/$'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminSplatRoute: typeof AdminSplatRoute
+  StudioSplatRoute: typeof StudioSplatRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminSplatRoute: AdminSplatRoute,
+  StudioSplatRoute: StudioSplatRoute,
 }
 
 export const routeTree = rootRoute
@@ -97,14 +97,14 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/admin/$"
+        "/studio/$"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
-    "/admin/$": {
-      "filePath": "admin.$.tsx"
+    "/studio/$": {
+      "filePath": "studio.$.tsx"
     }
   }
 }
