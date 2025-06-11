@@ -23,7 +23,6 @@ app.post('/field/update', async (req, res) => {
     path: [projectId, documentId, name, ...restPath],
     value,
   } = req.body as FieldUpdateRequest
-  console.log(req.body)
 
   // todo slomano :\
   const updatedDocument = await db.document.upsert({
@@ -98,16 +97,37 @@ app.get('/project/:id', async (req, res) => {
   res.json(project)
 })
 
-// app.get('/user/:name', async (req, res) => {
-//   const { name } = req.params
-//   const user = await db.user.create({
-//     data: {
-//       name,
-//       email: 'tamerlan4ik@gmail.com',
-//     },
-//   })
-//   res.json({ user })
-// })
+type QueryRequestParams = {
+  projectId: string
+  filter: any
+}
+
+app.post('/query', async (req, res) => {
+  const { projectId, filter } = req.body as QueryRequestParams
+  let result = await db.document.findMany({
+    where: {
+      projectId,
+    },
+    select: {
+      id: true,
+
+      fields: {
+        select: {
+          name: true,
+          value: true,
+        },
+      },
+    },
+  })
+
+  let modresult = result.map((r) => ({
+    id: r.id,
+    // fieldName: fieldValue
+    ...Object.fromEntries(r.fields.map(({ name, value }) => [name, value])),
+  }))
+
+  res.json(modresult)
+})
 
 app.listen(1488)
 

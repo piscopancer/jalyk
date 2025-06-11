@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 
-// TODO: maybe remove bcs it must be inside ui package only?
 * {
   @apply focus:outline-2 focus:outline-blue-400;
 }

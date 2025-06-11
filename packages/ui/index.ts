@@ -1,1 +1,3 @@
-export { Button } from './components'
+import '@/style.css'
+
+export * from './src/components'

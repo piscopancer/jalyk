@@ -1,6 +1,9 @@
+import { NumberField } from '@/form'
+
 export type NumberInputProps = {
   id: string
   onChange: (value: number) => void
+  field: NumberField
 }
 
 export default function NumberInput(props: NumberInputProps) {

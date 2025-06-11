@@ -38,6 +38,7 @@ model Field {
 
 model Document {
   id        String   @id @default(cuid())
+  type      String
   createdAt DateTime @default(now())
   fields    Field[]
   projectId String

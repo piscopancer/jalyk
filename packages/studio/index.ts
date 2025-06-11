@@ -1,3 +1,5 @@
+import '@/style.css'
+
 export * from './src/config'
 export * from './src/form'
 export * from './src/hooks/use-project-ctx'

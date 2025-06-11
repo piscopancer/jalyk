@@ -11,7 +11,9 @@ export default function Fieldset(props: { documentId: string; field: Field }) {
     <fieldset className='flex flex-col gap-1'>
       <FieldToolbar inputId={id} field={props.field} />
       <Input
+        field={props.field as never}
         id={id}
+        // todo: move onchange must appear in the input itself, not here
         onChange={(v) => {
           console.log(props, v)
           fetch('http://localhost:1488/field/update', {

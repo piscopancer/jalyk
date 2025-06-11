@@ -1,22 +1,26 @@
 import { StudioConfig } from '@/config'
 import { useParams } from 'react-router'
+import Fieldset from './form/fieldset'
 import Header from './header'
 
 const documentId = 'eric'
 
 export default function Studio({ config }: { config: StudioConfig }) {
-  const { '*': catchall } = useParams<'*'>()
+  const params = useParams<'*'>()
+  const catchall = params['*']?.split('/') ?? []
+  const [projectId, ...restCatchall] = catchall
+  const userDocDef = config.schema[0]
 
   return (
     <main>
       <Header />
-      {/* <ul>
+      <ul className='mx-auto w-xl gap-6 flex flex-col'>
         {userDocDef.fields.map((def) => (
           <li key={def.name}>
             <Fieldset field={def} documentId={documentId} />
           </li>
         ))}
-      </ul> */}
+      </ul>
       {/* <ul>
         {config.schema.map((docDef) => (
           <li key={docDef.name}>

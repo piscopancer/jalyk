@@ -7,7 +7,5 @@ export const Route = createFileRoute('/studio/$')({
 })
 
 function RouteComponent() {
-  const p = Route.useParams()
-  console.log(p)
   return <Studio config={studioConfig} />
 }

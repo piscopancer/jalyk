@@ -9,6 +9,8 @@ export const studioConfig: StudioConfig = {
         {
           type: 'string',
           name: 'name',
+          title: 'Имя',
+          placeholder: 'Ангелируни',
         },
         {
           type: 'string',

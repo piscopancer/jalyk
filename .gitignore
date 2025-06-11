@@ -2,4 +2,5 @@ node_modules
 .env
 .turbo
 dist
+test
 apps/server/prisma

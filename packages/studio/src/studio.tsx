@@ -3,7 +3,6 @@ import { StudioConfig, studioConfigCtx } from '@/config'
 import { qc } from '@/query'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Route, Routes, useHref, useNavigate } from 'react-router'
-import './style.css'
 
 const defaultPath = 'studio'
 

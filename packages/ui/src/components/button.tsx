@@ -6,7 +6,7 @@ type ButtonProps = {
 
 export function Button({ IconLeft, children, ...attrs }: ButtonProps & ComponentProps<'button'>) {
   return (
-    <button {...attrs}>
+    <button {...attrs} className='bg-rose-300'>
       {IconLeft && <IconLeft />}
       {children}
     </button>
