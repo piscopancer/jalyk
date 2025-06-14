@@ -1,5 +1,5 @@
 {
-  "name": "@repo/shared",
+  "name": "@repo/trpc",
   "version": "0.0.1",
   "exports": {
     ".": "./index.ts"
@@ -9,5 +9,9 @@
   "type": "module",
   "devDependencies": {
     "type-fest": "^4.41.0"
+  },
+  "dependencies": {
+    "@trpc/server": "^11.4.1",
+    "zod": "^3.25.64"
   }
 }

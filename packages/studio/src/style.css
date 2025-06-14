@@ -1,12 +1,6 @@
 @import 'tailwindcss';
+@import '../../ui/dist/index.css';
 
-// TODO: maybe remove bcs it must be inside ui package only?
-* {
-  @apply focus:outline-2 focus:outline-blue-400;
-}
-.lucide {
-  @apply !stroke-[1.5];
-}
 @utility hopper {
   display: grid;
   grid-template-areas: 'hopper';

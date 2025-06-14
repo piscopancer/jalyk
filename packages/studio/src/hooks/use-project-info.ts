@@ -1,5 +1,5 @@
 import useStudioCtx from '@/hooks/use-project-ctx'
-import { ProjectInfo } from '@repo/shared'
+import { ProjectInfo } from '@/types'
 import { useQuery } from '@tanstack/react-query'
 
 export function useProjectInfo() {

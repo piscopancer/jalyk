@@ -2,6 +2,12 @@ import { Field } from '@/config'
 import NumberInput, { NumberInputProps } from './number-input'
 import StringInput, { StringInputProps } from './string-input'
 
+export * from './asset-input'
+export * from './field-toolbar'
+export * from './fieldset'
+export * from './number-input'
+export * from './string-input'
+
 export const defaultInputs = {
   string: (props: StringInputProps) => StringInput(props),
   number: (props: NumberInputProps) => NumberInput(props),

@@ -7,11 +7,11 @@
       "outputs": ["dist/**"]
     },
     "@jalyk/server#dev": {},
-    "@jalyk/server#prisma:dev": {},
+    "@jalyk/server#db:dev": {},
     "dev": {
       "cache": false,
       "persistent": true,
-      "with": ["@jalyk/server#dev", "@jalyk/server#prisma:dev"]
+      "with": ["@jalyk/server#dev", "@jalyk/server#db:dev"]
     }
   }
 }

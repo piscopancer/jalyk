@@ -1,6 +1,7 @@
-import { ClientData, WsEvent } from '@repo/shared'
-import { Button } from '@repo/ui'
+import { trpc } from '@/trpc'
+import { AssetInput, ClientData, WsEvent } from '@repo/studio'
 import { createFileRoute } from '@tanstack/react-router'
+import { filesize } from 'filesize'
 import { useEffect, useRef, useState } from 'react'
 
 export const Route = createFileRoute('/')({
@@ -36,10 +37,34 @@ function App() {
     }
   }, [])
 
-  return (
-    <>
-      <Button>{123}</Button>
-    </>
+  // const s = useQuery({
+  //   queryKey: ['lol'],
+  //   async queryFn() {
+  //     return
+  //   },
+  // })
+
+  // const m = useMutation({
+  //   mutationKey: ['KEK'],
+  //   async mutationFn() {
+  //     return
+  //   },
+  // })
+
+  const userQuery = trpc.user.return(
+    <div className='m-12'>
+      {/* <Button>{123}</Button> */}
+      <AssetInput
+        state={{
+          type: 'empty',
+          onChange: (e) => {
+            const file = e.target.files?.[0]
+            if (!file) return
+            console.log(filesize(file.size, { round: 0 }))
+          },
+        }}
+      />
+    </div>
     // <div className='text-center'>
     //   <Button IconLeft={LucideBowArrow}>button</Button>
     //   <p>clients</p>

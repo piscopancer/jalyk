@@ -1,16 +1,18 @@
 import { faker } from '@faker-js/faker'
-import { ClientData, FieldUpdateRequest, WsEvent } from '@repo/shared'
+import { expressAdapter } from '@repo/trpc'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
 import { setTimeout } from 'node:timers/promises'
 import { WebSocketServer } from 'ws'
 import { db } from './db'
+import { uploadProjectAsset } from './s3'
 
 const app = express()
 
 app.use(cors({}))
 app.use(bodyParser.json())
+app.use('/trpc', expressAdapter)
 
 app.get('/', async (req, res) => {
   const users = await db.user.findMany({})
@@ -18,8 +20,25 @@ app.get('/', async (req, res) => {
   res.json({ users })
 })
 
+// todo: maybe do all those requests via socket? what if it will optimize in some way
+
+type UploadRequest = {
+  projectId: string
+  fileName: string
+  data: string
+}
+
+app.post('/upload', async (req, res) => {
+  const { projectId, fileName, data } = req.body as UploadRequest
+  const result = await uploadProjectAsset(projectId, fileName, data)
+  res.json(result)
+})
+
+//
+
 app.post('/field/update', async (req, res) => {
   const {
+    // if restPath is present it means object is changed, for that json sould be modified using restPath
     path: [projectId, documentId, name, ...restPath],
     value,
   } = req.body as FieldUpdateRequest
@@ -119,13 +138,11 @@ app.post('/query', async (req, res) => {
       },
     },
   })
-
   let modresult = result.map((r) => ({
     id: r.id,
     // fieldName: fieldValue
     ...Object.fromEntries(r.fields.map(({ name, value }) => [name, value])),
   }))
-
   res.json(modresult)
 })
 

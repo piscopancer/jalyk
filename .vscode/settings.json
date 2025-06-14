@@ -3,10 +3,13 @@
     "**/routeTree.gen.ts": true
   },
   "search.exclude": {
-    "**/routeTree.gen.ts": true
+    "**/routeTree.gen.ts": true,
+    "**/dist/**": true
   },
   "files.readonlyInclude": {
-    "**/routeTree.gen.ts": true
+    "**/routeTree.gen.ts": true,
+    "**/dist/**": true,
+    "**/node_modules/**": true
   },
   "terminal.integrated.profiles.windows": {
     "_client": {

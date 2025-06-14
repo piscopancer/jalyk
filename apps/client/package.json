@@ -8,14 +8,17 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "@repo/shared": "workspace:*",
     "@repo/studio": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@repo/trpc": "workspace:*",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/react-query": "^5.80.6",
     "@tanstack/react-router": "^1.114.3",
     "@tanstack/react-router-devtools": "^1.114.3",
     "@tanstack/router-plugin": "^1.114.3",
+    "@trpc/client": "^11.4.1",
+    "@trpc/react-query": "^11.4.1",
+    "filesize": "^10.1.6",
     "lucide-react": "^0.511.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

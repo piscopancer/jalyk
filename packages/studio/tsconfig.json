@@ -4,8 +4,9 @@
   "compilerOptions": {
     "outDir": "dist",
     "jsx": "react-jsx",
+    "skipDefaultLibCheck": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {

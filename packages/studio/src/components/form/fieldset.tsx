@@ -1,4 +1,4 @@
-import { FieldUpdateRequest } from '@repo/shared'
+import { FieldUpdateRequest } from '@/types'
 import { useId } from 'react'
 import { defaultInputs } from '.'
 import { Field } from '../../config'
