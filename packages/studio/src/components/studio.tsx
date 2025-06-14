@@ -1,4 +1,5 @@
 import { StudioConfig } from '@/config'
+import { trpc } from '@/trpc'
 import { useParams } from 'react-router'
 import Fieldset from './form/fieldset'
 import Header from './header'
@@ -10,6 +11,7 @@ export default function Studio({ config }: { config: StudioConfig }) {
   const catchall = params['*']?.split('/') ?? []
   const [projectId, ...restCatchall] = catchall
   const userDocDef = config.schema[0]
+  const createUserMutation = trpc.user.create.useMutation()
 
   return (
     <main>
@@ -21,6 +23,16 @@ export default function Studio({ config }: { config: StudioConfig }) {
           </li>
         ))}
       </ul>
+      <button
+        onClick={async () => {
+          const res = await createUserMutation.mutateAsync({
+            email: '',
+          })
+          console.log(res)
+        }}
+      >
+        create
+      </button>
       {/* <ul>
         {config.schema.map((docDef) => (
           <li key={docDef.name}>

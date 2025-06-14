@@ -2,12 +2,7 @@
   "name": "@jalyk/server",
   "version": "0.0.1",
   "scripts": {
-    "dev": "nodemon --watch \"src/**\" --ext \"ts,json\" --exec \"tsx src/index.ts\"",
-    "db-dev": "prisma dev",
-    "db-gen": "prisma generate",
-    "db-dev-mig-create": "prisma migrate dev --create-only",
-    "db-dev-mig-run": "prisma migrate dev",
-    "db-dev-con": "psql -h localhost -p 5555 -U piscopancer -d lol"
+    "dev": "nodemon --watch \"src/**\" --ext \"ts,json\" --exec \"tsx src/index.ts\""
   },
   "author": "piscopancer",
   "license": "ISC",
@@ -17,18 +12,21 @@
     "@aws-sdk/client-s3": "^3.828.0",
     "@faker-js/faker": "^9.8.0",
     "@prisma/client": "6.9.0",
+    "@trpc/server": "^11.4.1",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "filesize": "^10.1.6",
     "slugify": "^1.6.6",
-    "ws": "^8.18.2"
+    "ws": "^8.18.2",
+    "zod": "^3.25.64"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
     "@types/ws": "^8.18.1",
+    "esbuild": "^0.25.5",
     "nodemon": "^3.1.10",
     "tsx": "^4.19.4",
     "type-fest": "^4.41.0"

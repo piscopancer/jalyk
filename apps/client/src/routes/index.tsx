@@ -1,4 +1,3 @@
-import { trpc } from '@/trpc'
 import { AssetInput, ClientData, WsEvent } from '@repo/studio'
 import { createFileRoute } from '@tanstack/react-router'
 import { filesize } from 'filesize'
@@ -51,7 +50,7 @@ function App() {
   //   },
   // })
 
-  const userQuery = trpc.user.return(
+  return (
     <div className='m-12'>
       {/* <Button>{123}</Button> */}
       <AssetInput
