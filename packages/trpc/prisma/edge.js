@@ -86,6 +86,9 @@ Prisma.NullTypes = {
  * Enums
  */
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
@@ -125,6 +128,11 @@ exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
+
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
@@ -134,11 +142,6 @@ exports.Prisma.JsonNullValueFilter = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
-};
-
-exports.Prisma.QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
 };
 
 
@@ -177,7 +180,7 @@ const config = {
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": "../.env",
+    "rootEnvPath": null,
     "schemaEnvPath": "../.env"
   },
   "relativePath": "..",
@@ -186,18 +189,18 @@ const config = {
   "datasourceNames": [
     "db"
   ],
-  "activeProvider": "sqlite",
+  "activeProvider": "postgresql",
   "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
-        "fromEnvVar": null,
-        "value": "file:///./lol.db"
+        "fromEnvVar": "DATABASE_URL",
+        "value": null
       }
     }
   },
-  "inlineSchema": "datasource db {\n  provider = \"sqlite\"\n  // url      = env(\"DATABASE_URL\")\n  url      = \"file:///./lol.db\"\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"./prisma\"\n}\n\nmodel User {\n  id        String    @id @default(cuid())\n  createdAt DateTime  @default(now())\n  email     String    @unique\n  name      String\n  projects  Project[]\n}\n\nmodel Project {\n  id        String     @id @default(cuid())\n  title     String\n  createdAt DateTime   @default(now())\n  ownerId   String?\n  documents Document[]\n\n  owner User? @relation(fields: [ownerId], references: [id], onDelete: Cascade)\n}\n\nmodel Field {\n  documentId String\n  name       String\n  value      Json\n\n  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)\n\n  @@id([documentId, name])\n}\n\nmodel Document {\n  id        String   @id @default(cuid())\n  type      String\n  createdAt DateTime @default(now())\n  fields    Field[]\n  projectId String\n\n  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)\n}\n",
-  "inlineSchemaHash": "b864c35148b1fc551f35749cdecab5e75a0acc0a265562419c0811df859c1ffb",
+  "inlineSchema": "datasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"./prisma\"\n}\n\nmodel User {\n  id        String    @id @default(cuid())\n  createdAt DateTime  @default(now())\n  email     String    @unique\n  name      String\n  projects  Project[]\n}\n\nmodel Project {\n  id        String     @id @default(cuid())\n  title     String\n  createdAt DateTime   @default(now())\n  ownerId   String?\n  documents Document[]\n\n  owner User? @relation(fields: [ownerId], references: [id], onDelete: Cascade)\n}\n\nmodel Field {\n  documentId String\n  name       String\n  value      Json\n\n  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)\n\n  @@id([documentId, name])\n}\n\nmodel Document {\n  id        String   @id @default(cuid())\n  type      String\n  createdAt DateTime @default(now())\n  fields    Field[]\n  projectId String\n\n  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)\n}\n",
+  "inlineSchemaHash": "870bb9dd487409378f05191e506f452812d1d21c6ca606d627347f4c06477df3",
   "copyEngine": true
 }
 config.dirname = '/'
@@ -208,7 +211,9 @@ config.engineWasm = undefined
 config.compilerWasm = undefined
 
 config.injectableEdgeEnv = () => ({
-  parsed: {}
+  parsed: {
+    DATABASE_URL: typeof globalThis !== 'undefined' && globalThis['DATABASE_URL'] || typeof process !== 'undefined' && process.env && process.env.DATABASE_URL || undefined
+  }
 })
 
 if (typeof globalThis !== 'undefined' && globalThis['DEBUG'] || typeof process !== 'undefined' && process.env && process.env.DEBUG || undefined) {

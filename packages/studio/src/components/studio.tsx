@@ -26,7 +26,8 @@ export default function Studio({ config }: { config: StudioConfig }) {
       <button
         onClick={async () => {
           const res = await createUserMutation.mutateAsync({
-            email: '',
+            email: 'jarik@nalchik.ru',
+            name: 'jarimasiks',
           })
           console.log(res)
         }}

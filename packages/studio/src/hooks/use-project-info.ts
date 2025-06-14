@@ -7,6 +7,12 @@ export function useProjectInfo() {
   const query = useQuery({
     queryKey: ['project', ctx.projectId],
     async queryFn() {
+      return {
+        id: '123',
+        title: 'AAAA',
+      } satisfies ProjectInfo
+
+      // TODO: this does not work bcs of trpc
       const res = await fetch(`http://localhost:1488/project/${ctx.projectId}`).then((res) => res.json() as Promise<ProjectInfo>)
       return res
     },

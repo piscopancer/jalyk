@@ -7,8 +7,15 @@ import { expressAdapter } from '@repo/trpc'
 
 const app = express()
 
+app.use(
+  cors({
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+)
 app.use('/trpc', expressAdapter)
-app.use(cors())
 app.use(bodyParser.json())
 
 app.listen(1488)

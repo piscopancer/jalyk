@@ -6,7 +6,7 @@
     "jsx": "react-jsx",
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {

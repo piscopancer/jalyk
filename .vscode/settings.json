@@ -4,7 +4,8 @@
   },
   "search.exclude": {
     "**/routeTree.gen.ts": true,
-    "**/dist/**": true
+    "**/dist/**": true,
+    "packages/trpc/prisma/**": true
   },
   "files.readonlyInclude": {
     "**/routeTree.gen.ts": true,
@@ -12,26 +13,40 @@
     "**/node_modules/**": true
   },
   "terminal.integrated.profiles.windows": {
-    "_client": {
+    "_apps/client": {
       "source": "PowerShell",
       "icon": "globe",
       "overrideName": true,
       "color": "terminal.ansiBlue",
       "args": ["-WorkingDirectory", "apps/client"]
     },
-    "_server": {
+    "_apps/server": {
       "source": "PowerShell",
       "icon": "server",
       "overrideName": true,
       "color": "terminal.ansiRed",
       "args": ["-WorkingDirectory", "apps/server"]
     },
-    "_studio": {
+    "_packages/studio": {
       "source": "PowerShell",
       "icon": "home",
       "overrideName": true,
       "color": "terminal.ansiGreen",
       "args": ["-WorkingDirectory", "packages/studio"]
+    },
+    "_packages/ui": {
+      "source": "PowerShell",
+      "icon": "extensions-large",
+      "overrideName": true,
+      "color": "terminal.ansiGreen",
+      "args": ["-WorkingDirectory", "packages/ui"]
+    },
+    "_packages/trpc": {
+      "source": "PowerShell",
+      "icon": "gather",
+      "overrideName": true,
+      "color": "terminal.ansiRed",
+      "args": ["-WorkingDirectory", "packages/trpc"]
     }
   }
 }

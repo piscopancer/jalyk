@@ -5,12 +5,10 @@ import { t } from './t'
 export const userRouter = t.router({
   create: t.procedure
     .input(
-      z
-        .object({
-          name: z.string(),
-          email: z.string().email(),
-        })
-        .required()
+      z.object({
+        name: z.string(),
+        email: z.string().email(),
+      })
     )
     .mutation(async ({ input }) => {
       return db.user.create({

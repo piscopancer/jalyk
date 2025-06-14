@@ -16,6 +16,7 @@ export default function Fieldset(props: { documentId: string; field: Field }) {
         // todo: move onchange must appear in the input itself, not here
         onChange={(v) => {
           console.log(props, v)
+          // TODO change to trpc
           fetch('http://localhost:1488/field/update', {
             method: 'post',
             headers: {
