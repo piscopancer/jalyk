@@ -136,7 +136,7 @@ exports.Prisma.ProjectScalarFieldEnum = {
 
 exports.Prisma.FieldScalarFieldEnum = {
   documentId: 'documentId',
-  name: 'name',
+  path: 'path',
   value: 'value'
 };
 

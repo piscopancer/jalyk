@@ -1,4 +1,4 @@
-import { NumberField, StringField } from '@/form'
+// import { NumberField, StringField } from '@/form'
 import { createContext } from 'react'
 
 export const studioConfigCtx = createContext<StudioConfig>(null!)
@@ -15,4 +15,9 @@ type Schema = {
   fields: Field[]
 }
 
-export type Field = StringField | NumberField
+// export type Field = StringField
+export type Field = {
+  type: 'string'
+  value: '123123123'
+  validation: (v: string) => boolean
+}

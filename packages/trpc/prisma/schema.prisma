@@ -28,12 +28,12 @@ model Project {
 
 model Field {
   documentId String
-  name       String
+  path       String
   value      Json
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
-  @@id([documentId, name])
+  @@id([documentId, path])
 }
 
 model Document {

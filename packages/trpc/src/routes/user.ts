@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod/v4'
 import { db } from '../db'
 import { t } from './t'
 
@@ -7,7 +7,7 @@ export const userRouter = t.router({
     .input(
       z.object({
         name: z.string(),
-        email: z.string().email(),
+        email: z.email(),
       })
     )
     .mutation(async ({ input }) => {

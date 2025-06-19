@@ -3397,17 +3397,17 @@ export namespace Prisma {
 
   export type FieldMinAggregateOutputType = {
     documentId: string | null
-    name: string | null
+    path: string | null
   }
 
   export type FieldMaxAggregateOutputType = {
     documentId: string | null
-    name: string | null
+    path: string | null
   }
 
   export type FieldCountAggregateOutputType = {
     documentId: number
-    name: number
+    path: number
     value: number
     _all: number
   }
@@ -3415,17 +3415,17 @@ export namespace Prisma {
 
   export type FieldMinAggregateInputType = {
     documentId?: true
-    name?: true
+    path?: true
   }
 
   export type FieldMaxAggregateInputType = {
     documentId?: true
-    name?: true
+    path?: true
   }
 
   export type FieldCountAggregateInputType = {
     documentId?: true
-    name?: true
+    path?: true
     value?: true
     _all?: true
   }
@@ -3504,7 +3504,7 @@ export namespace Prisma {
 
   export type FieldGroupByOutputType = {
     documentId: string
-    name: string
+    path: string
     value: JsonValue
     _count: FieldCountAggregateOutputType | null
     _min: FieldMinAggregateOutputType | null
@@ -3527,32 +3527,32 @@ export namespace Prisma {
 
   export type FieldSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     documentId?: boolean
-    name?: boolean
+    path?: boolean
     value?: boolean
     document?: boolean | DocumentDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["field"]>
 
   export type FieldSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     documentId?: boolean
-    name?: boolean
+    path?: boolean
     value?: boolean
     document?: boolean | DocumentDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["field"]>
 
   export type FieldSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     documentId?: boolean
-    name?: boolean
+    path?: boolean
     value?: boolean
     document?: boolean | DocumentDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["field"]>
 
   export type FieldSelectScalar = {
     documentId?: boolean
-    name?: boolean
+    path?: boolean
     value?: boolean
   }
 
-  export type FieldOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"documentId" | "name" | "value", ExtArgs["result"]["field"]>
+  export type FieldOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"documentId" | "path" | "value", ExtArgs["result"]["field"]>
   export type FieldInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     document?: boolean | DocumentDefaultArgs<ExtArgs>
   }
@@ -3570,7 +3570,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       documentId: string
-      name: string
+      path: string
       value: Prisma.JsonValue
     }, ExtArgs["result"]["field"]>
     composites: {}
@@ -3997,7 +3997,7 @@ export namespace Prisma {
    */
   interface FieldFieldRefs {
     readonly documentId: FieldRef<"Field", 'String'>
-    readonly name: FieldRef<"Field", 'String'>
+    readonly path: FieldRef<"Field", 'String'>
     readonly value: FieldRef<"Field", 'Json'>
   }
     
@@ -5524,7 +5524,7 @@ export namespace Prisma {
 
   export const FieldScalarFieldEnum: {
     documentId: 'documentId',
-    name: 'name',
+    path: 'path',
     value: 'value'
   };
 
@@ -5753,32 +5753,32 @@ export namespace Prisma {
     OR?: FieldWhereInput[]
     NOT?: FieldWhereInput | FieldWhereInput[]
     documentId?: StringFilter<"Field"> | string
-    name?: StringFilter<"Field"> | string
+    path?: StringFilter<"Field"> | string
     value?: JsonFilter<"Field">
     document?: XOR<DocumentScalarRelationFilter, DocumentWhereInput>
   }
 
   export type FieldOrderByWithRelationInput = {
     documentId?: SortOrder
-    name?: SortOrder
+    path?: SortOrder
     value?: SortOrder
     document?: DocumentOrderByWithRelationInput
   }
 
   export type FieldWhereUniqueInput = Prisma.AtLeast<{
-    documentId_name?: FieldDocumentIdNameCompoundUniqueInput
+    documentId_path?: FieldDocumentIdPathCompoundUniqueInput
     AND?: FieldWhereInput | FieldWhereInput[]
     OR?: FieldWhereInput[]
     NOT?: FieldWhereInput | FieldWhereInput[]
     documentId?: StringFilter<"Field"> | string
-    name?: StringFilter<"Field"> | string
+    path?: StringFilter<"Field"> | string
     value?: JsonFilter<"Field">
     document?: XOR<DocumentScalarRelationFilter, DocumentWhereInput>
-  }, "documentId_name">
+  }, "documentId_path">
 
   export type FieldOrderByWithAggregationInput = {
     documentId?: SortOrder
-    name?: SortOrder
+    path?: SortOrder
     value?: SortOrder
     _count?: FieldCountOrderByAggregateInput
     _max?: FieldMaxOrderByAggregateInput
@@ -5790,7 +5790,7 @@ export namespace Prisma {
     OR?: FieldScalarWhereWithAggregatesInput[]
     NOT?: FieldScalarWhereWithAggregatesInput | FieldScalarWhereWithAggregatesInput[]
     documentId?: StringWithAggregatesFilter<"Field"> | string
-    name?: StringWithAggregatesFilter<"Field"> | string
+    path?: StringWithAggregatesFilter<"Field"> | string
     value?: JsonWithAggregatesFilter<"Field">
   }
 
@@ -5953,43 +5953,43 @@ export namespace Prisma {
   }
 
   export type FieldCreateInput = {
-    name: string
+    path: string
     value: JsonNullValueInput | InputJsonValue
     document: DocumentCreateNestedOneWithoutFieldsInput
   }
 
   export type FieldUncheckedCreateInput = {
     documentId: string
-    name: string
+    path: string
     value: JsonNullValueInput | InputJsonValue
   }
 
   export type FieldUpdateInput = {
-    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
     value?: JsonNullValueInput | InputJsonValue
     document?: DocumentUpdateOneRequiredWithoutFieldsNestedInput
   }
 
   export type FieldUncheckedUpdateInput = {
     documentId?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
     value?: JsonNullValueInput | InputJsonValue
   }
 
   export type FieldCreateManyInput = {
     documentId: string
-    name: string
+    path: string
     value: JsonNullValueInput | InputJsonValue
   }
 
   export type FieldUpdateManyMutationInput = {
-    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
     value?: JsonNullValueInput | InputJsonValue
   }
 
   export type FieldUncheckedUpdateManyInput = {
     documentId?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
     value?: JsonNullValueInput | InputJsonValue
   }
 
@@ -6236,25 +6236,25 @@ export namespace Prisma {
     isNot?: DocumentWhereInput
   }
 
-  export type FieldDocumentIdNameCompoundUniqueInput = {
+  export type FieldDocumentIdPathCompoundUniqueInput = {
     documentId: string
-    name: string
+    path: string
   }
 
   export type FieldCountOrderByAggregateInput = {
     documentId?: SortOrder
-    name?: SortOrder
+    path?: SortOrder
     value?: SortOrder
   }
 
   export type FieldMaxOrderByAggregateInput = {
     documentId?: SortOrder
-    name?: SortOrder
+    path?: SortOrder
   }
 
   export type FieldMinOrderByAggregateInput = {
     documentId?: SortOrder
-    name?: SortOrder
+    path?: SortOrder
   }
   export type JsonWithAggregatesFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -6822,12 +6822,12 @@ export namespace Prisma {
   }
 
   export type FieldCreateWithoutDocumentInput = {
-    name: string
+    path: string
     value: JsonNullValueInput | InputJsonValue
   }
 
   export type FieldUncheckedCreateWithoutDocumentInput = {
-    name: string
+    path: string
     value: JsonNullValueInput | InputJsonValue
   }
 
@@ -6881,7 +6881,7 @@ export namespace Prisma {
     OR?: FieldScalarWhereInput[]
     NOT?: FieldScalarWhereInput | FieldScalarWhereInput[]
     documentId?: StringFilter<"Field"> | string
-    name?: StringFilter<"Field"> | string
+    path?: StringFilter<"Field"> | string
     value?: JsonFilter<"Field">
   }
 
@@ -6963,22 +6963,22 @@ export namespace Prisma {
   }
 
   export type FieldCreateManyDocumentInput = {
-    name: string
+    path: string
     value: JsonNullValueInput | InputJsonValue
   }
 
   export type FieldUpdateWithoutDocumentInput = {
-    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
     value?: JsonNullValueInput | InputJsonValue
   }
 
   export type FieldUncheckedUpdateWithoutDocumentInput = {
-    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
     value?: JsonNullValueInput | InputJsonValue
   }
 
   export type FieldUncheckedUpdateManyWithoutDocumentInput = {
-    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
     value?: JsonNullValueInput | InputJsonValue
   }
 

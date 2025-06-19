@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "prisma": "^6.9.0",
-    "tsup": "8.3.0"
+    "tsup": "8.3.0",
+    "type-fest": "^4.41.0"
   }
 }

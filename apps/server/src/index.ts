@@ -1,9 +1,7 @@
-// import { faker } from '@faker-js/faker'
+import { expressAdapter } from '@repo/trpc'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
-// import { setTimeout } from 'node:timers/promises'
-import { expressAdapter } from '@repo/trpc'
 
 const app = express()
 
@@ -41,67 +39,6 @@ app.listen(1488)
 // })
 
 //
-
-// app.post('/field/update', async (req, res) => {
-//   const {
-//     // if restPath is present it means object is changed, for that json sould be modified using restPath
-//     path: [projectId, documentId, name, ...restPath],
-//     value,
-//   } = req.body as FieldUpdateRequest
-
-//   // todo slomano :\
-//   const updatedDocument = await db.document.upsert({
-//     create: {
-//       type: '..........',
-//       id: documentId,
-//       projectId,
-//       fields: {
-//         create: {
-//           name,
-//           value: {
-//             toJSON() {
-//               // todo arrays and objects
-//               return value
-//             },
-//           },
-//         },
-//       },
-//     },
-//     update: {
-//       fields: {
-//         upsert: {
-//           where: {
-//             documentId_name: {
-//               documentId,
-//               name,
-//             },
-//           },
-//           create: {
-//             name,
-//             value: {
-//               toJSON() {
-//                 return value
-//               },
-//             },
-//           },
-//           update: {
-//             value: {
-//               toJSON() {
-//                 return value
-//               },
-//             },
-//           },
-//         },
-//       },
-//     },
-//     where: {
-//       id: documentId,
-//     },
-//   })
-//   res.json({})
-//   console.log('updated', new Date().toLocaleTimeString(), updatedDocument)
-//   // todo inform websocket listeners of the change
-// })
 
 // app.get('/project/create', async (req, res) => {
 //   const p = await db.project.create({

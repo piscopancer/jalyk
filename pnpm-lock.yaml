@@ -193,6 +193,9 @@ importers:
       slugify:
         specifier: ^1.6.6
         version: 1.6.6
+      zod:
+        specifier: ^3.25.64
+        version: 3.25.64
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.1.8
@@ -255,6 +258,9 @@ importers:
       tsup:
         specifier: 8.3.0
         version: 8.3.0(jiti@2.4.2)(postcss@8.5.5)(tsx@4.20.3)(typescript@5.8.3)
+      type-fest:
+        specifier: ^4.41.0
+        version: 4.41.0
 
   packages/ui:
     dependencies:

@@ -1,7 +1,6 @@
 import { StudioConfig } from '@/config'
 import { trpc } from '@/trpc'
 import { useParams } from 'react-router'
-import Fieldset from './form/fieldset'
 import Header from './header'
 
 const documentId = 'eric'
@@ -16,7 +15,8 @@ export default function Studio({ config }: { config: StudioConfig }) {
   return (
     <main>
       <Header />
-      <ul className='mx-auto w-xl gap-6 flex flex-col'>
+      <pre>{catchall}</pre>
+      {/* <ul className='mx-auto w-xl gap-6 flex flex-col'>
         {userDocDef.fields.map((def) => (
           <li key={def.name}>
             <Fieldset field={def} documentId={documentId} />
@@ -33,22 +33,7 @@ export default function Studio({ config }: { config: StudioConfig }) {
         }}
       >
         create
-      </button>
-      {/* <ul>
-        {config.schema.map((docDef) => (
-          <li key={docDef.name}>
-            <button
-              onClick={() => {
-                router.navigate({
-                  to: `/${docDef.name}`,
-                })
-              }}
-            >
-              {docDef.name}
-            </button>
-          </li>
-        ))}
-      </ul> */}
+      </button> */}
     </main>
   )
 }

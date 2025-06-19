@@ -1,4 +1,5 @@
 import { StringField } from '@/form'
+import { trpc } from '@/trpc'
 
 export type StringInputProps = {
   id: string
@@ -7,6 +8,8 @@ export type StringInputProps = {
 }
 
 export default function StringInput(props: StringInputProps) {
+  const utils = trpc.field()
+
   return (
     <input
       //
