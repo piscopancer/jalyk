@@ -15,7 +15,7 @@ export function Studio({ config }: { config: StudioConfig }) {
           <BrowserRouter>
             <Routes>
               <Route index path={`/${config.studioPath ?? defaultPath}`} Component={() => <Home config={config} />} />
-              <Route path={`/${config.studioPath ?? defaultPath}/:projectId/*`} Component={() => <StudioComponent config={config} />} />
+              <Route path={`/${config.studioPath ?? defaultPath}/*`} Component={() => <StudioComponent config={config} />} />
             </Routes>
           </BrowserRouter>
         </studioConfigCtx.Provider>
