@@ -4,6 +4,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "jsx": "react-jsx",
+    "noUncheckedIndexedAccess": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "strict": true,
