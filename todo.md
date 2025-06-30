@@ -112,8 +112,15 @@ when clicking `+` to create a new document, the new "window" will open where gen
 
 ## Preview
 
+! store previews as a separate query
+
 for an automatic preview there must be at least one string field in the document which content will be taken to the `title` of the preview. the actions, media will be resolved from the document declaration as the document's `type` is used to find it in the schema. if there's 0 string titles, the id is displayed in the title unless preview props are specified.
 
 # Structure
+
+<!-- ! font for ui elements or studio -->
+
+! default structure that displays things according to the schema
+! document form fix inputs and show real inputs
 
 Segment logic. All have `expanded` flag. When below min width it collapses, but can be expanded manually again.

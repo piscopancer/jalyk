@@ -1,7 +1,9 @@
 import { StudioConfig } from '@/config'
+import { cn } from '@/utils'
 import { faker } from '@faker-js/faker'
-import { LucidePlus } from 'lucide-react'
-import { createContext, PropsWithChildren, ReactNode, useContext } from 'react'
+import { Separator } from '@repo/ui'
+import { LucidePlus, LucideSearch } from 'lucide-react'
+import { ComponentProps, createContext, PropsWithChildren, ReactNode, useContext } from 'react'
 import { createPath, useNavigate, useParams } from 'react-router'
 import { JsonValue } from 'type-fest'
 import Header from './header'
@@ -13,7 +15,7 @@ export default function Studio({ config }: { config: StudioConfig }) {
   // const [projectId, ...restCatchall] = catchall
 
   return (
-    <main>
+    <main className='studio flex flex-col'>
       <Header />
       {/* render only if path starts with that name of the tool (structure) */}
       <Structure />
@@ -21,16 +23,24 @@ export default function Studio({ config }: { config: StudioConfig }) {
   )
 }
 
-function Structure({}) {
+function Structure() {
   const params = useParams<'*'>()
   const catchall = params['*']?.split('/') ?? []
   const [tool, ...segments] = catchall
 
   return (
-    <div>
+    <>
       <pre>{catchall.join('/')}</pre>
-      <SegmentView tool={tool!} segments={segments} segmentDefinition={testStructure} />
-    </div>
+      <SegmentView
+        segment={{
+          tool: tool!,
+          segments,
+          segmentDefinition: testStructure,
+        }}
+        className='grow overflow-x-scroll'
+      />
+      <footer>FOOTER FOR SOMETHING???</footer>
+    </>
   )
 }
 
@@ -80,8 +90,6 @@ export const testStructure = defineSegment({
           },
         },
         content(ui) {
-          const ctx = useContext(segmentContext)
-
           return (
             <div>
               <ui.DocumentForm id={id} />
@@ -96,43 +104,52 @@ export const testStructure = defineSegment({
     return (
       <ul>
         <ui.DocumentItem tag='shop' id='shop_1' />
-        <ui.Separator />
+        <ui.Separator title='123' />
         <ui.DocumentItem tag='shop2' id='shop_2' />
       </ul>
     )
   },
 })
 
-const Separator = () => <div>---</div>
+// const Separator = (props: {title?:string}) =>
 const DocumentItem = (props: { tag: string; id: string }) => {
   const ctx = useContext(segmentContext)
+  const nextSegment = buildSegment(props.tag, props.id)
 
   return (
-    <DebugWrapper value={buildSegment(props.tag, props.id)}>
-      <button
-        onClick={() => {
-          const nextSegment = buildSegment(props.tag, props.id)
-          ctx.navigateToSegment(nextSegment)
+    // <DebugWrapper value={{ nextSegment, realSeg: ctx.nextSegment ?? null }}>
+    <button
+      onClick={() => {
+        ctx.navigateToSegment(nextSegment)
+      }}
+      className='w-full rounded-xl'
+    >
+      <Preview
+        preview={{
+          title: props.id,
+          subtitle: props.tag,
         }}
-        className='w-full'
-      >
-        <Preview title={props.id} subtitle={props.tag} />
-        {/* doc {props.id} */}
-      </button>
-    </DebugWrapper>
+        className={cn(ctx.nextSegment === nextSegment ? 'outline-4 outline-zinc-500/50' : '')}
+      />
+    </button>
+    // </DebugWrapper>
   )
 }
 const DocumentForm = (props: { id: string }) => <article>form for document: {props.id}</article>
+const TEST_IDS = Array.from({ length: 6 }).map(() => faker.color.human() + '_' + faker.company.buzzNoun())
 const DocumentItems = (props: { tag: string; type: string }) => {
-  const TEST_IDS = Array.from({ length: 6 }).map(() => faker.color.human() + '_' + faker.company.buzzNoun())
   return (
     <article>
-      <header>
-        <h1>{props.type}</h1>
+      <header className='flex mb-2'>
+        <h1 className='mr-auto'>{props.type}</h1>
         <button>
           <LucidePlus />
         </button>
       </header>
+      <div className='mb-2 hopper'>
+        <input placeholder='Search for documents' className='bg-zinc-900 w-full pl-11 pr-4 py-2 rounded-xl placeholder:text-zinc-500 text-sm' />
+        <LucideSearch className='stroke-zinc-500 size-5 self-center ml-3' />
+      </div>
       <ul>
         {TEST_IDS.map((id) => (
           <li key={id}>
@@ -147,7 +164,7 @@ const DocumentItems = (props: { tag: string; type: string }) => {
 type Ui = typeof ui
 
 const ui = {
-  Separator,
+  Separator: Separator,
   DocumentItem,
   DocumentItems,
   DocumentForm,
@@ -169,9 +186,22 @@ function parseSegment(segment: string) {
   return { tag, id }
 }
 
-const segmentContext = createContext<{ segment: string | undefined; navigateToSegment: (segment: string) => void }>(null!)
+const segmentContext = createContext<{ segment: string | undefined; navigateToSegment: (segment: string) => void; nextSegment: string | undefined }>(null!)
 
-export function SegmentView({ segmentIndex = -1, segmentDefinition, segments, tool }: { segmentIndex?: number; segmentDefinition: Segment; segments: string[]; tool: string }) {
+type SegmentProps = { segmentIndex?: number; segmentDefinition: Segment; segments: string[]; tool: string }
+
+export function SegmentView({
+  segment: {
+    //
+    segmentIndex = -1,
+    segmentDefinition,
+    segments,
+    tool,
+  },
+  ...attr
+}: {
+  segment: SegmentProps
+} & ComponentProps<'section'>) {
   const navigate = useNavigate()
 
   // if not present, it means we are at /structure and nothing has been selected
@@ -187,12 +217,13 @@ export function SegmentView({ segmentIndex = -1, segmentDefinition, segments, to
   })()
 
   function handleNavigate(to: string) {
+    const prevSegments = segments.slice(0, Math.max(segmentIndex, 0))
     const path = createPath({
       pathname: [
         //
         '/studio',
         tool,
-        ...segments.slice(0, Math.max(segmentIndex, 0)),
+        ...prevSegments,
         segment,
         to,
       ]
@@ -203,20 +234,30 @@ export function SegmentView({ segmentIndex = -1, segmentDefinition, segments, to
   }
 
   return (
-    <section className='flex'>
-      <main className='min-w-[28ch] max-w-[28ch]'>
-        <DebugWrapper value={{ segment: segment ?? '---' }}>
-          <segmentContext.Provider
-            value={{
-              segment,
-              navigateToSegment: handleNavigate,
-            }}
-          >
-            <segmentDefinition.content {...ui} />
-          </segmentContext.Provider>
-        </DebugWrapper>
+    <section {...attr} className={cn('flex group', attr.className)}>
+      <main className={cn('min-w-[28ch] max-w-[28ch] p-2', 'border-r border-zinc-800')}>
+        {/* <DebugWrapper value={{ segment: segment ?? '---' }}> */}
+        <segmentContext.Provider
+          value={{
+            segment,
+            nextSegment: segments[segmentIndex + 1],
+            navigateToSegment: handleNavigate,
+          }}
+        >
+          <segmentDefinition.content {...ui} />
+        </segmentContext.Provider>
+        {/* </DebugWrapper> */}
       </main>
-      {nextSegment && <SegmentView segmentIndex={segmentIndex + 1} tool={tool} segments={segments} segmentDefinition={nextSegment} />}
+      {nextSegment && (
+        <SegmentView
+          segment={{
+            segmentIndex: segmentIndex + 1,
+            tool,
+            segments,
+            segmentDefinition: nextSegment,
+          }}
+        />
+      )}
     </section>
   )
 }

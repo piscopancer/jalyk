@@ -1,3 +1,3 @@
 import '@/style.css'
 
-export * from './src/components'
+export * from '@/components'

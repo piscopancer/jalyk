@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap');
 @import 'tailwindcss';
 @import '../../ui/dist/index.css';
 
@@ -6,5 +8,13 @@
   grid-template-areas: 'hopper';
   & > * {
     grid-area: hopper;
+  }
+}
+
+.studio {
+  @apply font-[geist] min-h-screen;
+  code,
+  pre {
+    @apply font-[geist_mono];
   }
 }

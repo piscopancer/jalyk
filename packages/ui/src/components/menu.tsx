@@ -2,6 +2,7 @@ import { cn } from '@/utils'
 import { type LucideIcon } from 'lucide-react'
 import { DropdownMenu as M } from 'radix-ui'
 import { PropsWithChildren, ReactNode } from 'react'
+import { Separator } from './separator'
 
 export type MenuProps = {
   contentProps?: M.DropdownMenuContentProps
@@ -30,10 +31,6 @@ export type ItemProps = {
   icon?: LucideIcon
   label?: string
   onSelect?: () => void
-}
-
-export function Separator() {
-  return <M.Separator className='border-b border-zinc-800 my-1.5' />
 }
 
 export function Item(props: ItemProps) {
