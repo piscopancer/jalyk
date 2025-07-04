@@ -1,4 +1,5 @@
 import { StudioConfig } from '@/config'
+import { shopDefinition } from '@/test/shapes'
 import { cn } from '@/utils'
 import { faker } from '@faker-js/faker'
 import { Separator } from '@repo/ui'
@@ -6,6 +7,7 @@ import { LucidePlus, LucideSearch } from 'lucide-react'
 import { ComponentProps, createContext, PropsWithChildren, ReactNode, useContext } from 'react'
 import { createPath, useNavigate, useParams } from 'react-router'
 import { JsonValue } from 'type-fest'
+import DocumentView from './form/document-view'
 import Header from './header'
 import Preview from './preview'
 
@@ -60,7 +62,7 @@ export const testStructure = defineSegment({
     shop2() {
       return defineSegment({
         content(ui) {
-          return 'TAMIK SIEL KAKASHKU'
+          return <DocumentView definition={shopDefinition} id='shop_123' />
         },
       })
     },

@@ -1,14 +1,14 @@
-import { StringField } from '@/form'
-import { trpc } from '@/trpc'
+// import { StringField } from '@/form'
+// import { trpc } from '@/trpc'
 
 export type StringInputProps = {
   id: string
   onChange: (value: string) => void
-  field: StringField
+  // field: StringField
 }
 
-export default function StringInput(props: StringInputProps) {
-  const utils = trpc.field()
+export default function StringFieldInput(props: StringInputProps) {
+  // const utils = trpc.field()
 
   return (
     <input

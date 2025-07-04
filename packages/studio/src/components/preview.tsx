@@ -1,10 +1,10 @@
 import { DocumentAction } from '@/document/action'
 import useStudioCtx from '@/hooks/use-project-ctx'
-import { cn } from '@/utils'
+import { cn, IconComponentType } from '@/utils'
 import { Menu } from '@repo/ui'
 import { LucideEllipsisVertical, LucideFile } from 'lucide-react'
 import { DropdownMenu } from 'radix-ui'
-import { ComponentProps, ComponentType, ReactNode, SVGProps } from 'react'
+import { ComponentProps, ReactNode } from 'react'
 
 export type PreviewProps = {
   media?: ReactNode
@@ -34,7 +34,7 @@ export default function Preview({ preview, ...attr }: { preview: PreviewProps } 
   )
 }
 
-export function DefaultPreviewMedia(props: { icon: ComponentType<SVGProps<SVGSVGElement>> }) {
+export function DefaultPreviewMedia(props: { icon: IconComponentType }) {
   return (
     <div className='size-12 bg-zinc-950 hopper rounded-lg'>
       <props.icon className='size-5 stroke-zinc-400 place-self-center' />

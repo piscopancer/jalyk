@@ -1,5 +1,5 @@
-import { ReferenceShapeComponentProps } from '@/test/shapes'
+import { ReferenceShapeOptions } from '@/test/shapes'
 
-export default function ReferenceInput(props: ReferenceShapeComponentProps) {
+export default function ReferenceFieldInput(props: { options: ReferenceShapeOptions }) {
   return <div>{props.options.display}</div>
 }

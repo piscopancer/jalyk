@@ -1,50 +1,5 @@
 документы хранятся в бд как таблица с обязательными \_id, а остальные поля хранятся в поле fields. доки закреплены за проектами, у проектов есть id, title и так далее.
 
-```
-doc_69 {
-  id: 123,
-  fields: [...],
-}
-```
-
-fields документа включает в себя поля документа
-
-```
-fields: [
-  {
-    id: 123,
-    type: ...,
-  },
-  {
-    id: 456,
-    type: ...,
-  },
-],
-```
-
-так можно будет
-
-```
-table project {
-  id: 000
-  documents: Document[]
-}
-
-найти поле, name которого == surname и документ в котором оно находится имеет id === 000
-
-table Document {
-  id: 123
-  project_id: 000
-  fields: (json) {
-    name: surname
-    type: string/number/date
-    value: ?
-  }[]
-}
-```
-
-найти field где name === "surname" и вернуть все поле
-
 # клиент
 
 клиент просит конфиг, в котором указан айди проекта, делает подключение и предоставляет контекст через провайдер чтобы все хуки админки могли пользоваться этим контекстом
@@ -98,7 +53,13 @@ if type of field is `object`, there's an additional field `shape` that takes a z
 
 новый вариант для field: у field будут поля `project_id`, `document_id`, `path`. Если массив `animals` в документе с `id` `zoo123`, то его полем будет `<project_id>.zoo123.animals.12` (???). Если мы вдруг решили что animals должен стать объектом `{cats: string[], wolves: string[]}`, то `x.animals.[1..12]` останутся, но новые поля будут добавлены как `<project_id>.zoo123.animals.cats.0` и `<project_id>.zoo123.animals.wolves.0`.
 
-If user provided `shape` as a zod object, for each property recursively generate a key which would be changed by the input.
+Если поле не имеет `type` а определяется исходя из типа `value`, то если в массиве объявлены 2 типа строчного значения (разная валидация и компонент), то при создании такого поля не получится отличать их, ведь нет никакой разницы в БД - оба хранятся как строки JSON. Решение
+
+- просматривать строки в разных режимах валидации, объявленных ранее, например одну и ту же строку можно смотреть и как дату и как ФИО, соответственно компонент тоже будет другой.
+
+! если поле было типа JSON строки, но затем его изменили в студии на объект, указав другую zod схему, то валидация вернет ошибку, которую нужно показать вместе с полем и предложить удалить и скопировать текущие "неверные" данные (строку).
+! любое текстовое поле можно открыть на весь экран
+! для поля можно указать иконку и оно будет рендериться слева от названия
 
 # Document
 
@@ -109,6 +70,9 @@ If user provided `shape` as a zod object, for each property recursively generate
 `referenceShape` must take some sort of filter and search functions. filter describes what documents appear at all. search
 
 when clicking `+` to create a new document, the new "window" will open where generated (on the client) id will be passed. document is not created until one of its inputs calls upsert which in turn will create a missing document. the list rendering
+
+! форму документа можно открыть на весь экран, когда та рендерится для ссылки в другом документе. Потому что форма может быть широкой, нужно обернуть ее в контейнер, и компоненты внутри
+! если массив содержит только документы одного типа - есть кнопка рендерить как таблицу. поле станет столбиком, который можно свернуть - оно останется, но скроются значения и будет показана иконка поля.
 
 ## Preview
 

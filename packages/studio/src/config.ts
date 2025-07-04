@@ -1,23 +1,24 @@
 // import { NumberField, StringField } from '@/form'
 import { createContext } from 'react'
+import { FieldConfig } from './test/shapes'
 
 export const studioConfigCtx = createContext<StudioConfig>(null!)
 
 export type StudioConfig = {
   studioPath?: string
   projectId: string
-  schema: Schema[]
+  schema: DocumentDefinition[]
 }
 
 /** schema for a document */
-type Schema = {
+type DocumentDefinition = {
   name: string
-  fields: Field[]
+  fields: Record<string, FieldConfig>
 }
 
 // export type Field = StringField
-export type Field = {
-  type: 'string'
-  value: '123123123'
-  validation: (v: string) => boolean
-}
+// export type FieldConfig = {
+//   shape: z.ZodAny
+//   options: any
+//   component: any
+// }
