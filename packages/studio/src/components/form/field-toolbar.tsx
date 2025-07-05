@@ -1,8 +1,10 @@
 import { IconComponentType } from '@/utils'
 import { LucideEllipsis } from 'lucide-react'
+import { z } from 'zod/v4'
 
 type FieldToolbarProps = {
   inputElementId: string
+  shape: z.ZodAny
   field: {
     name: string
     title?: string

@@ -29,7 +29,7 @@ model Project {
 model Field {
   documentId String
   path       String
-  value      Json
+  value      Json?
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 

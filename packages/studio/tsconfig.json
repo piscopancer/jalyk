@@ -5,6 +5,7 @@
     "outDir": "dist",
     "jsx": "react-jsx",
     "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "strict": true,

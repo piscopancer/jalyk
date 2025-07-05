@@ -1,5 +1,4 @@
-import { cn } from '@/utils'
-import { type LucideIcon } from 'lucide-react'
+import { cn, IconComponentType } from '@/utils'
 import { DropdownMenu as M } from 'radix-ui'
 import { PropsWithChildren, ReactNode } from 'react'
 import { Separator } from './separator'
@@ -28,16 +27,17 @@ export function Menu({ children, content, contentProps, rootProps }: MenuProps) 
 
 export type ItemProps = {
   action?: () => void
-  icon?: LucideIcon
+  icon?: IconComponentType
   label?: string
   onSelect?: () => void
+  selected?: boolean
 }
 
 export function Item(props: ItemProps) {
   return (
-    <M.Item asChild onSelect={props.onSelect} className='flex items-center gap-x-3 py-1.5 px-2 rounded-sm'>
+    <M.Item key={props.label} asChild onSelect={props.onSelect} className={cn('flex items-center gap-x-3 py-1.5 px-2 rounded-sm w-full', props.selected ? 'bg-zinc-800' : '')}>
       <button>
-        {props.icon && <props.icon className='size-5' />}
+        {props.icon && <props.icon className='size-4' />}
         <span>{props.label}</span>
       </button>
     </M.Item>

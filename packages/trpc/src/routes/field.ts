@@ -1,4 +1,4 @@
-import { JsonValue } from 'type-fest'
+import { JsonValue, OverrideProperties } from 'type-fest'
 import { z } from 'zod/v4'
 import { db } from '../db'
 import { t } from './t'
@@ -14,15 +14,20 @@ export const fieldRouter = t.router({
       })
     )
     .query(async ({ input: { documentId, path } }) => {
-      return db.field.findFirst({
-        where: {
-          documentId,
-          path,
-        },
-        select: {
-          value: true,
-        },
-      })
+      return (
+        db.field
+          .findFirst({
+            where: {
+              documentId,
+              path,
+            },
+            select: {
+              value: true,
+            },
+          })
+          // TODO: need real fix
+          .then((res) => res as OverrideProperties<NonNullable<typeof res>, { value: JsonValue }> | null)
+      )
     }),
   upsert: t.procedure
     .input(
@@ -31,7 +36,7 @@ export const fieldRouter = t.router({
         documentId: z.string(),
         documentType: z.string(),
         path: z.string(),
-        value: z.custom<JsonValue>(),
+        value: z.custom<any>(),
       })
     )
     .mutation(async ({ input: { documentId, documentType, projectId, path, value } }) => {

@@ -1,5 +1,5 @@
 import useStudioCtx from '@/hooks/use-project-ctx'
-import { ProjectInfo } from '@/types'
+import { ProjectInfo } from '@repo/trpc'
 import { useQuery } from '@tanstack/react-query'
 
 export function useProjectInfo() {
@@ -8,13 +8,13 @@ export function useProjectInfo() {
     queryKey: ['project', ctx.projectId],
     async queryFn() {
       return {
-        id: '123',
-        title: 'AAAA',
+        id: 'la',
+        title: 'la',
       } satisfies ProjectInfo
 
       // TODO: this does not work bcs of trpc
-      const res = await fetch(`http://localhost:1488/project/${ctx.projectId}`).then((res) => res.json() as Promise<ProjectInfo>)
-      return res
+      // const res = await fetch(`http://localhost:1488/project/${ctx.projectId}`).then((res) => res.json() as Promise<ProjectInfo>)
+      // return res
     },
   })
   return query

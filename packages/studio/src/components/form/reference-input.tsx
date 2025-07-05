@@ -1,5 +1,12 @@
-import { ReferenceShapeOptions } from '@/test/shapes'
+import { ReferenceFieldConfig } from '@/test/shapes'
 
-export default function ReferenceFieldInput(props: { options: ReferenceShapeOptions }) {
-  return <div>{props.options.display}</div>
+type Props = {
+  docId: string
+  elementId: string | undefined
+  fieldName: string
+  config: ReferenceFieldConfig
+}
+
+export default function ReferenceFieldInput(props: Props) {
+  return <div>{props.config.options.display}</div>
 }

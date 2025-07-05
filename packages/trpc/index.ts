@@ -1,1 +1,1 @@
-export { expressAdapter, TRPCRouter } from './src'
+export * from './src'

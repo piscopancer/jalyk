@@ -1,5 +1,6 @@
 import { StudioConfig } from '@repo/studio'
 
+// todo: move schema here
 export const studioConfig: StudioConfig = {
   projectId: 'la',
   schema: [

@@ -2,6 +2,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap');
 @import 'tailwindcss';
 @import '../../ui/dist/index.css';
+@source '../../ui/dist/index.css';
+
+@theme inline {
+  --font-sans: geist;
+  --font-mono: geist mono;
+  --default-font-family: var(--font-sans);
+  --default-mono-font-family: var(--font-mono);
+}
 
 @utility hopper {
   display: grid;
@@ -12,9 +20,9 @@
 }
 
 .studio {
-  @apply font-[geist] min-h-screen;
+  @apply font-sans min-h-screen;
   code,
   pre {
-    @apply font-[geist_mono];
+    @apply font-mono;
   }
 }

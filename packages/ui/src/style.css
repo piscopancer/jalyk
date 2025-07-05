@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+@theme {
+  --font-*: initial;
+}
+
 * {
   @apply focus:outline-2 focus:outline-blue-400;
 }

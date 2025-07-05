@@ -1,6 +1,7 @@
 import { DocumentDefinition } from '@/test/shapes'
 import { objectEntries } from '@/utils'
 import { LucideEllipsis } from 'lucide-react'
+import { z } from 'zod/v4'
 import Fieldset from './fieldset'
 
 export default function DocumentView(doc: { id: string; definition: DocumentDefinition }) {
@@ -25,6 +26,7 @@ export default function DocumentView(doc: { id: string; definition: DocumentDefi
               fieldName={fieldName}
               documentId={doc.id}
               fieldConfig={config}
+              shape={config.shape as unknown as z.ZodAny}
               toolbar={{
                 title: config.title,
                 icon: config.icon,
