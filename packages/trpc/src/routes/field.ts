@@ -1,9 +1,16 @@
+import EventEmitter, { on } from 'node:events'
 import { JsonValue, OverrideProperties } from 'type-fest'
 import { z } from 'zod/v4'
 import { db } from '../db'
+import { FieldUpdateEvent, SubscriptionEvents } from '../types'
 import { t } from './t'
 
-export const pathSchema = z.array(z.union([z.string(), z.number()]))
+// export const pathSchema = z.array(z.union([z.string(), z.number()]))
+
+type EventMap = {
+  [Key in keyof SubscriptionEvents]: [SubscriptionEvents[Key]]
+}
+const ee = new EventEmitter<EventMap>()
 
 export const fieldRouter = t.router({
   find: t.procedure
@@ -25,7 +32,7 @@ export const fieldRouter = t.router({
               value: true,
             },
           })
-          // TODO: need real fix
+          // TODO: need real type fix
           .then((res) => res as OverrideProperties<NonNullable<typeof res>, { value: JsonValue }> | null)
       )
     }),
@@ -36,7 +43,7 @@ export const fieldRouter = t.router({
         documentId: z.string(),
         documentType: z.string(),
         path: z.string(),
-        value: z.custom<any>(),
+        value: z.json(),
       })
     )
     .mutation(async ({ input: { documentId, documentType, projectId, path, value } }) => {
@@ -82,8 +89,21 @@ export const fieldRouter = t.router({
           id: documentId,
         },
       })
-      console.log('updated', new Date().toLocaleTimeString(), upsertedDocument)
+      ee.emit(`fieldUpdate/${projectId}`, { documentId, path, value })
       return upsertedDocument
-      // todo inform websocket listeners of the change
+    }),
+  onFieldUpdate: t.procedure
+    .input(
+      z.object({
+        projectId: z.string(),
+      })
+    )
+    .subscription(async function* ({ input, signal }) {
+      for await (const [data] of on(ee, `fieldUpdate/${input.projectId}` satisfies keyof SubscriptionEvents, {
+        signal,
+      })) {
+        const updatedField = data as FieldUpdateEvent[keyof FieldUpdateEvent]
+        yield updatedField
+      }
     }),
 })

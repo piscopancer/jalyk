@@ -1,29 +1,31 @@
 import { JsonValue } from 'type-fest'
 
-export type ClientId = string
-export type ClientData = {
+export type ProjectUserData = {
   name: string
 }
 
-export type ClientConntectedWsEvent = {
-  type: 'clientConnected'
-  id: ClientId
-  client: ClientData
+export type FieldUpdateEvent = {
+  [K in `fieldUpdate/${string}`]: {
+    documentId: string
+    path: string
+    value: JsonValue
+  }
 }
 
-export type ClientDisconntectedWsEvent = {
-  type: 'clientDisconnected'
-  id: ClientId
+export interface SubscriptionEvents extends FieldUpdateEvent {
+  projectUserConnected: {
+    id: string
+    projectUser: ProjectUserData
+  }
+  projectUserDisconnected: {
+    id: string
+  }
+  fieldSelected: {
+    projectUserId: string
+    documentId: string
+    path: string
+  }
 }
-
-export type FieldUpdateWsEvent = {
-  type: 'fieldUpdate'
-  documentId: string
-  path: string
-  value: JsonValue
-}
-
-export type WsEvent = ClientConntectedWsEvent | ClientDisconntectedWsEvent | FieldUpdateWsEvent
 
 export type ProjectInfo = {
   id: string

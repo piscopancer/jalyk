@@ -4,11 +4,9 @@ import { useProjectInfo } from '@/hooks/use-project-info'
 import { StringFieldConfig } from '@/test/shapes'
 import { trpc } from '@/trpc'
 import { Menu } from '@repo/ui'
-import { getQueryKey } from '@trpc/react-query'
 import { LucideChevronsUpDown } from 'lucide-react'
 import { DropdownMenu } from 'radix-ui'
 import { funnel } from 'remeda'
-import { JsonValue } from 'type-fest'
 import { z } from 'zod/v4'
 import { Debug } from '../debug'
 
@@ -39,7 +37,7 @@ export default function StringFieldInput(props: Props) {
           const res = props.shape.safeParse(data.value)
           if (res.success) {
             return {
-              value: res.data as JsonValue,
+              value: res.data,
             }
           } else {
             return {
@@ -69,7 +67,7 @@ export default function StringFieldInput(props: Props) {
       }
     },
     {
-      minQuietPeriodMs: 1000,
+      minQuietPeriodMs: 500,
       reducer(_, value: string) {
         return value
       },
@@ -90,11 +88,6 @@ export default function StringFieldInput(props: Props) {
       value={{
         value: field.data?.value ?? null,
         shape: 'shape' in props,
-        key:
-          getQueryKey(trpc.field.find, {
-            documentId: props.docId,
-            path: props.fieldName,
-          }) ?? null,
       }}
     >
       <input

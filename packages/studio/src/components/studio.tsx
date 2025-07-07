@@ -1,55 +1,36 @@
+import useStudioCtx from '@/hooks/use-project-ctx'
 import { shopDefinition } from '@/test/shapes'
 import { trpc } from '@/trpc'
 import { cn } from '@/utils'
 import { faker } from '@faker-js/faker'
-import { ClientData, WsEvent } from '@repo/trpc'
 import { Separator } from '@repo/ui'
 import { LucidePlus, LucideSearch } from 'lucide-react'
-import { ComponentProps, createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react'
+import { ComponentProps, createContext, ReactNode, useContext } from 'react'
 import { createPath, useNavigate, useParams } from 'react-router'
 import DocumentView from './form/document-view'
 import Header from './header'
 import Preview from './preview'
 
-// const documentId = 'eric'
-
 export default function Studio() {
-  const wsRef = useRef<WebSocket>(null!)
-  const [clients, setClients] = useState<({ id: string } & ClientData)[]>([])
+  // const wsRef = useRef<WebSocket>(null!)
+  // const [clients, setClients] = useState<({ id: string } & ClientData)[]>([])
   const utils = trpc.useUtils()
-
-  useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8888')
-    wsRef.current = ws
-    ws.onmessage = (e: MessageEvent<string>) => {
-      const event = JSON.parse(e.data) as WsEvent
-      switch (event.type) {
-        case 'clientConnected': {
-          setClients((prev) => [
-            ...prev,
-            {
-              id: event.id,
-              name: event.client.name,
-            },
-          ])
-          break
-        }
-        case 'clientDisconnected': {
-          setClients((prev) => prev.filter((c) => c.id !== event.id))
-          break
-        }
-        case 'fieldUpdate': {
-          utils.field.find.setData(
-            {
-              documentId: event.documentId,
-              path: event.path,
-            },
-            { value: event.value }
-          )
-        }
-      }
+  const { projectId } = useStudioCtx()
+  const fieldUpdateSub = trpc.field.onFieldUpdate.useSubscription(
+    { projectId },
+    {
+      onData(updatedField) {
+        // console.log('field updated received', updatedField)
+        utils.field.find.setData(
+          {
+            documentId: updatedField.documentId,
+            path: updatedField.path,
+          },
+          { value: updatedField.value }
+        )
+      },
     }
-  }, [])
+  )
 
   return (
     <main className='studio flex flex-col'>
