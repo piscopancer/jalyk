@@ -1,4 +1,5 @@
 import { z } from 'zod/v4'
+import { auth } from '../auth'
 import { db } from '../db'
 import { t } from './t'
 
@@ -18,4 +19,16 @@ export const userRouter = t.router({
         },
       })
     }),
+  signIn: t.procedure.mutation(async ({}) => {
+    try {
+      const res = await auth.api.signInSocial({
+        body: {
+          provider: 'github',
+        },
+      })
+      return res
+    } catch (error) {
+      console.error(error)
+    }
+  }),
 })

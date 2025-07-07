@@ -26,7 +26,6 @@ export function Menu({ children, content, contentProps, rootProps }: MenuProps) 
 }
 
 export type ItemProps = {
-  action?: () => void
   icon?: IconComponentType
   label?: string
   onSelect?: () => void

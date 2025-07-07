@@ -1,20 +1,23 @@
-import { expressAdapter } from '@repo/trpc'
+import { auth, expressAdapter } from '@repo/trpc'
+import { toNodeHandler } from 'better-auth/node'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
 
-const expressServer = express()
+const server = express()
 
-expressServer.use(
+server.use(
   cors({
     // frontend origin
     origin: 'http://localhost:3000',
-    methods: ['GET', 'POST', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    // allowedHeaders: ['Content-Type', 'Authorization'],
   })
 )
-expressServer.use('/trpc', expressAdapter)
-expressServer.use(bodyParser.json())
+server.all('/api/auth/{*any}', toNodeHandler(auth))
+server.use('/trpc', expressAdapter)
+server.use(bodyParser.json())
+server.use(express.json())
 
-expressServer.listen(1488)
+server.listen(8484)

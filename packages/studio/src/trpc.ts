@@ -10,11 +10,11 @@ export const trpcClient = trpc.createClient({
         return op.type === 'subscription'
       },
       true: httpSubscriptionLink({
-        url: `http://localhost:${1488}/trpc`,
+        url: `http://localhost:${8484}/trpc`,
       }),
       false: httpBatchLink({
         // url: `http://localhost:${httpServerPort}/trpc`,
-        url: `http://localhost:${1488}/trpc`,
+        url: `http://localhost:${8484}/trpc`,
         fetch(url, options) {
           return fetch(url, {
             ...options,

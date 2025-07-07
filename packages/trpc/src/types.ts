@@ -5,6 +5,7 @@ export type ProjectUserData = {
 }
 
 export type FieldUpdateEvent = {
+  // fieldUpdate/<project-id>
   [K in `fieldUpdate/${string}`]: {
     documentId: string
     path: string

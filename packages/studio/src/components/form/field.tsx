@@ -15,7 +15,7 @@ export function Field(props: { fieldId: string; documentId: string; field: Field
     //   onChange={async (v) => {
     //     console.log(props, v)
     //     // TODO change to trpc
-    //     // fetch('http://localhost:1488/field/update', {
+    //     // fetch('http://localhost:8484/field/update', {
     //     //   method: 'post',
     //     //   headers: {
     //     //     'content-type': 'application/json',

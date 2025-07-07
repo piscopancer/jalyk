@@ -13,7 +13,7 @@ export function useProjectInfo() {
       } satisfies ProjectInfo
 
       // TODO: this does not work bcs of trpc
-      // const res = await fetch(`http://localhost:1488/project/${ctx.projectId}`).then((res) => res.json() as Promise<ProjectInfo>)
+      // const res = await fetch(`http://localhost:8484/project/${ctx.projectId}`).then((res) => res.json() as Promise<ProjectInfo>)
       // return res
     },
   })
