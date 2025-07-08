@@ -26,3 +26,34 @@
     @apply font-mono;
   }
 }
+
+.bg-hamper {
+  --color-1: var(--color-zinc-800);
+  --color-2: var(--color-zinc-900);
+  --color-3: var(--color-zinc-950);
+  --thick: 64px;
+  background:
+    conic-gradient(at var(--thick) calc(100% - var(--thick)), #0000 270deg, var(--color-1) 0) calc(var(--thick) + 12px) 0,
+    linear-gradient(var(--color-2) var(--thick), #0000 0) 0 12px,
+    conic-gradient(at var(--thick) calc(100% - var(--thick)), #0000 90deg, var(--color-2) 0 180deg, var(--color-1) 0),
+    var(--color-3);
+  background-size: calc(2 * (var(--thick) + 12px)) calc(2 * (var(--thick) + 12px));
+}
+
+.bg-stripes {
+  --color-1: var(--color-zinc-900);
+  --color-2: var(--color-zinc-950);
+  --size: 24px;
+  background-image: repeating-linear-gradient(45deg, var(--color-1) 0, var(--color-1) 1px, transparent 0, transparent 50%);
+  background-size: var(--size) var(--size);
+  background-color: var(--color-2);
+}
+
+.bg-dots {
+  --color-1: var(--color-zinc-800);
+  --color-2: var(--color-zinc-950);
+  --size: 24px;
+  background-image: radial-gradient(var(--color-1) 1px, transparent 1px);
+  background-size: var(--size) var(--size);
+  background-color: var(--color-2);
+}
