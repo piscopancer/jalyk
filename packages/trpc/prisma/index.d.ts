@@ -19,6 +19,11 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
+ * Model UserProjectRole
+ * 
+ */
+export type UserProjectRole = $Result.DefaultSelection<Prisma.$UserProjectRolePayload>
+/**
  * Model Project
  * 
  */
@@ -33,6 +38,36 @@ export type Field = $Result.DefaultSelection<Prisma.$FieldPayload>
  * 
  */
 export type Document = $Result.DefaultSelection<Prisma.$DocumentPayload>
+
+/**
+ * Enums
+ */
+export namespace $Enums {
+  export const UserRole: {
+  owner: 'owner',
+  editor: 'editor',
+  viewer: 'viewer'
+};
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole]
+
+
+export const AuthProvider: {
+  google: 'google',
+  github: 'github'
+};
+
+export type AuthProvider = (typeof AuthProvider)[keyof typeof AuthProvider]
+
+}
+
+export type UserRole = $Enums.UserRole
+
+export const UserRole: typeof $Enums.UserRole
+
+export type AuthProvider = $Enums.AuthProvider
+
+export const AuthProvider: typeof $Enums.AuthProvider
 
 /**
  * ##  Prisma Client ʲˢ
@@ -168,6 +203,16 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.userProjectRole`: Exposes CRUD operations for the **UserProjectRole** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more UserProjectRoles
+    * const userProjectRoles = await prisma.userProjectRole.findMany()
+    * ```
+    */
+  get userProjectRole(): Prisma.UserProjectRoleDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.project`: Exposes CRUD operations for the **Project** model.
@@ -639,6 +684,7 @@ export namespace Prisma {
 
   export const ModelName: {
     User: 'User',
+    UserProjectRole: 'UserProjectRole',
     Project: 'Project',
     Field: 'Field',
     Document: 'Document'
@@ -660,7 +706,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "project" | "field" | "document"
+      modelProps: "user" | "userProjectRole" | "project" | "field" | "document"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -735,6 +781,80 @@ export namespace Prisma {
           count: {
             args: Prisma.UserCountArgs<ExtArgs>
             result: $Utils.Optional<UserCountAggregateOutputType> | number
+          }
+        }
+      }
+      UserProjectRole: {
+        payload: Prisma.$UserProjectRolePayload<ExtArgs>
+        fields: Prisma.UserProjectRoleFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.UserProjectRoleFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProjectRolePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.UserProjectRoleFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProjectRolePayload>
+          }
+          findFirst: {
+            args: Prisma.UserProjectRoleFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProjectRolePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.UserProjectRoleFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProjectRolePayload>
+          }
+          findMany: {
+            args: Prisma.UserProjectRoleFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProjectRolePayload>[]
+          }
+          create: {
+            args: Prisma.UserProjectRoleCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProjectRolePayload>
+          }
+          createMany: {
+            args: Prisma.UserProjectRoleCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.UserProjectRoleCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProjectRolePayload>[]
+          }
+          delete: {
+            args: Prisma.UserProjectRoleDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProjectRolePayload>
+          }
+          update: {
+            args: Prisma.UserProjectRoleUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProjectRolePayload>
+          }
+          deleteMany: {
+            args: Prisma.UserProjectRoleDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.UserProjectRoleUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.UserProjectRoleUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProjectRolePayload>[]
+          }
+          upsert: {
+            args: Prisma.UserProjectRoleUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProjectRolePayload>
+          }
+          aggregate: {
+            args: Prisma.UserProjectRoleAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUserProjectRole>
+          }
+          groupBy: {
+            args: Prisma.UserProjectRoleGroupByArgs<ExtArgs>
+            result: $Utils.Optional<UserProjectRoleGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.UserProjectRoleCountArgs<ExtArgs>
+            result: $Utils.Optional<UserProjectRoleCountAggregateOutputType> | number
           }
         }
       }
@@ -1045,6 +1165,7 @@ export namespace Prisma {
   }
   export type GlobalOmitConfig = {
     user?: UserOmit
+    userProjectRole?: UserProjectRoleOmit
     project?: ProjectOmit
     field?: FieldOmit
     document?: DocumentOmit
@@ -1142,11 +1263,11 @@ export namespace Prisma {
    */
 
   export type UserCountOutputType = {
-    projects: number
+    inProjects: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    projects?: boolean | UserCountOutputTypeCountProjectsArgs
+    inProjects?: boolean | UserCountOutputTypeCountInProjectsArgs
   }
 
   // Custom InputTypes
@@ -1163,8 +1284,8 @@ export namespace Prisma {
   /**
    * UserCountOutputType without action
    */
-  export type UserCountOutputTypeCountProjectsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ProjectWhereInput
+  export type UserCountOutputTypeCountInProjectsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserProjectRoleWhereInput
   }
 
 
@@ -1174,10 +1295,12 @@ export namespace Prisma {
 
   export type ProjectCountOutputType = {
     documents: number
+    users: number
   }
 
   export type ProjectCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     documents?: boolean | ProjectCountOutputTypeCountDocumentsArgs
+    users?: boolean | ProjectCountOutputTypeCountUsersArgs
   }
 
   // Custom InputTypes
@@ -1196,6 +1319,13 @@ export namespace Prisma {
    */
   export type ProjectCountOutputTypeCountDocumentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: DocumentWhereInput
+  }
+
+  /**
+   * ProjectCountOutputType without action
+   */
+  export type ProjectCountOutputTypeCountUsersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserProjectRoleWhereInput
   }
 
 
@@ -1247,22 +1377,25 @@ export namespace Prisma {
   export type UserMinAggregateOutputType = {
     id: string | null
     createdAt: Date | null
-    email: string | null
     name: string | null
+    photoUrl: string | null
+    authProvider: $Enums.AuthProvider | null
   }
 
   export type UserMaxAggregateOutputType = {
     id: string | null
     createdAt: Date | null
-    email: string | null
     name: string | null
+    photoUrl: string | null
+    authProvider: $Enums.AuthProvider | null
   }
 
   export type UserCountAggregateOutputType = {
     id: number
     createdAt: number
-    email: number
     name: number
+    photoUrl: number
+    authProvider: number
     _all: number
   }
 
@@ -1270,22 +1403,25 @@ export namespace Prisma {
   export type UserMinAggregateInputType = {
     id?: true
     createdAt?: true
-    email?: true
     name?: true
+    photoUrl?: true
+    authProvider?: true
   }
 
   export type UserMaxAggregateInputType = {
     id?: true
     createdAt?: true
-    email?: true
     name?: true
+    photoUrl?: true
+    authProvider?: true
   }
 
   export type UserCountAggregateInputType = {
     id?: true
     createdAt?: true
-    email?: true
     name?: true
+    photoUrl?: true
+    authProvider?: true
     _all?: true
   }
 
@@ -1364,8 +1500,9 @@ export namespace Prisma {
   export type UserGroupByOutputType = {
     id: string
     createdAt: Date
-    email: string
     name: string
+    photoUrl: string | null
+    authProvider: $Enums.AuthProvider
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
@@ -1388,36 +1525,40 @@ export namespace Prisma {
   export type UserSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     createdAt?: boolean
-    email?: boolean
     name?: boolean
-    projects?: boolean | User$projectsArgs<ExtArgs>
+    photoUrl?: boolean
+    authProvider?: boolean
+    inProjects?: boolean | User$inProjectsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     createdAt?: boolean
-    email?: boolean
     name?: boolean
+    photoUrl?: boolean
+    authProvider?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     createdAt?: boolean
-    email?: boolean
     name?: boolean
+    photoUrl?: boolean
+    authProvider?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
     id?: boolean
     createdAt?: boolean
-    email?: boolean
     name?: boolean
+    photoUrl?: boolean
+    authProvider?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "createdAt" | "email" | "name", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "createdAt" | "name" | "photoUrl" | "authProvider", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    projects?: boolean | User$projectsArgs<ExtArgs>
+    inProjects?: boolean | User$inProjectsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -1426,13 +1567,14 @@ export namespace Prisma {
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
     objects: {
-      projects: Prisma.$ProjectPayload<ExtArgs>[]
+      inProjects: Prisma.$UserProjectRolePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       createdAt: Date
-      email: string
       name: string
+      photoUrl: string | null
+      authProvider: $Enums.AuthProvider
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -1827,7 +1969,7 @@ export namespace Prisma {
    */
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    projects<T extends User$projectsArgs<ExtArgs> = {}>(args?: Subset<T, User$projectsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    inProjects<T extends User$inProjectsArgs<ExtArgs> = {}>(args?: Subset<T, User$inProjectsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserProjectRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1859,8 +2001,9 @@ export namespace Prisma {
   interface UserFieldRefs {
     readonly id: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
-    readonly email: FieldRef<"User", 'String'>
     readonly name: FieldRef<"User", 'String'>
+    readonly photoUrl: FieldRef<"User", 'String'>
+    readonly authProvider: FieldRef<"User", 'AuthProvider'>
   }
     
 
@@ -2249,27 +2392,27 @@ export namespace Prisma {
   }
 
   /**
-   * User.projects
+   * User.inProjects
    */
-  export type User$projectsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type User$inProjectsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Project
+     * Select specific fields to fetch from the UserProjectRole
      */
-    select?: ProjectSelect<ExtArgs> | null
+    select?: UserProjectRoleSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Project
+     * Omit specific fields from the UserProjectRole
      */
-    omit?: ProjectOmit<ExtArgs> | null
+    omit?: UserProjectRoleOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ProjectInclude<ExtArgs> | null
-    where?: ProjectWhereInput
-    orderBy?: ProjectOrderByWithRelationInput | ProjectOrderByWithRelationInput[]
-    cursor?: ProjectWhereUniqueInput
+    include?: UserProjectRoleInclude<ExtArgs> | null
+    where?: UserProjectRoleWhereInput
+    orderBy?: UserProjectRoleOrderByWithRelationInput | UserProjectRoleOrderByWithRelationInput[]
+    cursor?: UserProjectRoleWhereUniqueInput
     take?: number
     skip?: number
-    distinct?: ProjectScalarFieldEnum | ProjectScalarFieldEnum[]
+    distinct?: UserProjectRoleScalarFieldEnum | UserProjectRoleScalarFieldEnum[]
   }
 
   /**
@@ -2292,6 +2435,1046 @@ export namespace Prisma {
 
 
   /**
+   * Model UserProjectRole
+   */
+
+  export type AggregateUserProjectRole = {
+    _count: UserProjectRoleCountAggregateOutputType | null
+    _min: UserProjectRoleMinAggregateOutputType | null
+    _max: UserProjectRoleMaxAggregateOutputType | null
+  }
+
+  export type UserProjectRoleMinAggregateOutputType = {
+    userId: string | null
+    projectId: string | null
+    role: $Enums.UserRole | null
+  }
+
+  export type UserProjectRoleMaxAggregateOutputType = {
+    userId: string | null
+    projectId: string | null
+    role: $Enums.UserRole | null
+  }
+
+  export type UserProjectRoleCountAggregateOutputType = {
+    userId: number
+    projectId: number
+    role: number
+    _all: number
+  }
+
+
+  export type UserProjectRoleMinAggregateInputType = {
+    userId?: true
+    projectId?: true
+    role?: true
+  }
+
+  export type UserProjectRoleMaxAggregateInputType = {
+    userId?: true
+    projectId?: true
+    role?: true
+  }
+
+  export type UserProjectRoleCountAggregateInputType = {
+    userId?: true
+    projectId?: true
+    role?: true
+    _all?: true
+  }
+
+  export type UserProjectRoleAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserProjectRole to aggregate.
+     */
+    where?: UserProjectRoleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserProjectRoles to fetch.
+     */
+    orderBy?: UserProjectRoleOrderByWithRelationInput | UserProjectRoleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: UserProjectRoleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserProjectRoles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserProjectRoles.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned UserProjectRoles
+    **/
+    _count?: true | UserProjectRoleCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: UserProjectRoleMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: UserProjectRoleMaxAggregateInputType
+  }
+
+  export type GetUserProjectRoleAggregateType<T extends UserProjectRoleAggregateArgs> = {
+        [P in keyof T & keyof AggregateUserProjectRole]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUserProjectRole[P]>
+      : GetScalarType<T[P], AggregateUserProjectRole[P]>
+  }
+
+
+
+
+  export type UserProjectRoleGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserProjectRoleWhereInput
+    orderBy?: UserProjectRoleOrderByWithAggregationInput | UserProjectRoleOrderByWithAggregationInput[]
+    by: UserProjectRoleScalarFieldEnum[] | UserProjectRoleScalarFieldEnum
+    having?: UserProjectRoleScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: UserProjectRoleCountAggregateInputType | true
+    _min?: UserProjectRoleMinAggregateInputType
+    _max?: UserProjectRoleMaxAggregateInputType
+  }
+
+  export type UserProjectRoleGroupByOutputType = {
+    userId: string
+    projectId: string
+    role: $Enums.UserRole
+    _count: UserProjectRoleCountAggregateOutputType | null
+    _min: UserProjectRoleMinAggregateOutputType | null
+    _max: UserProjectRoleMaxAggregateOutputType | null
+  }
+
+  type GetUserProjectRoleGroupByPayload<T extends UserProjectRoleGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<UserProjectRoleGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof UserProjectRoleGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], UserProjectRoleGroupByOutputType[P]>
+            : GetScalarType<T[P], UserProjectRoleGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type UserProjectRoleSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    userId?: boolean
+    projectId?: boolean
+    role?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userProjectRole"]>
+
+  export type UserProjectRoleSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    userId?: boolean
+    projectId?: boolean
+    role?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userProjectRole"]>
+
+  export type UserProjectRoleSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    userId?: boolean
+    projectId?: boolean
+    role?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userProjectRole"]>
+
+  export type UserProjectRoleSelectScalar = {
+    userId?: boolean
+    projectId?: boolean
+    role?: boolean
+  }
+
+  export type UserProjectRoleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"userId" | "projectId" | "role", ExtArgs["result"]["userProjectRole"]>
+  export type UserProjectRoleInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+  }
+  export type UserProjectRoleIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+  }
+  export type UserProjectRoleIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+  }
+
+  export type $UserProjectRolePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "UserProjectRole"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+      project: Prisma.$ProjectPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      userId: string
+      projectId: string
+      role: $Enums.UserRole
+    }, ExtArgs["result"]["userProjectRole"]>
+    composites: {}
+  }
+
+  type UserProjectRoleGetPayload<S extends boolean | null | undefined | UserProjectRoleDefaultArgs> = $Result.GetResult<Prisma.$UserProjectRolePayload, S>
+
+  type UserProjectRoleCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<UserProjectRoleFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: UserProjectRoleCountAggregateInputType | true
+    }
+
+  export interface UserProjectRoleDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['UserProjectRole'], meta: { name: 'UserProjectRole' } }
+    /**
+     * Find zero or one UserProjectRole that matches the filter.
+     * @param {UserProjectRoleFindUniqueArgs} args - Arguments to find a UserProjectRole
+     * @example
+     * // Get one UserProjectRole
+     * const userProjectRole = await prisma.userProjectRole.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends UserProjectRoleFindUniqueArgs>(args: SelectSubset<T, UserProjectRoleFindUniqueArgs<ExtArgs>>): Prisma__UserProjectRoleClient<$Result.GetResult<Prisma.$UserProjectRolePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one UserProjectRole that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {UserProjectRoleFindUniqueOrThrowArgs} args - Arguments to find a UserProjectRole
+     * @example
+     * // Get one UserProjectRole
+     * const userProjectRole = await prisma.userProjectRole.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends UserProjectRoleFindUniqueOrThrowArgs>(args: SelectSubset<T, UserProjectRoleFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UserProjectRoleClient<$Result.GetResult<Prisma.$UserProjectRolePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserProjectRole that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProjectRoleFindFirstArgs} args - Arguments to find a UserProjectRole
+     * @example
+     * // Get one UserProjectRole
+     * const userProjectRole = await prisma.userProjectRole.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends UserProjectRoleFindFirstArgs>(args?: SelectSubset<T, UserProjectRoleFindFirstArgs<ExtArgs>>): Prisma__UserProjectRoleClient<$Result.GetResult<Prisma.$UserProjectRolePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserProjectRole that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProjectRoleFindFirstOrThrowArgs} args - Arguments to find a UserProjectRole
+     * @example
+     * // Get one UserProjectRole
+     * const userProjectRole = await prisma.userProjectRole.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends UserProjectRoleFindFirstOrThrowArgs>(args?: SelectSubset<T, UserProjectRoleFindFirstOrThrowArgs<ExtArgs>>): Prisma__UserProjectRoleClient<$Result.GetResult<Prisma.$UserProjectRolePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more UserProjectRoles that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProjectRoleFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all UserProjectRoles
+     * const userProjectRoles = await prisma.userProjectRole.findMany()
+     * 
+     * // Get first 10 UserProjectRoles
+     * const userProjectRoles = await prisma.userProjectRole.findMany({ take: 10 })
+     * 
+     * // Only select the `userId`
+     * const userProjectRoleWithUserIdOnly = await prisma.userProjectRole.findMany({ select: { userId: true } })
+     * 
+     */
+    findMany<T extends UserProjectRoleFindManyArgs>(args?: SelectSubset<T, UserProjectRoleFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserProjectRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a UserProjectRole.
+     * @param {UserProjectRoleCreateArgs} args - Arguments to create a UserProjectRole.
+     * @example
+     * // Create one UserProjectRole
+     * const UserProjectRole = await prisma.userProjectRole.create({
+     *   data: {
+     *     // ... data to create a UserProjectRole
+     *   }
+     * })
+     * 
+     */
+    create<T extends UserProjectRoleCreateArgs>(args: SelectSubset<T, UserProjectRoleCreateArgs<ExtArgs>>): Prisma__UserProjectRoleClient<$Result.GetResult<Prisma.$UserProjectRolePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many UserProjectRoles.
+     * @param {UserProjectRoleCreateManyArgs} args - Arguments to create many UserProjectRoles.
+     * @example
+     * // Create many UserProjectRoles
+     * const userProjectRole = await prisma.userProjectRole.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends UserProjectRoleCreateManyArgs>(args?: SelectSubset<T, UserProjectRoleCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many UserProjectRoles and returns the data saved in the database.
+     * @param {UserProjectRoleCreateManyAndReturnArgs} args - Arguments to create many UserProjectRoles.
+     * @example
+     * // Create many UserProjectRoles
+     * const userProjectRole = await prisma.userProjectRole.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many UserProjectRoles and only return the `userId`
+     * const userProjectRoleWithUserIdOnly = await prisma.userProjectRole.createManyAndReturn({
+     *   select: { userId: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends UserProjectRoleCreateManyAndReturnArgs>(args?: SelectSubset<T, UserProjectRoleCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserProjectRolePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a UserProjectRole.
+     * @param {UserProjectRoleDeleteArgs} args - Arguments to delete one UserProjectRole.
+     * @example
+     * // Delete one UserProjectRole
+     * const UserProjectRole = await prisma.userProjectRole.delete({
+     *   where: {
+     *     // ... filter to delete one UserProjectRole
+     *   }
+     * })
+     * 
+     */
+    delete<T extends UserProjectRoleDeleteArgs>(args: SelectSubset<T, UserProjectRoleDeleteArgs<ExtArgs>>): Prisma__UserProjectRoleClient<$Result.GetResult<Prisma.$UserProjectRolePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one UserProjectRole.
+     * @param {UserProjectRoleUpdateArgs} args - Arguments to update one UserProjectRole.
+     * @example
+     * // Update one UserProjectRole
+     * const userProjectRole = await prisma.userProjectRole.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends UserProjectRoleUpdateArgs>(args: SelectSubset<T, UserProjectRoleUpdateArgs<ExtArgs>>): Prisma__UserProjectRoleClient<$Result.GetResult<Prisma.$UserProjectRolePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more UserProjectRoles.
+     * @param {UserProjectRoleDeleteManyArgs} args - Arguments to filter UserProjectRoles to delete.
+     * @example
+     * // Delete a few UserProjectRoles
+     * const { count } = await prisma.userProjectRole.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends UserProjectRoleDeleteManyArgs>(args?: SelectSubset<T, UserProjectRoleDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserProjectRoles.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProjectRoleUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many UserProjectRoles
+     * const userProjectRole = await prisma.userProjectRole.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends UserProjectRoleUpdateManyArgs>(args: SelectSubset<T, UserProjectRoleUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserProjectRoles and returns the data updated in the database.
+     * @param {UserProjectRoleUpdateManyAndReturnArgs} args - Arguments to update many UserProjectRoles.
+     * @example
+     * // Update many UserProjectRoles
+     * const userProjectRole = await prisma.userProjectRole.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more UserProjectRoles and only return the `userId`
+     * const userProjectRoleWithUserIdOnly = await prisma.userProjectRole.updateManyAndReturn({
+     *   select: { userId: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends UserProjectRoleUpdateManyAndReturnArgs>(args: SelectSubset<T, UserProjectRoleUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserProjectRolePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one UserProjectRole.
+     * @param {UserProjectRoleUpsertArgs} args - Arguments to update or create a UserProjectRole.
+     * @example
+     * // Update or create a UserProjectRole
+     * const userProjectRole = await prisma.userProjectRole.upsert({
+     *   create: {
+     *     // ... data to create a UserProjectRole
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the UserProjectRole we want to update
+     *   }
+     * })
+     */
+    upsert<T extends UserProjectRoleUpsertArgs>(args: SelectSubset<T, UserProjectRoleUpsertArgs<ExtArgs>>): Prisma__UserProjectRoleClient<$Result.GetResult<Prisma.$UserProjectRolePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of UserProjectRoles.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProjectRoleCountArgs} args - Arguments to filter UserProjectRoles to count.
+     * @example
+     * // Count the number of UserProjectRoles
+     * const count = await prisma.userProjectRole.count({
+     *   where: {
+     *     // ... the filter for the UserProjectRoles we want to count
+     *   }
+     * })
+    **/
+    count<T extends UserProjectRoleCountArgs>(
+      args?: Subset<T, UserProjectRoleCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], UserProjectRoleCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a UserProjectRole.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProjectRoleAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends UserProjectRoleAggregateArgs>(args: Subset<T, UserProjectRoleAggregateArgs>): Prisma.PrismaPromise<GetUserProjectRoleAggregateType<T>>
+
+    /**
+     * Group by UserProjectRole.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProjectRoleGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends UserProjectRoleGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: UserProjectRoleGroupByArgs['orderBy'] }
+        : { orderBy?: UserProjectRoleGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, UserProjectRoleGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUserProjectRoleGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the UserProjectRole model
+   */
+  readonly fields: UserProjectRoleFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for UserProjectRole.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__UserProjectRoleClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    project<T extends ProjectDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProjectDefaultArgs<ExtArgs>>): Prisma__ProjectClient<$Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the UserProjectRole model
+   */
+  interface UserProjectRoleFieldRefs {
+    readonly userId: FieldRef<"UserProjectRole", 'String'>
+    readonly projectId: FieldRef<"UserProjectRole", 'String'>
+    readonly role: FieldRef<"UserProjectRole", 'UserRole'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * UserProjectRole findUnique
+   */
+  export type UserProjectRoleFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProjectRole
+     */
+    select?: UserProjectRoleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProjectRole
+     */
+    omit?: UserProjectRoleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProjectRoleInclude<ExtArgs> | null
+    /**
+     * Filter, which UserProjectRole to fetch.
+     */
+    where: UserProjectRoleWhereUniqueInput
+  }
+
+  /**
+   * UserProjectRole findUniqueOrThrow
+   */
+  export type UserProjectRoleFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProjectRole
+     */
+    select?: UserProjectRoleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProjectRole
+     */
+    omit?: UserProjectRoleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProjectRoleInclude<ExtArgs> | null
+    /**
+     * Filter, which UserProjectRole to fetch.
+     */
+    where: UserProjectRoleWhereUniqueInput
+  }
+
+  /**
+   * UserProjectRole findFirst
+   */
+  export type UserProjectRoleFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProjectRole
+     */
+    select?: UserProjectRoleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProjectRole
+     */
+    omit?: UserProjectRoleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProjectRoleInclude<ExtArgs> | null
+    /**
+     * Filter, which UserProjectRole to fetch.
+     */
+    where?: UserProjectRoleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserProjectRoles to fetch.
+     */
+    orderBy?: UserProjectRoleOrderByWithRelationInput | UserProjectRoleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserProjectRoles.
+     */
+    cursor?: UserProjectRoleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserProjectRoles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserProjectRoles.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserProjectRoles.
+     */
+    distinct?: UserProjectRoleScalarFieldEnum | UserProjectRoleScalarFieldEnum[]
+  }
+
+  /**
+   * UserProjectRole findFirstOrThrow
+   */
+  export type UserProjectRoleFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProjectRole
+     */
+    select?: UserProjectRoleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProjectRole
+     */
+    omit?: UserProjectRoleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProjectRoleInclude<ExtArgs> | null
+    /**
+     * Filter, which UserProjectRole to fetch.
+     */
+    where?: UserProjectRoleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserProjectRoles to fetch.
+     */
+    orderBy?: UserProjectRoleOrderByWithRelationInput | UserProjectRoleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserProjectRoles.
+     */
+    cursor?: UserProjectRoleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserProjectRoles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserProjectRoles.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserProjectRoles.
+     */
+    distinct?: UserProjectRoleScalarFieldEnum | UserProjectRoleScalarFieldEnum[]
+  }
+
+  /**
+   * UserProjectRole findMany
+   */
+  export type UserProjectRoleFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProjectRole
+     */
+    select?: UserProjectRoleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProjectRole
+     */
+    omit?: UserProjectRoleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProjectRoleInclude<ExtArgs> | null
+    /**
+     * Filter, which UserProjectRoles to fetch.
+     */
+    where?: UserProjectRoleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserProjectRoles to fetch.
+     */
+    orderBy?: UserProjectRoleOrderByWithRelationInput | UserProjectRoleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing UserProjectRoles.
+     */
+    cursor?: UserProjectRoleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserProjectRoles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserProjectRoles.
+     */
+    skip?: number
+    distinct?: UserProjectRoleScalarFieldEnum | UserProjectRoleScalarFieldEnum[]
+  }
+
+  /**
+   * UserProjectRole create
+   */
+  export type UserProjectRoleCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProjectRole
+     */
+    select?: UserProjectRoleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProjectRole
+     */
+    omit?: UserProjectRoleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProjectRoleInclude<ExtArgs> | null
+    /**
+     * The data needed to create a UserProjectRole.
+     */
+    data: XOR<UserProjectRoleCreateInput, UserProjectRoleUncheckedCreateInput>
+  }
+
+  /**
+   * UserProjectRole createMany
+   */
+  export type UserProjectRoleCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many UserProjectRoles.
+     */
+    data: UserProjectRoleCreateManyInput | UserProjectRoleCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * UserProjectRole createManyAndReturn
+   */
+  export type UserProjectRoleCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProjectRole
+     */
+    select?: UserProjectRoleSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProjectRole
+     */
+    omit?: UserProjectRoleOmit<ExtArgs> | null
+    /**
+     * The data used to create many UserProjectRoles.
+     */
+    data: UserProjectRoleCreateManyInput | UserProjectRoleCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProjectRoleIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserProjectRole update
+   */
+  export type UserProjectRoleUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProjectRole
+     */
+    select?: UserProjectRoleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProjectRole
+     */
+    omit?: UserProjectRoleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProjectRoleInclude<ExtArgs> | null
+    /**
+     * The data needed to update a UserProjectRole.
+     */
+    data: XOR<UserProjectRoleUpdateInput, UserProjectRoleUncheckedUpdateInput>
+    /**
+     * Choose, which UserProjectRole to update.
+     */
+    where: UserProjectRoleWhereUniqueInput
+  }
+
+  /**
+   * UserProjectRole updateMany
+   */
+  export type UserProjectRoleUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update UserProjectRoles.
+     */
+    data: XOR<UserProjectRoleUpdateManyMutationInput, UserProjectRoleUncheckedUpdateManyInput>
+    /**
+     * Filter which UserProjectRoles to update
+     */
+    where?: UserProjectRoleWhereInput
+    /**
+     * Limit how many UserProjectRoles to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserProjectRole updateManyAndReturn
+   */
+  export type UserProjectRoleUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProjectRole
+     */
+    select?: UserProjectRoleSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProjectRole
+     */
+    omit?: UserProjectRoleOmit<ExtArgs> | null
+    /**
+     * The data used to update UserProjectRoles.
+     */
+    data: XOR<UserProjectRoleUpdateManyMutationInput, UserProjectRoleUncheckedUpdateManyInput>
+    /**
+     * Filter which UserProjectRoles to update
+     */
+    where?: UserProjectRoleWhereInput
+    /**
+     * Limit how many UserProjectRoles to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProjectRoleIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserProjectRole upsert
+   */
+  export type UserProjectRoleUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProjectRole
+     */
+    select?: UserProjectRoleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProjectRole
+     */
+    omit?: UserProjectRoleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProjectRoleInclude<ExtArgs> | null
+    /**
+     * The filter to search for the UserProjectRole to update in case it exists.
+     */
+    where: UserProjectRoleWhereUniqueInput
+    /**
+     * In case the UserProjectRole found by the `where` argument doesn't exist, create a new UserProjectRole with this data.
+     */
+    create: XOR<UserProjectRoleCreateInput, UserProjectRoleUncheckedCreateInput>
+    /**
+     * In case the UserProjectRole was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<UserProjectRoleUpdateInput, UserProjectRoleUncheckedUpdateInput>
+  }
+
+  /**
+   * UserProjectRole delete
+   */
+  export type UserProjectRoleDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProjectRole
+     */
+    select?: UserProjectRoleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProjectRole
+     */
+    omit?: UserProjectRoleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProjectRoleInclude<ExtArgs> | null
+    /**
+     * Filter which UserProjectRole to delete.
+     */
+    where: UserProjectRoleWhereUniqueInput
+  }
+
+  /**
+   * UserProjectRole deleteMany
+   */
+  export type UserProjectRoleDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserProjectRoles to delete
+     */
+    where?: UserProjectRoleWhereInput
+    /**
+     * Limit how many UserProjectRoles to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserProjectRole without action
+   */
+  export type UserProjectRoleDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProjectRole
+     */
+    select?: UserProjectRoleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProjectRole
+     */
+    omit?: UserProjectRoleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProjectRoleInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model Project
    */
 
@@ -2305,21 +3488,18 @@ export namespace Prisma {
     id: string | null
     title: string | null
     createdAt: Date | null
-    ownerId: string | null
   }
 
   export type ProjectMaxAggregateOutputType = {
     id: string | null
     title: string | null
     createdAt: Date | null
-    ownerId: string | null
   }
 
   export type ProjectCountAggregateOutputType = {
     id: number
     title: number
     createdAt: number
-    ownerId: number
     _all: number
   }
 
@@ -2328,21 +3508,18 @@ export namespace Prisma {
     id?: true
     title?: true
     createdAt?: true
-    ownerId?: true
   }
 
   export type ProjectMaxAggregateInputType = {
     id?: true
     title?: true
     createdAt?: true
-    ownerId?: true
   }
 
   export type ProjectCountAggregateInputType = {
     id?: true
     title?: true
     createdAt?: true
-    ownerId?: true
     _all?: true
   }
 
@@ -2422,7 +3599,6 @@ export namespace Prisma {
     id: string
     title: string
     createdAt: Date
-    ownerId: string | null
     _count: ProjectCountAggregateOutputType | null
     _min: ProjectMinAggregateOutputType | null
     _max: ProjectMaxAggregateOutputType | null
@@ -2446,9 +3622,8 @@ export namespace Prisma {
     id?: boolean
     title?: boolean
     createdAt?: boolean
-    ownerId?: boolean
     documents?: boolean | Project$documentsArgs<ExtArgs>
-    owner?: boolean | Project$ownerArgs<ExtArgs>
+    users?: boolean | Project$usersArgs<ExtArgs>
     _count?: boolean | ProjectCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["project"]>
 
@@ -2456,49 +3631,39 @@ export namespace Prisma {
     id?: boolean
     title?: boolean
     createdAt?: boolean
-    ownerId?: boolean
-    owner?: boolean | Project$ownerArgs<ExtArgs>
   }, ExtArgs["result"]["project"]>
 
   export type ProjectSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     title?: boolean
     createdAt?: boolean
-    ownerId?: boolean
-    owner?: boolean | Project$ownerArgs<ExtArgs>
   }, ExtArgs["result"]["project"]>
 
   export type ProjectSelectScalar = {
     id?: boolean
     title?: boolean
     createdAt?: boolean
-    ownerId?: boolean
   }
 
-  export type ProjectOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "createdAt" | "ownerId", ExtArgs["result"]["project"]>
+  export type ProjectOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "createdAt", ExtArgs["result"]["project"]>
   export type ProjectInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     documents?: boolean | Project$documentsArgs<ExtArgs>
-    owner?: boolean | Project$ownerArgs<ExtArgs>
+    users?: boolean | Project$usersArgs<ExtArgs>
     _count?: boolean | ProjectCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type ProjectIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    owner?: boolean | Project$ownerArgs<ExtArgs>
-  }
-  export type ProjectIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    owner?: boolean | Project$ownerArgs<ExtArgs>
-  }
+  export type ProjectIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type ProjectIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $ProjectPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Project"
     objects: {
       documents: Prisma.$DocumentPayload<ExtArgs>[]
-      owner: Prisma.$UserPayload<ExtArgs> | null
+      users: Prisma.$UserProjectRolePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       title: string
       createdAt: Date
-      ownerId: string | null
     }, ExtArgs["result"]["project"]>
     composites: {}
   }
@@ -2894,7 +4059,7 @@ export namespace Prisma {
   export interface Prisma__ProjectClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     documents<T extends Project$documentsArgs<ExtArgs> = {}>(args?: Subset<T, Project$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    owner<T extends Project$ownerArgs<ExtArgs> = {}>(args?: Subset<T, Project$ownerArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    users<T extends Project$usersArgs<ExtArgs> = {}>(args?: Subset<T, Project$usersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserProjectRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2927,7 +4092,6 @@ export namespace Prisma {
     readonly id: FieldRef<"Project", 'String'>
     readonly title: FieldRef<"Project", 'String'>
     readonly createdAt: FieldRef<"Project", 'DateTime'>
-    readonly ownerId: FieldRef<"Project", 'String'>
   }
     
 
@@ -3177,10 +4341,6 @@ export namespace Prisma {
      */
     data: ProjectCreateManyInput | ProjectCreateManyInput[]
     skipDuplicates?: boolean
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ProjectIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -3251,10 +4411,6 @@ export namespace Prisma {
      * Limit how many Projects to update.
      */
     limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ProjectIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -3348,22 +4504,27 @@ export namespace Prisma {
   }
 
   /**
-   * Project.owner
+   * Project.users
    */
-  export type Project$ownerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type Project$usersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the User
+     * Select specific fields to fetch from the UserProjectRole
      */
-    select?: UserSelect<ExtArgs> | null
+    select?: UserProjectRoleSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the User
+     * Omit specific fields from the UserProjectRole
      */
-    omit?: UserOmit<ExtArgs> | null
+    omit?: UserProjectRoleOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: UserInclude<ExtArgs> | null
-    where?: UserWhereInput
+    include?: UserProjectRoleInclude<ExtArgs> | null
+    where?: UserProjectRoleWhereInput
+    orderBy?: UserProjectRoleOrderByWithRelationInput | UserProjectRoleOrderByWithRelationInput[]
+    cursor?: UserProjectRoleWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserProjectRoleScalarFieldEnum | UserProjectRoleScalarFieldEnum[]
   }
 
   /**
@@ -5505,18 +6666,27 @@ export namespace Prisma {
   export const UserScalarFieldEnum: {
     id: 'id',
     createdAt: 'createdAt',
-    email: 'email',
-    name: 'name'
+    name: 'name',
+    photoUrl: 'photoUrl',
+    authProvider: 'authProvider'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
+  export const UserProjectRoleScalarFieldEnum: {
+    userId: 'userId',
+    projectId: 'projectId',
+    role: 'role'
+  };
+
+  export type UserProjectRoleScalarFieldEnum = (typeof UserProjectRoleScalarFieldEnum)[keyof typeof UserProjectRoleScalarFieldEnum]
+
+
   export const ProjectScalarFieldEnum: {
     id: 'id',
     title: 'title',
-    createdAt: 'createdAt',
-    ownerId: 'ownerId'
+    createdAt: 'createdAt'
   };
 
   export type ProjectScalarFieldEnum = (typeof ProjectScalarFieldEnum)[keyof typeof ProjectScalarFieldEnum]
@@ -5616,6 +6786,34 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'AuthProvider'
+   */
+  export type EnumAuthProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuthProvider'>
+    
+
+
+  /**
+   * Reference to a field of type 'AuthProvider[]'
+   */
+  export type ListEnumAuthProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuthProvider[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'UserRole'
+   */
+  export type EnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole'>
+    
+
+
+  /**
+   * Reference to a field of type 'UserRole[]'
+   */
+  export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Json'
    */
   export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
@@ -5652,35 +6850,39 @@ export namespace Prisma {
     NOT?: UserWhereInput | UserWhereInput[]
     id?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
-    email?: StringFilter<"User"> | string
     name?: StringFilter<"User"> | string
-    projects?: ProjectListRelationFilter
+    photoUrl?: StringNullableFilter<"User"> | string | null
+    authProvider?: EnumAuthProviderFilter<"User"> | $Enums.AuthProvider
+    inProjects?: UserProjectRoleListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
     id?: SortOrder
     createdAt?: SortOrder
-    email?: SortOrder
     name?: SortOrder
-    projects?: ProjectOrderByRelationAggregateInput
+    photoUrl?: SortOrderInput | SortOrder
+    authProvider?: SortOrder
+    inProjects?: UserProjectRoleOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    email?: string
     AND?: UserWhereInput | UserWhereInput[]
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
     createdAt?: DateTimeFilter<"User"> | Date | string
     name?: StringFilter<"User"> | string
-    projects?: ProjectListRelationFilter
-  }, "id" | "email">
+    photoUrl?: StringNullableFilter<"User"> | string | null
+    authProvider?: EnumAuthProviderFilter<"User"> | $Enums.AuthProvider
+    inProjects?: UserProjectRoleListRelationFilter
+  }, "id">
 
   export type UserOrderByWithAggregationInput = {
     id?: SortOrder
     createdAt?: SortOrder
-    email?: SortOrder
     name?: SortOrder
+    photoUrl?: SortOrderInput | SortOrder
+    authProvider?: SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
@@ -5692,8 +6894,58 @@ export namespace Prisma {
     NOT?: UserScalarWhereWithAggregatesInput | UserScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"User"> | string
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
-    email?: StringWithAggregatesFilter<"User"> | string
     name?: StringWithAggregatesFilter<"User"> | string
+    photoUrl?: StringNullableWithAggregatesFilter<"User"> | string | null
+    authProvider?: EnumAuthProviderWithAggregatesFilter<"User"> | $Enums.AuthProvider
+  }
+
+  export type UserProjectRoleWhereInput = {
+    AND?: UserProjectRoleWhereInput | UserProjectRoleWhereInput[]
+    OR?: UserProjectRoleWhereInput[]
+    NOT?: UserProjectRoleWhereInput | UserProjectRoleWhereInput[]
+    userId?: StringFilter<"UserProjectRole"> | string
+    projectId?: StringFilter<"UserProjectRole"> | string
+    role?: EnumUserRoleFilter<"UserProjectRole"> | $Enums.UserRole
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    project?: XOR<ProjectScalarRelationFilter, ProjectWhereInput>
+  }
+
+  export type UserProjectRoleOrderByWithRelationInput = {
+    userId?: SortOrder
+    projectId?: SortOrder
+    role?: SortOrder
+    user?: UserOrderByWithRelationInput
+    project?: ProjectOrderByWithRelationInput
+  }
+
+  export type UserProjectRoleWhereUniqueInput = Prisma.AtLeast<{
+    userId_projectId?: UserProjectRoleUserIdProjectIdCompoundUniqueInput
+    AND?: UserProjectRoleWhereInput | UserProjectRoleWhereInput[]
+    OR?: UserProjectRoleWhereInput[]
+    NOT?: UserProjectRoleWhereInput | UserProjectRoleWhereInput[]
+    userId?: StringFilter<"UserProjectRole"> | string
+    projectId?: StringFilter<"UserProjectRole"> | string
+    role?: EnumUserRoleFilter<"UserProjectRole"> | $Enums.UserRole
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    project?: XOR<ProjectScalarRelationFilter, ProjectWhereInput>
+  }, "userId_projectId">
+
+  export type UserProjectRoleOrderByWithAggregationInput = {
+    userId?: SortOrder
+    projectId?: SortOrder
+    role?: SortOrder
+    _count?: UserProjectRoleCountOrderByAggregateInput
+    _max?: UserProjectRoleMaxOrderByAggregateInput
+    _min?: UserProjectRoleMinOrderByAggregateInput
+  }
+
+  export type UserProjectRoleScalarWhereWithAggregatesInput = {
+    AND?: UserProjectRoleScalarWhereWithAggregatesInput | UserProjectRoleScalarWhereWithAggregatesInput[]
+    OR?: UserProjectRoleScalarWhereWithAggregatesInput[]
+    NOT?: UserProjectRoleScalarWhereWithAggregatesInput | UserProjectRoleScalarWhereWithAggregatesInput[]
+    userId?: StringWithAggregatesFilter<"UserProjectRole"> | string
+    projectId?: StringWithAggregatesFilter<"UserProjectRole"> | string
+    role?: EnumUserRoleWithAggregatesFilter<"UserProjectRole"> | $Enums.UserRole
   }
 
   export type ProjectWhereInput = {
@@ -5703,18 +6955,16 @@ export namespace Prisma {
     id?: StringFilter<"Project"> | string
     title?: StringFilter<"Project"> | string
     createdAt?: DateTimeFilter<"Project"> | Date | string
-    ownerId?: StringNullableFilter<"Project"> | string | null
     documents?: DocumentListRelationFilter
-    owner?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    users?: UserProjectRoleListRelationFilter
   }
 
   export type ProjectOrderByWithRelationInput = {
     id?: SortOrder
     title?: SortOrder
     createdAt?: SortOrder
-    ownerId?: SortOrderInput | SortOrder
     documents?: DocumentOrderByRelationAggregateInput
-    owner?: UserOrderByWithRelationInput
+    users?: UserProjectRoleOrderByRelationAggregateInput
   }
 
   export type ProjectWhereUniqueInput = Prisma.AtLeast<{
@@ -5724,16 +6974,14 @@ export namespace Prisma {
     NOT?: ProjectWhereInput | ProjectWhereInput[]
     title?: StringFilter<"Project"> | string
     createdAt?: DateTimeFilter<"Project"> | Date | string
-    ownerId?: StringNullableFilter<"Project"> | string | null
     documents?: DocumentListRelationFilter
-    owner?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    users?: UserProjectRoleListRelationFilter
   }, "id">
 
   export type ProjectOrderByWithAggregationInput = {
     id?: SortOrder
     title?: SortOrder
     createdAt?: SortOrder
-    ownerId?: SortOrderInput | SortOrder
     _count?: ProjectCountOrderByAggregateInput
     _max?: ProjectMaxOrderByAggregateInput
     _min?: ProjectMinOrderByAggregateInput
@@ -5746,7 +6994,6 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Project"> | string
     title?: StringWithAggregatesFilter<"Project"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Project"> | Date | string
-    ownerId?: StringNullableWithAggregatesFilter<"Project"> | string | null
   }
 
   export type FieldWhereInput = {
@@ -5849,56 +7096,103 @@ export namespace Prisma {
   }
 
   export type UserCreateInput = {
-    id?: string
+    id: string
     createdAt?: Date | string
-    email: string
     name: string
-    projects?: ProjectCreateNestedManyWithoutOwnerInput
+    photoUrl?: string | null
+    authProvider: $Enums.AuthProvider
+    inProjects?: UserProjectRoleCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
-    id?: string
+    id: string
     createdAt?: Date | string
-    email: string
     name: string
-    projects?: ProjectUncheckedCreateNestedManyWithoutOwnerInput
+    photoUrl?: string | null
+    authProvider: $Enums.AuthProvider
+    inProjects?: UserProjectRoleUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    projects?: ProjectUpdateManyWithoutOwnerNestedInput
+    photoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    inProjects?: UserProjectRoleUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    projects?: ProjectUncheckedUpdateManyWithoutOwnerNestedInput
+    photoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+    inProjects?: UserProjectRoleUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
-    id?: string
+    id: string
     createdAt?: Date | string
-    email: string
     name: string
+    photoUrl?: string | null
+    authProvider: $Enums.AuthProvider
   }
 
   export type UserUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    photoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
   }
 
   export type UserUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    photoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
+  }
+
+  export type UserProjectRoleCreateInput = {
+    role: $Enums.UserRole
+    user: UserCreateNestedOneWithoutInProjectsInput
+    project: ProjectCreateNestedOneWithoutUsersInput
+  }
+
+  export type UserProjectRoleUncheckedCreateInput = {
+    userId: string
+    projectId: string
+    role: $Enums.UserRole
+  }
+
+  export type UserProjectRoleUpdateInput = {
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    user?: UserUpdateOneRequiredWithoutInProjectsNestedInput
+    project?: ProjectUpdateOneRequiredWithoutUsersNestedInput
+  }
+
+  export type UserProjectRoleUncheckedUpdateInput = {
+    userId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  }
+
+  export type UserProjectRoleCreateManyInput = {
+    userId: string
+    projectId: string
+    role: $Enums.UserRole
+  }
+
+  export type UserProjectRoleUpdateManyMutationInput = {
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  }
+
+  export type UserProjectRoleUncheckedUpdateManyInput = {
+    userId?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   }
 
   export type ProjectCreateInput = {
@@ -5906,15 +7200,15 @@ export namespace Prisma {
     title: string
     createdAt?: Date | string
     documents?: DocumentCreateNestedManyWithoutProjectInput
-    owner?: UserCreateNestedOneWithoutProjectsInput
+    users?: UserProjectRoleCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateInput = {
     id?: string
     title: string
     createdAt?: Date | string
-    ownerId?: string | null
     documents?: DocumentUncheckedCreateNestedManyWithoutProjectInput
+    users?: UserProjectRoleUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUpdateInput = {
@@ -5922,22 +7216,21 @@ export namespace Prisma {
     title?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     documents?: DocumentUpdateManyWithoutProjectNestedInput
-    owner?: UserUpdateOneWithoutProjectsNestedInput
+    users?: UserProjectRoleUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    ownerId?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: DocumentUncheckedUpdateManyWithoutProjectNestedInput
+    users?: UserProjectRoleUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectCreateManyInput = {
     id?: string
     title: string
     createdAt?: Date | string
-    ownerId?: string | null
   }
 
   export type ProjectUpdateManyMutationInput = {
@@ -5950,7 +7243,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    ownerId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type FieldCreateInput = {
@@ -6072,35 +7364,65 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
-  export type ProjectListRelationFilter = {
-    every?: ProjectWhereInput
-    some?: ProjectWhereInput
-    none?: ProjectWhereInput
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
-  export type ProjectOrderByRelationAggregateInput = {
+  export type EnumAuthProviderFilter<$PrismaModel = never> = {
+    equals?: $Enums.AuthProvider | EnumAuthProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumAuthProviderFilter<$PrismaModel> | $Enums.AuthProvider
+  }
+
+  export type UserProjectRoleListRelationFilter = {
+    every?: UserProjectRoleWhereInput
+    some?: UserProjectRoleWhereInput
+    none?: UserProjectRoleWhereInput
+  }
+
+  export type SortOrderInput = {
+    sort: SortOrder
+    nulls?: NullsOrder
+  }
+
+  export type UserProjectRoleOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
   export type UserCountOrderByAggregateInput = {
     id?: SortOrder
     createdAt?: SortOrder
-    email?: SortOrder
     name?: SortOrder
+    photoUrl?: SortOrder
+    authProvider?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
     id?: SortOrder
     createdAt?: SortOrder
-    email?: SortOrder
     name?: SortOrder
+    photoUrl?: SortOrder
+    authProvider?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
     id?: SortOrder
     createdAt?: SortOrder
-    email?: SortOrder
     name?: SortOrder
+    photoUrl?: SortOrder
+    authProvider?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -6135,62 +7457,6 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
-  export type StringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type DocumentListRelationFilter = {
-    every?: DocumentWhereInput
-    some?: DocumentWhereInput
-    none?: DocumentWhereInput
-  }
-
-  export type UserNullableScalarRelationFilter = {
-    is?: UserWhereInput | null
-    isNot?: UserWhereInput | null
-  }
-
-  export type SortOrderInput = {
-    sort: SortOrder
-    nulls?: NullsOrder
-  }
-
-  export type DocumentOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type ProjectCountOrderByAggregateInput = {
-    id?: SortOrder
-    title?: SortOrder
-    createdAt?: SortOrder
-    ownerId?: SortOrder
-  }
-
-  export type ProjectMaxOrderByAggregateInput = {
-    id?: SortOrder
-    title?: SortOrder
-    createdAt?: SortOrder
-    ownerId?: SortOrder
-  }
-
-  export type ProjectMinOrderByAggregateInput = {
-    id?: SortOrder
-    title?: SortOrder
-    createdAt?: SortOrder
-    ownerId?: SortOrder
-  }
-
   export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -6207,6 +7473,94 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type EnumAuthProviderWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.AuthProvider | EnumAuthProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumAuthProviderWithAggregatesFilter<$PrismaModel> | $Enums.AuthProvider
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumAuthProviderFilter<$PrismaModel>
+    _max?: NestedEnumAuthProviderFilter<$PrismaModel>
+  }
+
+  export type EnumUserRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
+  }
+
+  export type UserScalarRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
+  }
+
+  export type ProjectScalarRelationFilter = {
+    is?: ProjectWhereInput
+    isNot?: ProjectWhereInput
+  }
+
+  export type UserProjectRoleUserIdProjectIdCompoundUniqueInput = {
+    userId: string
+    projectId: string
+  }
+
+  export type UserProjectRoleCountOrderByAggregateInput = {
+    userId?: SortOrder
+    projectId?: SortOrder
+    role?: SortOrder
+  }
+
+  export type UserProjectRoleMaxOrderByAggregateInput = {
+    userId?: SortOrder
+    projectId?: SortOrder
+    role?: SortOrder
+  }
+
+  export type UserProjectRoleMinOrderByAggregateInput = {
+    userId?: SortOrder
+    projectId?: SortOrder
+    role?: SortOrder
+  }
+
+  export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumUserRoleFilter<$PrismaModel>
+    _max?: NestedEnumUserRoleFilter<$PrismaModel>
+  }
+
+  export type DocumentListRelationFilter = {
+    every?: DocumentWhereInput
+    some?: DocumentWhereInput
+    none?: DocumentWhereInput
+  }
+
+  export type DocumentOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ProjectCountOrderByAggregateInput = {
+    id?: SortOrder
+    title?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ProjectMaxOrderByAggregateInput = {
+    id?: SortOrder
+    title?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ProjectMinOrderByAggregateInput = {
+    id?: SortOrder
+    title?: SortOrder
+    createdAt?: SortOrder
   }
   export type JsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -6290,11 +7644,6 @@ export namespace Prisma {
     none?: FieldWhereInput
   }
 
-  export type ProjectScalarRelationFilter = {
-    is?: ProjectWhereInput
-    isNot?: ProjectWhereInput
-  }
-
   export type FieldOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -6320,18 +7669,18 @@ export namespace Prisma {
     projectId?: SortOrder
   }
 
-  export type ProjectCreateNestedManyWithoutOwnerInput = {
-    create?: XOR<ProjectCreateWithoutOwnerInput, ProjectUncheckedCreateWithoutOwnerInput> | ProjectCreateWithoutOwnerInput[] | ProjectUncheckedCreateWithoutOwnerInput[]
-    connectOrCreate?: ProjectCreateOrConnectWithoutOwnerInput | ProjectCreateOrConnectWithoutOwnerInput[]
-    createMany?: ProjectCreateManyOwnerInputEnvelope
-    connect?: ProjectWhereUniqueInput | ProjectWhereUniqueInput[]
+  export type UserProjectRoleCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserProjectRoleCreateWithoutUserInput, UserProjectRoleUncheckedCreateWithoutUserInput> | UserProjectRoleCreateWithoutUserInput[] | UserProjectRoleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserProjectRoleCreateOrConnectWithoutUserInput | UserProjectRoleCreateOrConnectWithoutUserInput[]
+    createMany?: UserProjectRoleCreateManyUserInputEnvelope
+    connect?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
   }
 
-  export type ProjectUncheckedCreateNestedManyWithoutOwnerInput = {
-    create?: XOR<ProjectCreateWithoutOwnerInput, ProjectUncheckedCreateWithoutOwnerInput> | ProjectCreateWithoutOwnerInput[] | ProjectUncheckedCreateWithoutOwnerInput[]
-    connectOrCreate?: ProjectCreateOrConnectWithoutOwnerInput | ProjectCreateOrConnectWithoutOwnerInput[]
-    createMany?: ProjectCreateManyOwnerInputEnvelope
-    connect?: ProjectWhereUniqueInput | ProjectWhereUniqueInput[]
+  export type UserProjectRoleUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserProjectRoleCreateWithoutUserInput, UserProjectRoleUncheckedCreateWithoutUserInput> | UserProjectRoleCreateWithoutUserInput[] | UserProjectRoleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserProjectRoleCreateOrConnectWithoutUserInput | UserProjectRoleCreateOrConnectWithoutUserInput[]
+    createMany?: UserProjectRoleCreateManyUserInputEnvelope
+    connect?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -6342,32 +7691,72 @@ export namespace Prisma {
     set?: Date | string
   }
 
-  export type ProjectUpdateManyWithoutOwnerNestedInput = {
-    create?: XOR<ProjectCreateWithoutOwnerInput, ProjectUncheckedCreateWithoutOwnerInput> | ProjectCreateWithoutOwnerInput[] | ProjectUncheckedCreateWithoutOwnerInput[]
-    connectOrCreate?: ProjectCreateOrConnectWithoutOwnerInput | ProjectCreateOrConnectWithoutOwnerInput[]
-    upsert?: ProjectUpsertWithWhereUniqueWithoutOwnerInput | ProjectUpsertWithWhereUniqueWithoutOwnerInput[]
-    createMany?: ProjectCreateManyOwnerInputEnvelope
-    set?: ProjectWhereUniqueInput | ProjectWhereUniqueInput[]
-    disconnect?: ProjectWhereUniqueInput | ProjectWhereUniqueInput[]
-    delete?: ProjectWhereUniqueInput | ProjectWhereUniqueInput[]
-    connect?: ProjectWhereUniqueInput | ProjectWhereUniqueInput[]
-    update?: ProjectUpdateWithWhereUniqueWithoutOwnerInput | ProjectUpdateWithWhereUniqueWithoutOwnerInput[]
-    updateMany?: ProjectUpdateManyWithWhereWithoutOwnerInput | ProjectUpdateManyWithWhereWithoutOwnerInput[]
-    deleteMany?: ProjectScalarWhereInput | ProjectScalarWhereInput[]
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
   }
 
-  export type ProjectUncheckedUpdateManyWithoutOwnerNestedInput = {
-    create?: XOR<ProjectCreateWithoutOwnerInput, ProjectUncheckedCreateWithoutOwnerInput> | ProjectCreateWithoutOwnerInput[] | ProjectUncheckedCreateWithoutOwnerInput[]
-    connectOrCreate?: ProjectCreateOrConnectWithoutOwnerInput | ProjectCreateOrConnectWithoutOwnerInput[]
-    upsert?: ProjectUpsertWithWhereUniqueWithoutOwnerInput | ProjectUpsertWithWhereUniqueWithoutOwnerInput[]
-    createMany?: ProjectCreateManyOwnerInputEnvelope
-    set?: ProjectWhereUniqueInput | ProjectWhereUniqueInput[]
-    disconnect?: ProjectWhereUniqueInput | ProjectWhereUniqueInput[]
-    delete?: ProjectWhereUniqueInput | ProjectWhereUniqueInput[]
-    connect?: ProjectWhereUniqueInput | ProjectWhereUniqueInput[]
-    update?: ProjectUpdateWithWhereUniqueWithoutOwnerInput | ProjectUpdateWithWhereUniqueWithoutOwnerInput[]
-    updateMany?: ProjectUpdateManyWithWhereWithoutOwnerInput | ProjectUpdateManyWithWhereWithoutOwnerInput[]
-    deleteMany?: ProjectScalarWhereInput | ProjectScalarWhereInput[]
+  export type EnumAuthProviderFieldUpdateOperationsInput = {
+    set?: $Enums.AuthProvider
+  }
+
+  export type UserProjectRoleUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserProjectRoleCreateWithoutUserInput, UserProjectRoleUncheckedCreateWithoutUserInput> | UserProjectRoleCreateWithoutUserInput[] | UserProjectRoleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserProjectRoleCreateOrConnectWithoutUserInput | UserProjectRoleCreateOrConnectWithoutUserInput[]
+    upsert?: UserProjectRoleUpsertWithWhereUniqueWithoutUserInput | UserProjectRoleUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserProjectRoleCreateManyUserInputEnvelope
+    set?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    disconnect?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    delete?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    connect?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    update?: UserProjectRoleUpdateWithWhereUniqueWithoutUserInput | UserProjectRoleUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserProjectRoleUpdateManyWithWhereWithoutUserInput | UserProjectRoleUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserProjectRoleScalarWhereInput | UserProjectRoleScalarWhereInput[]
+  }
+
+  export type UserProjectRoleUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserProjectRoleCreateWithoutUserInput, UserProjectRoleUncheckedCreateWithoutUserInput> | UserProjectRoleCreateWithoutUserInput[] | UserProjectRoleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserProjectRoleCreateOrConnectWithoutUserInput | UserProjectRoleCreateOrConnectWithoutUserInput[]
+    upsert?: UserProjectRoleUpsertWithWhereUniqueWithoutUserInput | UserProjectRoleUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserProjectRoleCreateManyUserInputEnvelope
+    set?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    disconnect?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    delete?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    connect?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    update?: UserProjectRoleUpdateWithWhereUniqueWithoutUserInput | UserProjectRoleUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserProjectRoleUpdateManyWithWhereWithoutUserInput | UserProjectRoleUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserProjectRoleScalarWhereInput | UserProjectRoleScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutInProjectsInput = {
+    create?: XOR<UserCreateWithoutInProjectsInput, UserUncheckedCreateWithoutInProjectsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutInProjectsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type ProjectCreateNestedOneWithoutUsersInput = {
+    create?: XOR<ProjectCreateWithoutUsersInput, ProjectUncheckedCreateWithoutUsersInput>
+    connectOrCreate?: ProjectCreateOrConnectWithoutUsersInput
+    connect?: ProjectWhereUniqueInput
+  }
+
+  export type EnumUserRoleFieldUpdateOperationsInput = {
+    set?: $Enums.UserRole
+  }
+
+  export type UserUpdateOneRequiredWithoutInProjectsNestedInput = {
+    create?: XOR<UserCreateWithoutInProjectsInput, UserUncheckedCreateWithoutInProjectsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutInProjectsInput
+    upsert?: UserUpsertWithoutInProjectsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutInProjectsInput, UserUpdateWithoutInProjectsInput>, UserUncheckedUpdateWithoutInProjectsInput>
+  }
+
+  export type ProjectUpdateOneRequiredWithoutUsersNestedInput = {
+    create?: XOR<ProjectCreateWithoutUsersInput, ProjectUncheckedCreateWithoutUsersInput>
+    connectOrCreate?: ProjectCreateOrConnectWithoutUsersInput
+    upsert?: ProjectUpsertWithoutUsersInput
+    connect?: ProjectWhereUniqueInput
+    update?: XOR<XOR<ProjectUpdateToOneWithWhereWithoutUsersInput, ProjectUpdateWithoutUsersInput>, ProjectUncheckedUpdateWithoutUsersInput>
   }
 
   export type DocumentCreateNestedManyWithoutProjectInput = {
@@ -6377,10 +7766,11 @@ export namespace Prisma {
     connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
   }
 
-  export type UserCreateNestedOneWithoutProjectsInput = {
-    create?: XOR<UserCreateWithoutProjectsInput, UserUncheckedCreateWithoutProjectsInput>
-    connectOrCreate?: UserCreateOrConnectWithoutProjectsInput
-    connect?: UserWhereUniqueInput
+  export type UserProjectRoleCreateNestedManyWithoutProjectInput = {
+    create?: XOR<UserProjectRoleCreateWithoutProjectInput, UserProjectRoleUncheckedCreateWithoutProjectInput> | UserProjectRoleCreateWithoutProjectInput[] | UserProjectRoleUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: UserProjectRoleCreateOrConnectWithoutProjectInput | UserProjectRoleCreateOrConnectWithoutProjectInput[]
+    createMany?: UserProjectRoleCreateManyProjectInputEnvelope
+    connect?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
   }
 
   export type DocumentUncheckedCreateNestedManyWithoutProjectInput = {
@@ -6388,6 +7778,13 @@ export namespace Prisma {
     connectOrCreate?: DocumentCreateOrConnectWithoutProjectInput | DocumentCreateOrConnectWithoutProjectInput[]
     createMany?: DocumentCreateManyProjectInputEnvelope
     connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+  }
+
+  export type UserProjectRoleUncheckedCreateNestedManyWithoutProjectInput = {
+    create?: XOR<UserProjectRoleCreateWithoutProjectInput, UserProjectRoleUncheckedCreateWithoutProjectInput> | UserProjectRoleCreateWithoutProjectInput[] | UserProjectRoleUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: UserProjectRoleCreateOrConnectWithoutProjectInput | UserProjectRoleCreateOrConnectWithoutProjectInput[]
+    createMany?: UserProjectRoleCreateManyProjectInputEnvelope
+    connect?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
   }
 
   export type DocumentUpdateManyWithoutProjectNestedInput = {
@@ -6404,18 +7801,18 @@ export namespace Prisma {
     deleteMany?: DocumentScalarWhereInput | DocumentScalarWhereInput[]
   }
 
-  export type UserUpdateOneWithoutProjectsNestedInput = {
-    create?: XOR<UserCreateWithoutProjectsInput, UserUncheckedCreateWithoutProjectsInput>
-    connectOrCreate?: UserCreateOrConnectWithoutProjectsInput
-    upsert?: UserUpsertWithoutProjectsInput
-    disconnect?: UserWhereInput | boolean
-    delete?: UserWhereInput | boolean
-    connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProjectsInput, UserUpdateWithoutProjectsInput>, UserUncheckedUpdateWithoutProjectsInput>
-  }
-
-  export type NullableStringFieldUpdateOperationsInput = {
-    set?: string | null
+  export type UserProjectRoleUpdateManyWithoutProjectNestedInput = {
+    create?: XOR<UserProjectRoleCreateWithoutProjectInput, UserProjectRoleUncheckedCreateWithoutProjectInput> | UserProjectRoleCreateWithoutProjectInput[] | UserProjectRoleUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: UserProjectRoleCreateOrConnectWithoutProjectInput | UserProjectRoleCreateOrConnectWithoutProjectInput[]
+    upsert?: UserProjectRoleUpsertWithWhereUniqueWithoutProjectInput | UserProjectRoleUpsertWithWhereUniqueWithoutProjectInput[]
+    createMany?: UserProjectRoleCreateManyProjectInputEnvelope
+    set?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    disconnect?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    delete?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    connect?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    update?: UserProjectRoleUpdateWithWhereUniqueWithoutProjectInput | UserProjectRoleUpdateWithWhereUniqueWithoutProjectInput[]
+    updateMany?: UserProjectRoleUpdateManyWithWhereWithoutProjectInput | UserProjectRoleUpdateManyWithWhereWithoutProjectInput[]
+    deleteMany?: UserProjectRoleScalarWhereInput | UserProjectRoleScalarWhereInput[]
   }
 
   export type DocumentUncheckedUpdateManyWithoutProjectNestedInput = {
@@ -6430,6 +7827,20 @@ export namespace Prisma {
     update?: DocumentUpdateWithWhereUniqueWithoutProjectInput | DocumentUpdateWithWhereUniqueWithoutProjectInput[]
     updateMany?: DocumentUpdateManyWithWhereWithoutProjectInput | DocumentUpdateManyWithWhereWithoutProjectInput[]
     deleteMany?: DocumentScalarWhereInput | DocumentScalarWhereInput[]
+  }
+
+  export type UserProjectRoleUncheckedUpdateManyWithoutProjectNestedInput = {
+    create?: XOR<UserProjectRoleCreateWithoutProjectInput, UserProjectRoleUncheckedCreateWithoutProjectInput> | UserProjectRoleCreateWithoutProjectInput[] | UserProjectRoleUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: UserProjectRoleCreateOrConnectWithoutProjectInput | UserProjectRoleCreateOrConnectWithoutProjectInput[]
+    upsert?: UserProjectRoleUpsertWithWhereUniqueWithoutProjectInput | UserProjectRoleUpsertWithWhereUniqueWithoutProjectInput[]
+    createMany?: UserProjectRoleCreateManyProjectInputEnvelope
+    set?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    disconnect?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    delete?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    connect?: UserProjectRoleWhereUniqueInput | UserProjectRoleWhereUniqueInput[]
+    update?: UserProjectRoleUpdateWithWhereUniqueWithoutProjectInput | UserProjectRoleUpdateWithWhereUniqueWithoutProjectInput[]
+    updateMany?: UserProjectRoleUpdateManyWithWhereWithoutProjectInput | UserProjectRoleUpdateManyWithWhereWithoutProjectInput[]
+    deleteMany?: UserProjectRoleScalarWhereInput | UserProjectRoleScalarWhereInput[]
   }
 
   export type DocumentCreateNestedOneWithoutFieldsInput = {
@@ -6527,6 +7938,27 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type NestedStringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type NestedEnumAuthProviderFilter<$PrismaModel = never> = {
+    equals?: $Enums.AuthProvider | EnumAuthProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumAuthProviderFilter<$PrismaModel> | $Enums.AuthProvider
+  }
+
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -6569,20 +8001,6 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
-  export type NestedStringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -6610,6 +8028,33 @@ export namespace Prisma {
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
+
+  export type NestedEnumAuthProviderWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.AuthProvider | EnumAuthProviderFieldRefInput<$PrismaModel>
+    in?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    notIn?: $Enums.AuthProvider[] | ListEnumAuthProviderFieldRefInput<$PrismaModel>
+    not?: NestedEnumAuthProviderWithAggregatesFilter<$PrismaModel> | $Enums.AuthProvider
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumAuthProviderFilter<$PrismaModel>
+    _max?: NestedEnumAuthProviderFilter<$PrismaModel>
+  }
+
+  export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
+  }
+
+  export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumUserRoleFilter<$PrismaModel>
+    _max?: NestedEnumUserRoleFilter<$PrismaModel>
+  }
   export type NestedJsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
         Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
@@ -6634,54 +8079,141 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
-  export type ProjectCreateWithoutOwnerInput = {
+  export type UserProjectRoleCreateWithoutUserInput = {
+    role: $Enums.UserRole
+    project: ProjectCreateNestedOneWithoutUsersInput
+  }
+
+  export type UserProjectRoleUncheckedCreateWithoutUserInput = {
+    projectId: string
+    role: $Enums.UserRole
+  }
+
+  export type UserProjectRoleCreateOrConnectWithoutUserInput = {
+    where: UserProjectRoleWhereUniqueInput
+    create: XOR<UserProjectRoleCreateWithoutUserInput, UserProjectRoleUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserProjectRoleCreateManyUserInputEnvelope = {
+    data: UserProjectRoleCreateManyUserInput | UserProjectRoleCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type UserProjectRoleUpsertWithWhereUniqueWithoutUserInput = {
+    where: UserProjectRoleWhereUniqueInput
+    update: XOR<UserProjectRoleUpdateWithoutUserInput, UserProjectRoleUncheckedUpdateWithoutUserInput>
+    create: XOR<UserProjectRoleCreateWithoutUserInput, UserProjectRoleUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserProjectRoleUpdateWithWhereUniqueWithoutUserInput = {
+    where: UserProjectRoleWhereUniqueInput
+    data: XOR<UserProjectRoleUpdateWithoutUserInput, UserProjectRoleUncheckedUpdateWithoutUserInput>
+  }
+
+  export type UserProjectRoleUpdateManyWithWhereWithoutUserInput = {
+    where: UserProjectRoleScalarWhereInput
+    data: XOR<UserProjectRoleUpdateManyMutationInput, UserProjectRoleUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type UserProjectRoleScalarWhereInput = {
+    AND?: UserProjectRoleScalarWhereInput | UserProjectRoleScalarWhereInput[]
+    OR?: UserProjectRoleScalarWhereInput[]
+    NOT?: UserProjectRoleScalarWhereInput | UserProjectRoleScalarWhereInput[]
+    userId?: StringFilter<"UserProjectRole"> | string
+    projectId?: StringFilter<"UserProjectRole"> | string
+    role?: EnumUserRoleFilter<"UserProjectRole"> | $Enums.UserRole
+  }
+
+  export type UserCreateWithoutInProjectsInput = {
+    id: string
+    createdAt?: Date | string
+    name: string
+    photoUrl?: string | null
+    authProvider: $Enums.AuthProvider
+  }
+
+  export type UserUncheckedCreateWithoutInProjectsInput = {
+    id: string
+    createdAt?: Date | string
+    name: string
+    photoUrl?: string | null
+    authProvider: $Enums.AuthProvider
+  }
+
+  export type UserCreateOrConnectWithoutInProjectsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutInProjectsInput, UserUncheckedCreateWithoutInProjectsInput>
+  }
+
+  export type ProjectCreateWithoutUsersInput = {
     id?: string
     title: string
     createdAt?: Date | string
     documents?: DocumentCreateNestedManyWithoutProjectInput
   }
 
-  export type ProjectUncheckedCreateWithoutOwnerInput = {
+  export type ProjectUncheckedCreateWithoutUsersInput = {
     id?: string
     title: string
     createdAt?: Date | string
     documents?: DocumentUncheckedCreateNestedManyWithoutProjectInput
   }
 
-  export type ProjectCreateOrConnectWithoutOwnerInput = {
+  export type ProjectCreateOrConnectWithoutUsersInput = {
     where: ProjectWhereUniqueInput
-    create: XOR<ProjectCreateWithoutOwnerInput, ProjectUncheckedCreateWithoutOwnerInput>
+    create: XOR<ProjectCreateWithoutUsersInput, ProjectUncheckedCreateWithoutUsersInput>
   }
 
-  export type ProjectCreateManyOwnerInputEnvelope = {
-    data: ProjectCreateManyOwnerInput | ProjectCreateManyOwnerInput[]
-    skipDuplicates?: boolean
+  export type UserUpsertWithoutInProjectsInput = {
+    update: XOR<UserUpdateWithoutInProjectsInput, UserUncheckedUpdateWithoutInProjectsInput>
+    create: XOR<UserCreateWithoutInProjectsInput, UserUncheckedCreateWithoutInProjectsInput>
+    where?: UserWhereInput
   }
 
-  export type ProjectUpsertWithWhereUniqueWithoutOwnerInput = {
-    where: ProjectWhereUniqueInput
-    update: XOR<ProjectUpdateWithoutOwnerInput, ProjectUncheckedUpdateWithoutOwnerInput>
-    create: XOR<ProjectCreateWithoutOwnerInput, ProjectUncheckedCreateWithoutOwnerInput>
+  export type UserUpdateToOneWithWhereWithoutInProjectsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutInProjectsInput, UserUncheckedUpdateWithoutInProjectsInput>
   }
 
-  export type ProjectUpdateWithWhereUniqueWithoutOwnerInput = {
-    where: ProjectWhereUniqueInput
-    data: XOR<ProjectUpdateWithoutOwnerInput, ProjectUncheckedUpdateWithoutOwnerInput>
+  export type UserUpdateWithoutInProjectsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    name?: StringFieldUpdateOperationsInput | string
+    photoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
   }
 
-  export type ProjectUpdateManyWithWhereWithoutOwnerInput = {
-    where: ProjectScalarWhereInput
-    data: XOR<ProjectUpdateManyMutationInput, ProjectUncheckedUpdateManyWithoutOwnerInput>
+  export type UserUncheckedUpdateWithoutInProjectsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    name?: StringFieldUpdateOperationsInput | string
+    photoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    authProvider?: EnumAuthProviderFieldUpdateOperationsInput | $Enums.AuthProvider
   }
 
-  export type ProjectScalarWhereInput = {
-    AND?: ProjectScalarWhereInput | ProjectScalarWhereInput[]
-    OR?: ProjectScalarWhereInput[]
-    NOT?: ProjectScalarWhereInput | ProjectScalarWhereInput[]
-    id?: StringFilter<"Project"> | string
-    title?: StringFilter<"Project"> | string
-    createdAt?: DateTimeFilter<"Project"> | Date | string
-    ownerId?: StringNullableFilter<"Project"> | string | null
+  export type ProjectUpsertWithoutUsersInput = {
+    update: XOR<ProjectUpdateWithoutUsersInput, ProjectUncheckedUpdateWithoutUsersInput>
+    create: XOR<ProjectCreateWithoutUsersInput, ProjectUncheckedCreateWithoutUsersInput>
+    where?: ProjectWhereInput
+  }
+
+  export type ProjectUpdateToOneWithWhereWithoutUsersInput = {
+    where?: ProjectWhereInput
+    data: XOR<ProjectUpdateWithoutUsersInput, ProjectUncheckedUpdateWithoutUsersInput>
+  }
+
+  export type ProjectUpdateWithoutUsersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    documents?: DocumentUpdateManyWithoutProjectNestedInput
+  }
+
+  export type ProjectUncheckedUpdateWithoutUsersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    documents?: DocumentUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type DocumentCreateWithoutProjectInput = {
@@ -6708,23 +8240,24 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type UserCreateWithoutProjectsInput = {
-    id?: string
-    createdAt?: Date | string
-    email: string
-    name: string
+  export type UserProjectRoleCreateWithoutProjectInput = {
+    role: $Enums.UserRole
+    user: UserCreateNestedOneWithoutInProjectsInput
   }
 
-  export type UserUncheckedCreateWithoutProjectsInput = {
-    id?: string
-    createdAt?: Date | string
-    email: string
-    name: string
+  export type UserProjectRoleUncheckedCreateWithoutProjectInput = {
+    userId: string
+    role: $Enums.UserRole
   }
 
-  export type UserCreateOrConnectWithoutProjectsInput = {
-    where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutProjectsInput, UserUncheckedCreateWithoutProjectsInput>
+  export type UserProjectRoleCreateOrConnectWithoutProjectInput = {
+    where: UserProjectRoleWhereUniqueInput
+    create: XOR<UserProjectRoleCreateWithoutProjectInput, UserProjectRoleUncheckedCreateWithoutProjectInput>
+  }
+
+  export type UserProjectRoleCreateManyProjectInputEnvelope = {
+    data: UserProjectRoleCreateManyProjectInput | UserProjectRoleCreateManyProjectInput[]
+    skipDuplicates?: boolean
   }
 
   export type DocumentUpsertWithWhereUniqueWithoutProjectInput = {
@@ -6753,29 +8286,20 @@ export namespace Prisma {
     projectId?: StringFilter<"Document"> | string
   }
 
-  export type UserUpsertWithoutProjectsInput = {
-    update: XOR<UserUpdateWithoutProjectsInput, UserUncheckedUpdateWithoutProjectsInput>
-    create: XOR<UserCreateWithoutProjectsInput, UserUncheckedCreateWithoutProjectsInput>
-    where?: UserWhereInput
+  export type UserProjectRoleUpsertWithWhereUniqueWithoutProjectInput = {
+    where: UserProjectRoleWhereUniqueInput
+    update: XOR<UserProjectRoleUpdateWithoutProjectInput, UserProjectRoleUncheckedUpdateWithoutProjectInput>
+    create: XOR<UserProjectRoleCreateWithoutProjectInput, UserProjectRoleUncheckedCreateWithoutProjectInput>
   }
 
-  export type UserUpdateToOneWithWhereWithoutProjectsInput = {
-    where?: UserWhereInput
-    data: XOR<UserUpdateWithoutProjectsInput, UserUncheckedUpdateWithoutProjectsInput>
+  export type UserProjectRoleUpdateWithWhereUniqueWithoutProjectInput = {
+    where: UserProjectRoleWhereUniqueInput
+    data: XOR<UserProjectRoleUpdateWithoutProjectInput, UserProjectRoleUncheckedUpdateWithoutProjectInput>
   }
 
-  export type UserUpdateWithoutProjectsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    email?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-  }
-
-  export type UserUncheckedUpdateWithoutProjectsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    email?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
+  export type UserProjectRoleUpdateManyWithWhereWithoutProjectInput = {
+    where: UserProjectRoleScalarWhereInput
+    data: XOR<UserProjectRoleUpdateManyMutationInput, UserProjectRoleUncheckedUpdateManyWithoutProjectInput>
   }
 
   export type DocumentCreateWithoutFieldsInput = {
@@ -6846,14 +8370,14 @@ export namespace Prisma {
     id?: string
     title: string
     createdAt?: Date | string
-    owner?: UserCreateNestedOneWithoutProjectsInput
+    users?: UserProjectRoleCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutDocumentsInput = {
     id?: string
     title: string
     createdAt?: Date | string
-    ownerId?: string | null
+    users?: UserProjectRoleUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutDocumentsInput = {
@@ -6901,46 +8425,45 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    owner?: UserUpdateOneWithoutProjectsNestedInput
+    users?: UserProjectRoleUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutDocumentsInput = {
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    ownerId?: NullableStringFieldUpdateOperationsInput | string | null
+    users?: UserProjectRoleUncheckedUpdateManyWithoutProjectNestedInput
   }
 
-  export type ProjectCreateManyOwnerInput = {
-    id?: string
-    title: string
-    createdAt?: Date | string
+  export type UserProjectRoleCreateManyUserInput = {
+    projectId: string
+    role: $Enums.UserRole
   }
 
-  export type ProjectUpdateWithoutOwnerInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    title?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    documents?: DocumentUpdateManyWithoutProjectNestedInput
+  export type UserProjectRoleUpdateWithoutUserInput = {
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    project?: ProjectUpdateOneRequiredWithoutUsersNestedInput
   }
 
-  export type ProjectUncheckedUpdateWithoutOwnerInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    title?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    documents?: DocumentUncheckedUpdateManyWithoutProjectNestedInput
+  export type UserProjectRoleUncheckedUpdateWithoutUserInput = {
+    projectId?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   }
 
-  export type ProjectUncheckedUpdateManyWithoutOwnerInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    title?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  export type UserProjectRoleUncheckedUpdateManyWithoutUserInput = {
+    projectId?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   }
 
   export type DocumentCreateManyProjectInput = {
     id?: string
     type: string
     createdAt?: Date | string
+  }
+
+  export type UserProjectRoleCreateManyProjectInput = {
+    userId: string
+    role: $Enums.UserRole
   }
 
   export type DocumentUpdateWithoutProjectInput = {
@@ -6961,6 +8484,21 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserProjectRoleUpdateWithoutProjectInput = {
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    user?: UserUpdateOneRequiredWithoutInProjectsNestedInput
+  }
+
+  export type UserProjectRoleUncheckedUpdateWithoutProjectInput = {
+    userId?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  }
+
+  export type UserProjectRoleUncheckedUpdateManyWithoutProjectInput = {
+    userId?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   }
 
   export type FieldCreateManyDocumentInput = {

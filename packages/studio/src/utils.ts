@@ -13,4 +13,4 @@ export function objectEntries<O extends object>(obj: O) {
   return Object.entries(obj) as [keyof O, O[keyof O]][]
 }
 
-export type IconComponentType = ComponentType<SVGProps<SVGSVGElement>>
+export type SvgComponentType = ComponentType<SVGProps<SVGSVGElement>>

@@ -1,25 +1,17 @@
-import useStudioCtx from '@/hooks/use-project-ctx'
-import { queryKeys } from '@/query'
-import { faker } from '@faker-js/faker'
-import { useQuery } from '@tanstack/react-query'
+import { trpc } from '@/trpc'
+import useStudioConfig from '../use-project-ctx'
+import { useProjectQuery } from '../use-project-info'
 
-export function useUsers() {
-  const { projectId } = useStudioCtx()
-  return useQuery({
-    queryKey: queryKeys.users(projectId),
-    queryFn: () => {
-      return [
-        {
-          id: '0',
-          name: 'igor',
-          photoUrl: faker.image.personPortrait({ sex: 'male' }),
-        },
-        {
-          id: '1',
-          name: 'inna',
-          photoUrl: faker.image.personPortrait({ sex: 'female' }),
-        },
-      ]
+export function useProjectUsers() {
+  const { projectId } = useStudioConfig()
+  const { data: project } = useProjectQuery()
+  return trpc.user.findMany.useQuery(
+    {
+      projectId,
+      userIds: project?.users.map((u) => u.userId)!,
     },
-  })
+    {
+      enabled: !!project,
+    }
+  )
 }

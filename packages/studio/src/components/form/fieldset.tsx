@@ -1,5 +1,5 @@
-import useStudioCtx from '@/hooks/use-project-ctx'
-import { IconComponentType } from '@/utils'
+import useStudioConfig from '@/hooks/use-project-ctx'
+import { SvgComponentType } from '@/utils'
 import { useId } from 'react'
 // import { FieldConfig } from '../../config'
 import { FieldConfig } from '@/test/shapes'
@@ -13,18 +13,19 @@ type FieldsetProps = {
   shape: z.ZodAny
   toolbar?: {
     title?: string
-    icon?: IconComponentType
+    icon?: SvgComponentType
   }
 }
 
 export default function Fieldset(props: FieldsetProps) {
   // const Input = fieldInputs[props.field.type]
   const inputElementId = useId()
-  const { projectId } = useStudioCtx()
+  const { projectId } = useStudioConfig()
 
   return (
     <fieldset className='flex flex-col gap-1'>
       <FieldToolbar
+        shape={props.shape}
         inputElementId={inputElementId}
         field={{
           name: props.fieldName,

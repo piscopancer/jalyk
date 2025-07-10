@@ -9,7 +9,7 @@ export const projectRouter = t.router({
         id: z.string(),
       })
     )
-    .query(async ({ input: { id } }) => {
+    .query(({ input: { id } }) => {
       return db.project.findFirst({
         where: {
           id,
@@ -19,4 +19,24 @@ export const projectRouter = t.router({
         },
       })
     }),
+  find: t.procedure.input(z.object({ projectId: z.string() })).query(({ input: { projectId } }) => {
+    return db.project.findFirst({
+      where: {
+        id: projectId,
+      },
+      include: {
+        documents: {
+          select: {
+            _count: true,
+          },
+        },
+        users: {
+          select: {
+            role: true,
+            userId: true,
+          },
+        },
+      },
+    })
+  }),
 })

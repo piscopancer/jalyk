@@ -123,15 +123,21 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   createdAt: 'createdAt',
-  email: 'email',
-  name: 'name'
+  name: 'name',
+  photoUrl: 'photoUrl',
+  authProvider: 'authProvider'
+};
+
+exports.Prisma.UserProjectRoleScalarFieldEnum = {
+  userId: 'userId',
+  projectId: 'projectId',
+  role: 'role'
 };
 
 exports.Prisma.ProjectScalarFieldEnum = {
   id: 'id',
   title: 'title',
-  createdAt: 'createdAt',
-  ownerId: 'ownerId'
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.FieldScalarFieldEnum = {
@@ -172,10 +178,20 @@ exports.Prisma.JsonNullValueFilter = {
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
 };
+exports.AuthProvider = exports.$Enums.AuthProvider = {
+  google: 'google',
+  github: 'github'
+};
 
+exports.UserRole = exports.$Enums.UserRole = {
+  owner: 'owner',
+  editor: 'editor',
+  viewer: 'viewer'
+};
 
 exports.Prisma.ModelName = {
   User: 'User',
+  UserProjectRole: 'UserProjectRole',
   Project: 'Project',
   Field: 'Field',
   Document: 'Document'

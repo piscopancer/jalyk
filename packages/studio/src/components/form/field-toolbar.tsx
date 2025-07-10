@@ -1,4 +1,4 @@
-import { IconComponentType } from '@/utils'
+import { SvgComponentType } from '@/utils'
 import { LucideEllipsis } from 'lucide-react'
 import { z } from 'zod/v4'
 
@@ -8,7 +8,7 @@ type FieldToolbarProps = {
   field: {
     name: string
     title?: string
-    icon?: IconComponentType
+    icon?: SvgComponentType
   }
 }
 

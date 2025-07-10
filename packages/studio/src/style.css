@@ -40,12 +40,20 @@
   background-size: calc(2 * (var(--thick) + 12px)) calc(2 * (var(--thick) + 12px));
 }
 
-.bg-stripes {
+.bg-lines {
   --color-1: var(--color-zinc-900);
   --color-2: var(--color-zinc-950);
   --size: 24px;
   background-image: repeating-linear-gradient(45deg, var(--color-1) 0, var(--color-1) 1px, transparent 0, transparent 50%);
   background-size: var(--size) var(--size);
+  background-color: var(--color-2);
+}
+
+.bg-stripes {
+  --color-1: var(--color-zinc-900);
+  --color-2: var(--color-zinc-950);
+  --size: 24px;
+  background-image: repeating-linear-gradient(45deg, transparent, transparent var(--size), var(--color-1) var(--size), var(--color-1) calc(var(--size) * 2));
   background-color: var(--color-2);
 }
 

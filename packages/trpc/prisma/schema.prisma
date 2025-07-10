@@ -9,21 +9,45 @@ generator client {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  createdAt DateTime  @default(now())
-  email     String    @unique
-  name      String
-  projects  Project[]
+  // provided by auth provider, must not generate by hand
+  id           String       @id
+  createdAt    DateTime     @default(now())
+  name         String
+  photoUrl     String?
+  authProvider AuthProvider
+
+  inProjects UserProjectRole[]
+}
+
+enum UserRole {
+  owner
+  editor
+  viewer
+}
+
+enum AuthProvider {
+  google
+  github
+}
+
+model UserProjectRole {
+  userId    String
+  projectId String
+  role      UserRole
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([userId, projectId])
 }
 
 model Project {
-  id        String     @id @default(cuid())
+  id        String   @id @default(cuid())
   title     String
-  createdAt DateTime   @default(now())
-  ownerId   String?
-  documents Document[]
+  createdAt DateTime @default(now())
 
-  owner User? @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  documents Document[]
+  users     UserProjectRole[]
 }
 
 model Field {

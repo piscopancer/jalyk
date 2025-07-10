@@ -1,10 +1,10 @@
 import { FieldDefinition } from '@/form'
-import useStudioCtx from '@/hooks/use-project-ctx'
+import useStudioConfig from '@/hooks/use-project-ctx'
 import { trpc } from '@/trpc'
 // import { fieldInputs } from '.'
 
 export function Field(props: { fieldId: string; documentId: string; field: FieldDefinition; inputProps?: { id?: string } }) {
-  const { projectId } = useStudioCtx()
+  const { projectId } = useStudioConfig()
   const fieldUpsertMutation = trpc.field.upsert.useMutation()
 
   return (

@@ -1,4 +1,5 @@
-import useStudioCtx from '@/hooks/use-project-ctx'
+import { auth } from '@/auth'
+import useStudioConfig from '@/hooks/use-project-ctx'
 import { shopDefinition } from '@/test/shapes'
 import { trpc } from '@/trpc'
 import { cn } from '@/utils'
@@ -12,10 +13,9 @@ import Header from './header'
 import Preview from './preview'
 
 export default function Studio() {
-  // const wsRef = useRef<WebSocket>(null!)
-  // const [clients, setClients] = useState<({ id: string } & ClientData)[]>([])
+  const authQuery = auth.useSession()
   const utils = trpc.useUtils()
-  const { projectId } = useStudioCtx()
+  const { projectId } = useStudioConfig()
   const fieldUpdateSub = trpc.field.onFieldUpdate.useSubscription(
     { projectId },
     {

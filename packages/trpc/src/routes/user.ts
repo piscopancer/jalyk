@@ -1,34 +1,50 @@
 import { z } from 'zod/v4'
-import { auth } from '../auth'
+import { AuthProvider } from '../../prisma'
 import { db } from '../db'
 import { t } from './t'
 
 export const userRouter = t.router({
-  create: t.procedure
+  upsert: t.procedure
     .input(
       z.object({
+        id: z.string(),
         name: z.string(),
-        email: z.email(),
+        photoUrl: z.string().optional(),
+        authProvider: z.enum(AuthProvider),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input: { id, name, photoUrl, authProvider } }) => {
       return db.user.create({
         data: {
-          email: input.email,
-          name: input.name,
+          id,
+          name,
+          photoUrl,
+          authProvider,
         },
       })
     }),
-  signIn: t.procedure.mutation(async ({}) => {
-    try {
-      const res = await auth.api.signInSocial({
-        body: {
-          provider: 'github',
+  findMany: t.procedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        userIds: z.array(z.string()),
+      })
+    )
+    .query(({ input: { projectId, userIds } }) => {
+      return db.user.findMany({
+        where: {
+          id: {
+            in: userIds,
+          },
+        },
+        include: {
+          inProjects: {
+            where: {
+              projectId,
+            },
+            take: 1,
+          },
         },
       })
-      return res
-    } catch (error) {
-      console.error(error)
-    }
-  }),
+    }),
 })

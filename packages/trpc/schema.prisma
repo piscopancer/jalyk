@@ -9,17 +9,25 @@ generator client {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  createdAt DateTime  @default(now())
-  email     String    @unique
-  name      String
-  projects  Project[]
+  // provided by auth provider, must not generate by hand
+  id           String       @id
+  createdAt    DateTime     @default(now())
+  name         String
+  photoUrl     String?
+  authProvider AuthProvider
+
+  inProjects UserProjectRole[]
 }
 
 enum UserRole {
-  Owner
-  Editor
-  Viewer
+  owner
+  editor
+  viewer
+}
+
+enum AuthProvider {
+  google
+  github
 }
 
 model UserProjectRole {
@@ -34,9 +42,10 @@ model UserProjectRole {
 }
 
 model Project {
-  id        String            @id @default(cuid())
+  id        String   @id @default(cuid())
   title     String
-  createdAt DateTime          @default(now())
+  createdAt DateTime @default(now())
+
   documents Document[]
   users     UserProjectRole[]
 }
