@@ -85,6 +85,7 @@ when clicking `+` to create a new document, the new "window" will open where gen
 ## Preview
 
 ! store previews as a separate query
+! превью документа с повторяющимся фоном стрелка вправо чтобы показать движение вправо
 
 for an automatic preview there must be at least one string field in the document which content will be taken to the `title` of the preview. the actions, media will be resolved from the document declaration as the document's `type` is used to find it in the schema. if there's 0 string titles, the id is displayed in the title unless preview props are specified.
 

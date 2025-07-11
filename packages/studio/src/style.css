@@ -11,6 +11,12 @@
   --default-mono-font-family: var(--font-mono);
 }
 
+@layer components {
+  .asdasd {
+    background: #123123;
+  }
+}
+
 @utility hopper {
   display: grid;
   grid-template-areas: 'hopper';
@@ -27,41 +33,35 @@
   }
 }
 
-.bg-hamper {
-  --color-1: var(--color-zinc-800);
-  --color-2: var(--color-zinc-900);
-  --color-3: var(--color-zinc-950);
-  --thick: 64px;
-  background:
-    conic-gradient(at var(--thick) calc(100% - var(--thick)), #0000 270deg, var(--color-1) 0) calc(var(--thick) + 12px) 0,
-    linear-gradient(var(--color-2) var(--thick), #0000 0) 0 12px,
-    conic-gradient(at var(--thick) calc(100% - var(--thick)), #0000 90deg, var(--color-2) 0 180deg, var(--color-1) 0),
-    var(--color-3);
-  background-size: calc(2 * (var(--thick) + 12px)) calc(2 * (var(--thick) + 12px));
+@theme {
+  --bg-size-xs: 6px;
+  --bg-size-sm: 12px;
+  --bg-size-normal: 24px;
+  --bg-size-md: 36px;
 }
 
-.bg-lines {
+@utility bg-dots-* {
+  --color-1: var(--color-zinc-800);
+  --color-2: var(--color-zinc-950);
+  --size: --value(--bg-size- *);
+  background-image: radial-gradient(var(--color-1) 1px, transparent 1px);
+  background-size: var(--size) var(--size);
+  background-color: var(--color-2);
+}
+
+@utility bg-lines-* {
   --color-1: var(--color-zinc-900);
   --color-2: var(--color-zinc-950);
-  --size: 24px;
+  --size: --value(--bg-size- *);
   background-image: repeating-linear-gradient(45deg, var(--color-1) 0, var(--color-1) 1px, transparent 0, transparent 50%);
   background-size: var(--size) var(--size);
   background-color: var(--color-2);
 }
 
-.bg-stripes {
+@utility bg-stripes-* {
   --color-1: var(--color-zinc-900);
   --color-2: var(--color-zinc-950);
-  --size: 24px;
+  --size: --value(--bg-size- *);
   background-image: repeating-linear-gradient(45deg, transparent, transparent var(--size), var(--color-1) var(--size), var(--color-1) calc(var(--size) * 2));
-  background-color: var(--color-2);
-}
-
-.bg-dots {
-  --color-1: var(--color-zinc-800);
-  --color-2: var(--color-zinc-950);
-  --size: 24px;
-  background-image: radial-gradient(var(--color-1) 1px, transparent 1px);
-  background-size: var(--size) var(--size);
   background-color: var(--color-2);
 }

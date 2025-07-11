@@ -1,43 +1,65 @@
-import { DocumentAction } from '@/document/action'
-import useStudioConfig from '@/hooks/use-project-ctx'
-import { cn, SvgComponentType } from '@/utils'
-import { Menu } from '@repo/ui'
-import { LucideEllipsisVertical, LucideFile } from 'lucide-react'
-import { DropdownMenu } from 'radix-ui'
-import { ComponentProps, ReactNode } from 'react'
+import { cn, keySwitch, literalSwitch, SvgComponentType } from '@/utils'
+import { ComponentProps } from 'react'
+
+export type MediaType =
+  | {
+      type: 'icon'
+      icon: SvgComponentType
+    }
+  | {
+      type: 'image'
+      url: string
+    }
 
 export type PreviewProps = {
-  media?: ReactNode
+  media?: MediaType
   title: string
   subtitle?: string
-  actions?: DocumentAction[]
+  size?: 'default' | 'sm'
 }
 
 export default function Preview({ preview, ...attr }: { preview: PreviewProps } & ComponentProps<'article'>) {
-  const s = useStudioConfig()
-
-  return (
-    <article {...attr} className={cn('flex rounded-xl bg-zinc-900 p-1 gap-x-2', attr.className)}>
-      <aside>{preview.media ?? <DefaultPreviewMedia icon={LucideFile} />}</aside>
-      <div className='grow text-left line-clamp-1 flex flex-col self-center gap-0.5'>
-        <h1 className='line-clamp-1 leading-none'>{preview.title}</h1>
-        <h2 className='line-clamp-1 text-sm leading-none text-zinc-400'>{preview.subtitle}</h2>
-      </div>
-      {preview.actions?.length ? (
-        <Menu content={(m) => preview.actions!.map((action) => <m.Item label={action.title ?? action.name} />)}>
-          <DropdownMenu.Trigger>
-            <LucideEllipsisVertical />
-          </DropdownMenu.Trigger>
-        </Menu>
-      ) : null}
-    </article>
-  )
+  return literalSwitch(preview.size ?? 'default', {
+    default: () => (
+      <article {...attr} className={cn('flex p-2 gap-x-2 items-center', attr.className)}>
+        {preview.media && <PreviewMedia media={preview.media} size={preview.size ?? 'default'} />}
+        <div className='grow text-left line-clamp-1'>
+          <h1 className='line-clamp-1 leading-tight'>{preview.title}</h1>
+          <h2 className='line-clamp-1 text-sm leading-tight text-zinc-400'>{preview.subtitle}</h2>
+        </div>
+      </article>
+    ),
+    sm: () => (
+      <article {...attr} className={cn('flex p-1 gap-x-2 items-center', attr.className)}>
+        {preview.media && <PreviewMedia media={preview.media} size={preview.size ?? 'default'} />}
+        <h1>{preview.title}</h1>
+      </article>
+    ),
+  })
 }
 
-export function DefaultPreviewMedia(props: { icon: SvgComponentType }) {
-  return (
-    <div className='size-12 bg-zinc-950 hopper rounded-lg'>
-      <props.icon className='size-5 stroke-zinc-400 place-self-center' />
-    </div>
-  )
+export function PreviewMedia(props: { media: MediaType; size?: 'default' | 'sm' }) {
+  return keySwitch(props.media, 'type', {
+    icon: (media) =>
+      literalSwitch(props.size ?? 'default', {
+        default: () => (
+          <div className='size-10 border border-zinc-800 hopper rounded-md'>
+            <media.icon className='size-2/5 stroke-zinc-400 place-self-center' />
+          </div>
+        ),
+        sm: () => <media.icon className='size-4 stroke-zinc-400 place-self-center' />,
+      }),
+    image: (media) => (
+      <img
+        src={media.url}
+        className={cn(
+          literalSwitch(props.size ?? 'default', {
+            default: () => 'size-10',
+            sm: () => 'size-6',
+          }),
+          'rounded-md border border-zinc-800 object-cover'
+        )}
+      />
+    ),
+  })
 }

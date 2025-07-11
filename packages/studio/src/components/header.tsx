@@ -9,7 +9,7 @@ export default function Header() {
   const usersQuery = useProjectUsers()
 
   return (
-    <header className='bg-lines px-4 py-2 flex items-center border-b border-zinc-800'>
+    <header className='bg-lines-normal px-4 py-2 flex items-center border-b border-zinc-800'>
       <div className='mr-auto'>{project?.title}</div>
       <div>
         <DropdownMenu.Root>

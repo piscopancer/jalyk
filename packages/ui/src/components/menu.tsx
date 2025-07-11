@@ -34,7 +34,7 @@ export type ItemProps = {
 
 export function Item(props: ItemProps) {
   return (
-    <M.Item key={props.label} asChild onSelect={props.onSelect} className={cn('flex items-center gap-x-3 py-1.5 px-2 rounded-sm w-full', props.selected ? 'bg-zinc-800' : '')}>
+    <M.Item key={props.label} asChild disabled={props.selected} onSelect={props.onSelect} className={cn('flex items-center gap-x-3 py-1.5 px-2 rounded-sm w-full', props.selected ? 'bg-zinc-800' : '')}>
       <button>
         {props.icon && <props.icon className='size-4' />}
         <span>{props.label}</span>

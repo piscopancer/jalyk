@@ -140,14 +140,14 @@ const DocumentItem = (props: { tag: string; id: string }) => {
       onClick={() => {
         ctx.navigateToSegment(nextSegment)
       }}
-      className='w-full rounded-xl'
+      disabled={ctx.nextSegment === nextSegment}
+      className={cn('border-y w-full', ctx.nextSegment === nextSegment ? 'border-zinc-700 bg-stripes-sm' : 'border-transparent hover:bg-zinc-900')}
     >
       <Preview
         preview={{
           title: props.id,
           subtitle: props.tag,
         }}
-        className={cn(ctx.nextSegment === nextSegment ? 'outline-4 outline-zinc-500/50' : '')}
       />
     </button>
     // </DebugWrapper>
@@ -253,7 +253,7 @@ export function SegmentView({
 
   return (
     <section {...attr} className={cn('flex group', attr.className)}>
-      <main className={cn('min-w-[28ch] max-w-[28ch] p-2', 'border-r border-zinc-800')}>
+      <main className={cn('min-w-[28ch] max-w-[28ch] flex')}>
         {/* <DebugWrapper value={{ segment: segment ?? '---' }}> */}
         <segmentContext.Provider
           value={{
@@ -262,8 +262,15 @@ export function SegmentView({
             navigateToSegment: handleNavigate,
           }}
         >
-          <segmentDefinition.content {...ui} />
+          <div className='flex-1'>
+            <segmentDefinition.content {...ui} />
+          </div>
         </segmentContext.Provider>
+        {true && (
+          <div className='h-full w-3 border-x border-zinc-800 px-0.5'>
+            <div className='h-full bg-zinc-500/10 border-x border-zinc-950' />
+          </div>
+        )}
         {/* </DebugWrapper> */}
       </main>
       {nextSegment && (

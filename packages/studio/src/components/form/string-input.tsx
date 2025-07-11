@@ -1,5 +1,6 @@
 // import { StringField } from '@/form'
 // import { trpc } from '@/trpc'
+import { useFieldQuery } from '@/field'
 import { useProjectQuery } from '@/hooks/use-project-info'
 import { StringFieldConfig } from '@/test/shapes'
 import { trpc } from '@/trpc'
@@ -24,29 +25,11 @@ export default function StringFieldInput(props: Props) {
   const options = props.config.options
   const { data: project } = useProjectQuery()
   const utils = trpc.useUtils()
-  const field = trpc.field.find.useQuery(
-    {
-      documentId: props.docId,
-      path: props.fieldName,
-    },
-    {
-      select(data) {
-        if (data) {
-          const res = props.shape.safeParse(data.value)
-          if (res.success) {
-            return {
-              value: res.data,
-            }
-          } else {
-            return {
-              value: data.value,
-              errors: res.error.issues.map((i) => i.message),
-            }
-          }
-        }
-      },
-    }
-  )
+  const field = useFieldQuery({
+    docId: props.docId,
+    fieldPath: props.fieldName,
+    shape: props.shape,
+  })
   const upsertField = trpc.field.upsert.useMutation()
   const updateFunnel = useMemo(
     () =>
@@ -82,9 +65,8 @@ export default function StringFieldInput(props: Props) {
         return (
           <Menu
             contentProps={{
-              className: 'w-full',
               side: 'top',
-              align: 'start',
+              align: 'center',
             }}
             content={(m) =>
               options.predefined!.options.map(({ value, title, icon }) =>
