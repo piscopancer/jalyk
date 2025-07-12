@@ -1,7 +1,7 @@
 import { auth } from '@/auth'
 import useStudioConfig from '@/hooks/use-project-ctx'
 import { UsePreview, useUserPreview1 } from '@/preview'
-import { userDefinition } from '@/test/shapes'
+import { shopDefinition, userDefinition } from '@/test/shapes'
 import { trpc } from '@/trpc'
 import { cn } from '@/utils'
 import { faker } from '@faker-js/faker'
@@ -11,7 +11,7 @@ import { ComponentProps, createContext, ReactNode, useContext } from 'react'
 import { createPath, useNavigate, useParams } from 'react-router'
 import DocumentView from './form/document-view'
 import Header from './header'
-import Preview from './preview'
+import PreviewBase from './preview'
 
 export default function Studio() {
   const authQuery = auth.useSession()
@@ -79,17 +79,17 @@ export const testStructure = defineSegment({
     user() {
       return defineSegment({
         content(ui) {
-          return <DocumentView definition={userDefinition} id='cool-user' />
+          return <DocumentView documentDefinition={userDefinition} documentId='cool-user' />
         },
       })
     },
-    // shop2() {
-    //   return defineSegment({
-    //     content(ui) {
-    //       return <DocumentView definition={shopDefinition} id='shop_123' />
-    //     },
-    //   })
-    // },
+    shop() {
+      return defineSegment({
+        content(ui) {
+          return <DocumentView documentDefinition={shopDefinition} documentId='shop_0' />
+        },
+      })
+    },
     // shop(id) {
     //   return defineSegment({
     //     next: {
@@ -129,8 +129,8 @@ export const testStructure = defineSegment({
   content(ui) {
     return (
       <ul>
-        {/* <ui.DocumentItem usePreview={useUserPreview1} tag='shop' id='shop_1' /> */}
-        {/* <ui.Separator title='123' /> */}
+        <ui.DocumentItem tag='shop' id='shop_0' />
+        <ui.Separator />
         {/* <ui.DocumentItem usePreview={useUserPreview1} tag='shop2' id='shop_2' /> */}
         <ui.DocumentItem usePreview={useUserPreview1} tag='user' id='cool-user' />
       </ul>
@@ -146,6 +146,7 @@ const DocumentItem = (props: {
 }) => {
   const ctx = useContext(segmentContext)
   const nextSegment = buildSegment(props.tag, props.id)
+  // todo: insulting hook rules?
   const preview = props.usePreview ? props.usePreview(props.id) : undefined
 
   return (
@@ -156,7 +157,7 @@ const DocumentItem = (props: {
       disabled={ctx.nextSegment === nextSegment}
       className={cn('border-y w-full', ctx.nextSegment === nextSegment ? 'border-zinc-700 bg-stripes-sm' : 'border-transparent hover:bg-zinc-900')}
     >
-      <Preview
+      <PreviewBase
         preview={{
           title: preview?.title ?? props.id,
           subtitle: preview?.subtitle,

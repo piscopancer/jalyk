@@ -11,14 +11,14 @@ export type MediaType =
       url: string
     }
 
-export type PreviewProps = {
+export type PreviewBaseProps = {
   media?: MediaType
   title: string
   subtitle?: string
   size?: 'default' | 'sm'
 }
 
-export default function Preview({ preview, ...attr }: { preview: PreviewProps } & ComponentProps<'article'>) {
+export default function PreviewBase({ preview, ...attr }: { preview: PreviewBaseProps } & ComponentProps<'article'>) {
   return literalSwitch(preview.size ?? 'default', {
     default: () => (
       <article {...attr} className={cn('flex p-2 gap-x-2 items-center', attr.className)}>
@@ -43,11 +43,11 @@ export function PreviewMedia(props: { media: MediaType; size?: 'default' | 'sm' 
     icon: (media) =>
       literalSwitch(props.size ?? 'default', {
         default: () => (
-          <div className='size-10 border border-zinc-800 hopper rounded-md'>
+          <div className='shrink-0 size-10 border border-zinc-800 hopper rounded-md'>
             <media.icon className='size-5 stroke-zinc-400 place-self-center' />
           </div>
         ),
-        sm: () => <media.icon className='size-4 stroke-zinc-400 place-self-center' />,
+        sm: () => <media.icon className='shrink-0 size-4 stroke-zinc-400 place-self-center' />,
       }),
     image: (media) => (
       <img
@@ -57,7 +57,7 @@ export function PreviewMedia(props: { media: MediaType; size?: 'default' | 'sm' 
             default: () => 'size-10',
             sm: () => 'size-7',
           }),
-          'rounded-md border border-zinc-800 object-cover'
+          'shrink-0 rounded-md border border-zinc-800 object-cover'
         )}
       />
     ),

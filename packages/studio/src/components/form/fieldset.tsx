@@ -1,15 +1,14 @@
-import useStudioConfig from '@/hooks/use-project-ctx'
-import { SvgComponentType } from '@/utils'
+import { JalykDocument } from '@/document'
+import { FieldDefinition } from '@/test/shapes'
+import { keySwitch, SvgComponentType } from '@/utils'
 import { useId } from 'react'
-// import { FieldConfig } from '../../config'
-import { FieldConfig } from '@/test/shapes'
 import { z } from 'zod/v4'
 import FieldToolbar from './field-toolbar'
 
 type FieldsetProps = {
-  documentId: string
+  document: JalykDocument
   fieldName: string
-  fieldConfig: FieldConfig
+  field: FieldDefinition
   shape: z.ZodType
   toolbar?: {
     title?: string
@@ -18,9 +17,7 @@ type FieldsetProps = {
 }
 
 export default function Fieldset(props: FieldsetProps) {
-  // const Input = fieldInputs[props.field.type]
   const inputElementId = useId()
-  const { projectId } = useStudioConfig()
 
   return (
     <fieldset className='flex flex-col gap-1'>
@@ -29,16 +26,47 @@ export default function Fieldset(props: FieldsetProps) {
         inputElementId={inputElementId}
         field={{
           name: props.fieldName,
-          title: props.fieldConfig.title,
-          icon: props.fieldConfig.icon,
+          title: props.field.title,
+          icon: props.field.icon,
         }}
       />
-      <props.fieldConfig.component config={props.fieldConfig} elementId={inputElementId} fieldName={props.fieldName} docId={props.documentId} shape={props.shape} />
-      {/* <Input
-        field={props.fieldConfig as never}
-        id={inputElementId}
-        // todo: move onchange must appear in the input itself, not here
-      /> */}
+      {keySwitch(props.field, 'type', {
+        reference(cfg) {
+          return (
+            <cfg.component
+              elementId={inputElementId}
+              document={props.document}
+              field={{
+                path: props.fieldName,
+                shape: props.shape,
+                config: {
+                  icon: cfg.icon,
+                  title: cfg.title,
+                  options: cfg.options ?? { size: 'default' },
+                },
+              }}
+            />
+          )
+        },
+        string(cfg) {
+          return (
+            <cfg.component
+              elementId={inputElementId}
+              document={props.document}
+              field={{
+                path: props.fieldName,
+                shape: props.shape,
+                config: {
+                  icon: cfg.icon,
+                  title: cfg.title,
+                  options: cfg.options ?? {},
+                },
+              }}
+            />
+          )
+        },
+      })}
+      {/* <props.fieldConfig.component config={props.fieldConfig} elementId={inputElementId} fieldPath={props.fieldName} documentId={props.documentId} documentType={props.documentType} shape={props.shape} /> */}
     </fieldset>
   )
 }

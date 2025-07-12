@@ -1,4 +1,4 @@
-import { PreviewProps } from '@/components/preview'
+import { PreviewBaseProps } from '@/components/preview'
 import { trpc } from '@/trpc'
 
 // function preparePreview(
@@ -14,6 +14,7 @@ import { trpc } from '@/trpc'
 //   }
 // }
 
+/** @deprecated */
 export function usePreviewQuery(documentId: string) {
   const { data: doc } = trpc.document.find.useQuery(documentId)
   const fieldsQuery = trpc.useQueries((t) =>
@@ -28,5 +29,5 @@ export function usePreviewQuery(documentId: string) {
   let title = fieldsQuery.find((q) => typeof q.data?.value === 'string')?.data?.value as string | undefined
   return {
     title: title ?? documentId,
-  } satisfies PreviewProps as PreviewProps
+  } satisfies PreviewBaseProps as PreviewBaseProps
 }

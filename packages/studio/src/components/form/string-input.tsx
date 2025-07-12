@@ -1,67 +1,37 @@
 // import { StringField } from '@/form'
 // import { trpc } from '@/trpc'
-import { useParsedFieldQuery } from '@/field'
-import { useProjectQuery } from '@/hooks/use-project-info'
-import { StringFieldConfig } from '@/test/shapes'
-import { trpc } from '@/trpc'
+import { JalykDocument } from '@/document'
+import { useParsedFieldQuery, useUpsertFieldFunnel } from '@/field'
+import { StringFieldConfig, StringShape } from '@/test/shapes'
 import { cn } from '@/utils'
 import { Menu as BaseMenu } from '@base-ui-components/react'
 import { Menu } from '@repo/ui'
 import { LucideChevronsUpDown } from 'lucide-react'
-import { useMemo } from 'react'
-import { funnel } from 'remeda'
-import { z } from 'zod/v4'
-import { Debug } from '../debug'
+import { ComponentProps } from 'react'
 
 type Props = {
-  docId: string
+  document: JalykDocument
   elementId: string | undefined
-  fieldName: string
-  config: StringFieldConfig
-  shape: z.ZodType
-}
+  field: {
+    path: string
+    config: StringFieldConfig
+    shape: StringShape
+  }
+} & ComponentProps<'div'>
 
-export default function StringFieldInput(props: Props) {
-  const options = props.config.options
-  const { data: project } = useProjectQuery()
-  const utils = trpc.useUtils()
-  const field = useParsedFieldQuery({
-    documentId: props.docId,
-    path: props.fieldName,
-    shape: props.shape,
+export default function StringFieldInput({ document, elementId, field, ...attr }: Props) {
+  const options = field.config.options
+  const fieldQuery = useParsedFieldQuery({
+    documentId: document.id,
+    path: field.path,
+    shape: field.shape,
   })
-  const upsertField = trpc.field.upsert.useMutation()
-  const updateFunnel = useMemo(
-    () =>
-      funnel(
-        (value: string) => {
-          const res = props.shape.safeParse(value)
-          if (res.success) {
-            upsertField.mutate({
-              value: res.data as any,
-              documentId: props.docId,
-              documentType: 'shop',
-              path: props.fieldName,
-              projectId: project!.id,
-            })
-          } else {
-            console.warn('wrong value type')
-          }
-        },
-        {
-          minQuietPeriodMs: 1000,
-          reducer(_, value: string) {
-            return value
-          },
-        }
-      ),
-    [props, project]
-  )
+  const { upsertField } = useUpsertFieldFunnel(document, field)
 
   if (options?.predefined) {
     switch (options.predefined.display) {
       case 'dropdown':
-        const selectedOption = options.predefined!.options.find((o) => o.value === field.data?.value)
+        const selectedOption = options.predefined!.options.find((o) => o.value === fieldQuery.data?.value)
         return (
           <Menu
             positionProps={{
@@ -75,14 +45,7 @@ export default function StringFieldInput(props: Props) {
                   icon,
                   selected: selectedOption?.value === value,
                   onSelect() {
-                    utils.field.find.setData(
-                      {
-                        documentId: props.docId,
-                        path: props.fieldName,
-                      },
-                      { value }
-                    )
-                    updateFunnel.call(value)
+                    upsertField(value)
                   },
                 })
               )
@@ -102,34 +65,20 @@ export default function StringFieldInput(props: Props) {
     }
   }
 
+  /* todo: bug: rerenders and current selection restores to the end of line */
   return (
-    <Debug
-      value={{
-        value: field.data?.value ?? null,
-        shape: 'shape' in props,
+    <input
+      //
+      key='input'
+      type='text'
+      placeholder={options?.placeholder}
+      id={elementId}
+      value={typeof fieldQuery.data?.value === 'string' ? fieldQuery.data?.value : undefined}
+      onChange={({ target: { value } }) => {
+        upsertField(value)
       }}
-    >
-      {/* todo: bug: rerenders and current selection restores to the end of line */}
-      <input
-        //
-        key='input'
-        type='text'
-        placeholder={options?.placeholder}
-        id={props.elementId}
-        value={typeof field.data?.value === 'string' ? field.data?.value : undefined}
-        onChange={({ target: { value } }) => {
-          utils.field.find.setData(
-            {
-              documentId: props.docId,
-              path: props.fieldName,
-            },
-            { value }
-          )
-          updateFunnel.call(value)
-        }}
-        className='border px-4 py-2 rounded-md border-zinc-700'
-      />
-    </Debug>
+      className='border px-4 py-2 rounded-md border-zinc-700'
+    />
   )
 }
 

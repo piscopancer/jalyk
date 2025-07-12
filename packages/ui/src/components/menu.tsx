@@ -37,17 +37,9 @@ export type ItemProps = {
 
 export function Item(props: ItemProps) {
   return (
-    <M.Item
-      key={props.label}
-      disabled={props.selected}
-      onSelect={props.onSelect}
-      className={cn('flex items-center gap-x-3 py-1.5 px-2 rounded-sm w-full', props.selected ? 'bg-zinc-800' : '')}
-      render={
-        <button>
-          {props.icon && <props.icon className='size-4' />}
-          <span>{props.label}</span>
-        </button>
-      }
-    />
+    <M.Item closeOnClick key={props.label} disabled={props.selected} onMouseDown={props.onSelect} className={cn('flex items-center gap-x-3 py-1.5 px-2 rounded-sm w-full', props.selected ? 'bg-zinc-800' : '')}>
+      {props.icon && <props.icon className='size-4' />}
+      <span>{props.label}</span>
+    </M.Item>
   )
 }

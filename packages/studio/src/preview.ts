@@ -37,6 +37,6 @@ export const useUserPreview1 = defineUsePreview(({ useParsedFieldQuery, document
 
   return {
     title: name + ' ' + surname,
-    subtitle: '🚗🚗🚗',
+    subtitle: '123',
   }
 })

@@ -1,6 +1,6 @@
 // import { NumberField, StringField } from '@/form'
 import { createContext } from 'react'
-import { FieldConfig } from './test/shapes'
+import { FieldDefinition } from './test/shapes'
 
 export const studioConfigCtx = createContext<StudioConfig>(null!)
 
@@ -13,7 +13,7 @@ export type StudioConfig = {
 /** schema for a document */
 type DocumentDefinition = {
   name: string
-  fields: Record<string, FieldConfig>
+  fields: Record<string, FieldDefinition>
 }
 
 // export type Field = StringField

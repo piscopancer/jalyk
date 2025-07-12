@@ -1,20 +1,23 @@
 import ReferenceFieldInput from '@/components/form/reference-input'
-import { z } from 'zod/v4'
+import { referenceShape } from '@/test/shapes'
 
 export default function TestPage() {
   return (
     <div className='m-12'>
       <ReferenceFieldInput
-        reference={{
-          docId: 'test_123',
+        elementId='_'
+        document={{
+          id: 'test_123',
+          type: 'user',
+        }}
+        field={{
           config: {
             options: {
               size: 'default',
             },
           },
-          elementId: '_',
-          fieldPath: 'test_path',
-          shape: z.any(),
+          path: 'test_path',
+          shape: referenceShape,
         }}
       />
     </div>

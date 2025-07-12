@@ -1,17 +1,16 @@
 import { DocumentDefinition } from '@/test/shapes'
 import { objectEntries } from '@/utils'
 import { LucideEllipsis } from 'lucide-react'
-import { z } from 'zod/v4'
 import Fieldset from './fieldset'
 
-export default function DocumentView(doc: { id: string; definition: DocumentDefinition }) {
+export default function DocumentView({ documentId, documentDefinition }: { documentId: string; documentDefinition: DocumentDefinition }) {
   return (
     <article>
       <header className='flex bg-zinc-900'>
         <div className='mr-auto flex items-center'>
-          {doc.definition.icon && <doc.definition.icon className='size-5 mr-2' />}
-          <h1 className='inline mr-2'>{doc.id}</h1>
-          <span className='inline text-zinc-500 font-mono'>{doc.definition.type}</span>
+          {documentDefinition.icon && <documentDefinition.icon className='size-5 mr-2' />}
+          <h1 className='inline mr-2'>{documentId}</h1>
+          <span className='inline text-zinc-500 font-mono'>{documentDefinition.type}</span>
         </div>
         <menu>
           <button>
@@ -20,13 +19,16 @@ export default function DocumentView(doc: { id: string; definition: DocumentDefi
         </menu>
       </header>
       <ul className='flex flex-col gap-6'>
-        {objectEntries(doc.definition.fields).map(([fieldName, config]) => (
+        {objectEntries(documentDefinition.fields).map(([fieldName, config]) => (
           <li key={fieldName}>
             <Fieldset
+              document={{
+                id: documentId,
+                type: documentDefinition.type,
+              }}
               fieldName={fieldName}
-              documentId={doc.id}
-              fieldConfig={config}
-              shape={config.shape as z.ZodType}
+              field={config}
+              shape={config.shape}
               toolbar={{
                 title: config.title,
                 icon: config.icon,

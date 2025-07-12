@@ -1,4 +1,4 @@
-import { FieldDefinition } from '@/form'
+import { FieldDefinition } from '@/document'
 import useStudioConfig from '@/hooks/use-project-ctx'
 import { trpc } from '@/trpc'
 // import { fieldInputs } from '.'

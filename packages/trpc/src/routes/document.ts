@@ -19,4 +19,14 @@ export const documentRouter = t.router({
       },
     })
   }),
+  idsOfType: t.procedure.input(z.object({ type: z.string() })).query(async ({ input }) => {
+    return db.document.findMany({
+      where: {
+        type: input.type,
+      },
+      select: {
+        id: true,
+      },
+    })
+  }),
 })

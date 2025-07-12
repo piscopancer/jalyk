@@ -1,4 +1,4 @@
-import { NumberField } from '@/form'
+import { NumberField } from '@/document'
 
 export type NumberInputProps = {
   id: string
