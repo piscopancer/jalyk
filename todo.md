@@ -89,6 +89,8 @@ when clicking `+` to create a new document, the new "window" will open where gen
 
 for an automatic preview there must be at least one string field in the document which content will be taken to the `title` of the preview. the actions, media will be resolved from the document declaration as the document's `type` is used to find it in the schema. if there's 0 string titles, the id is displayed in the title unless preview props are specified.
 
+для превью надо предоставить ключи полей которые он будет читать. так можно не только получить значение для превью, но также засунуть поля в кеш и подписаться на обновления. Наверное документу надо представить хук в превью `usePreview()`, чтобы он использовал его для превью компонета внутри его. Таких хуков мб несколько поэтому по паттерну стратегии их надо давать компоненту структуры `DocumentItem`
+
 # Structure
 
 <!-- ! font for ui elements or studio -->

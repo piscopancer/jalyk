@@ -14,12 +14,19 @@ export const userRouter = t.router({
       })
     )
     .mutation(async ({ input: { id, name, photoUrl, authProvider } }) => {
-      return db.user.create({
-        data: {
+      return db.user.upsert({
+        where: {
+          id,
+        },
+        create: {
           id,
           name,
           photoUrl,
           authProvider,
+        },
+        update: {
+          name,
+          photoUrl,
         },
       })
     }),

@@ -1,11 +1,11 @@
 import { z } from 'zod/v4'
 import { trpc } from './trpc'
 
-export function useFieldQuery({ docId, fieldPath, shape }: { docId: string; fieldPath: string; shape: z.ZodAny }) {
+export function useParsedFieldQuery<S extends z.ZodType>({ documentId, path, shape }: { documentId: string; path: string; shape: S }) {
   return trpc.field.find.useQuery(
     {
-      documentId: docId,
-      path: fieldPath,
+      documentId,
+      path: path,
     },
     {
       select(data) {

@@ -4,7 +4,7 @@ import { z } from 'zod/v4'
 
 type FieldToolbarProps = {
   inputElementId: string
-  shape: z.ZodAny
+  shape: z.ZodType
   field: {
     name: string
     title?: string

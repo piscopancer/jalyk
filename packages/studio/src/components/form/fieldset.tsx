@@ -10,7 +10,7 @@ type FieldsetProps = {
   documentId: string
   fieldName: string
   fieldConfig: FieldConfig
-  shape: z.ZodAny
+  shape: z.ZodType
   toolbar?: {
     title?: string
     icon?: SvgComponentType
@@ -33,7 +33,7 @@ export default function Fieldset(props: FieldsetProps) {
           icon: props.fieldConfig.icon,
         }}
       />
-      <props.fieldConfig.component config={props.fieldConfig} elementId={inputElementId} fieldPath={props.fieldName} docId={props.documentId} shape={props.shape} />
+      <props.fieldConfig.component config={props.fieldConfig} elementId={inputElementId} fieldName={props.fieldName} docId={props.documentId} shape={props.shape} />
       {/* <Input
         field={props.fieldConfig as never}
         id={inputElementId}

@@ -1,13 +1,13 @@
 // import { StringField } from '@/form'
 // import { trpc } from '@/trpc'
-import { useFieldQuery } from '@/field'
+import { useParsedFieldQuery } from '@/field'
 import { useProjectQuery } from '@/hooks/use-project-info'
 import { StringFieldConfig } from '@/test/shapes'
 import { trpc } from '@/trpc'
 import { cn } from '@/utils'
+import { Menu as BaseMenu } from '@base-ui-components/react'
 import { Menu } from '@repo/ui'
 import { LucideChevronsUpDown } from 'lucide-react'
-import { DropdownMenu } from 'radix-ui'
 import { useMemo } from 'react'
 import { funnel } from 'remeda'
 import { z } from 'zod/v4'
@@ -18,16 +18,16 @@ type Props = {
   elementId: string | undefined
   fieldName: string
   config: StringFieldConfig
-  shape: z.ZodAny
+  shape: z.ZodType
 }
 
 export default function StringFieldInput(props: Props) {
   const options = props.config.options
   const { data: project } = useProjectQuery()
   const utils = trpc.useUtils()
-  const field = useFieldQuery({
-    docId: props.docId,
-    fieldPath: props.fieldName,
+  const field = useParsedFieldQuery({
+    documentId: props.docId,
+    path: props.fieldName,
     shape: props.shape,
   })
   const upsertField = trpc.field.upsert.useMutation()
@@ -38,7 +38,7 @@ export default function StringFieldInput(props: Props) {
           const res = props.shape.safeParse(value)
           if (res.success) {
             upsertField.mutate({
-              value: res.data,
+              value: res.data as any,
               documentId: props.docId,
               documentType: 'shop',
               path: props.fieldName,
@@ -64,7 +64,7 @@ export default function StringFieldInput(props: Props) {
         const selectedOption = options.predefined!.options.find((o) => o.value === field.data?.value)
         return (
           <Menu
-            contentProps={{
+            positionProps={{
               side: 'top',
               align: 'center',
             }}
@@ -88,13 +88,13 @@ export default function StringFieldInput(props: Props) {
               )
             }
           >
-            <DropdownMenu.Trigger className='rounded-md border-zinc-700 hover:bg-zinc-900 border hopper'>
+            <BaseMenu.Trigger className='rounded-md border-zinc-700 hover:bg-zinc-900 border hopper'>
               <div className='self-center justify-self-left py-2 px-4 flex items-center gap-3'>
                 {selectedOption?.icon && <selectedOption.icon className='size-4' />}
                 <span className={cn(selectedOption?.title || selectedOption?.value ? '' : 'text-zinc-400')}>{selectedOption?.title ?? selectedOption?.value ?? options.placeholder ?? 'Select'}</span>
               </div>
               <LucideChevronsUpDown className='self-center justify-self-end size-4 mr-3 stroke-zinc-400' />
-            </DropdownMenu.Trigger>
+            </BaseMenu.Trigger>
           </Menu>
         )
       case 'select':

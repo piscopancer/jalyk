@@ -9,7 +9,7 @@ export default function TestPage() {
           docId: 'test_123',
           config: {
             options: {
-              size: 'sm',
+              size: 'default',
             },
           },
           elementId: '_',

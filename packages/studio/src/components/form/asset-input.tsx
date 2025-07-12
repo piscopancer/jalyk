@@ -1,6 +1,6 @@
+import { Menu as BaseMenu } from '@base-ui-components/react'
 import { Menu, Tooltip } from '@repo/ui'
 import { LucideDownload, LucideEllipsisVertical, LucideFile, LucideHardDriveUpload, LucideLibrary, LucideMousePointerSquareDashed } from 'lucide-react'
-import { DropdownMenu } from 'radix-ui'
 import { ChangeEventHandler } from 'react'
 
 type AssetInputProps = {
@@ -75,9 +75,9 @@ export function AssetInput(props: AssetInputProps) {
             )}
           >
             <Tooltip content='Never gonna dig straight down...'>
-              <DropdownMenu.Trigger className='hover:bg-zinc-800 text-zinc-500 hover:text-zinc-200 self-stretch px-1 rounded-2xl'>
+              <BaseMenu.Trigger className='hover:bg-zinc-800 text-zinc-500 hover:text-zinc-200 self-stretch px-1 rounded-2xl'>
                 <LucideEllipsisVertical />
-              </DropdownMenu.Trigger>
+              </BaseMenu.Trigger>
             </Tooltip>
           </Menu>
         </>

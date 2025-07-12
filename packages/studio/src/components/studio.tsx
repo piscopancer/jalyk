@@ -1,6 +1,7 @@
 import { auth } from '@/auth'
 import useStudioConfig from '@/hooks/use-project-ctx'
-import { shopDefinition } from '@/test/shapes'
+import { UsePreview, useUserPreview1 } from '@/preview'
+import { userDefinition } from '@/test/shapes'
 import { trpc } from '@/trpc'
 import { cn } from '@/utils'
 import { faker } from '@faker-js/faker'
@@ -75,67 +76,79 @@ function defineSegment(seg: Segment) {
 
 export const testStructure = defineSegment({
   next: {
-    shop2() {
+    user() {
       return defineSegment({
         content(ui) {
-          return <DocumentView definition={shopDefinition} id='shop_123' />
+          return <DocumentView definition={userDefinition} id='cool-user' />
         },
       })
     },
-    shop(id) {
-      return defineSegment({
-        next: {
-          users() {
-            return defineSegment({
-              next: {
-                megaUser(id) {
-                  return defineSegment({
-                    content(ui) {
-                      return 'this user is TAMERLAN ✈🏝'
-                    },
-                  })
-                },
-              },
-              content(ui) {
-                return (
-                  <ul>
-                    <ui.DocumentItem tag='megaUser' id='tamik' />
-                    <ui.DocumentItems tag='megaUser' type='user' />
-                  </ul>
-                )
-              },
-            })
-          },
-        },
-        content(ui) {
-          return (
-            <div>
-              <ui.DocumentForm id={id} />
-              <ui.DocumentItem tag='users' id='users' />
-            </div>
-          )
-        },
-      })
-    },
+    // shop2() {
+    //   return defineSegment({
+    //     content(ui) {
+    //       return <DocumentView definition={shopDefinition} id='shop_123' />
+    //     },
+    //   })
+    // },
+    // shop(id) {
+    //   return defineSegment({
+    //     next: {
+    //       users() {
+    //         return defineSegment({
+    //           next: {
+    //             megaUser(id) {
+    //               return defineSegment({
+    //                 content(ui) {
+    //                   return 'this user is TAMERLAN ✈🏝'
+    //                 },
+    //               })
+    //             },
+    //           },
+    //           content(ui) {
+    //             return (
+    //               <ul>
+    //                 <ui.DocumentItem tag='megaUser' id='tamik' />
+    //                 <ui.DocumentItems tag='megaUser' type='user' />
+    //               </ul>
+    //             )
+    //           },
+    //         })
+    //       },
+    //     },
+    //     content(ui) {
+    //       return (
+    //         <div>
+    //           <ui.DocumentForm id={id} />
+    //           <ui.DocumentItem tag='users' id='users' />
+    //         </div>
+    //       )
+    //     },
+    //   })
+    // },
   },
   content(ui) {
     return (
       <ul>
-        <ui.DocumentItem tag='shop' id='shop_1' />
-        <ui.Separator title='123' />
-        <ui.DocumentItem tag='shop2' id='shop_2' />
+        {/* <ui.DocumentItem usePreview={useUserPreview1} tag='shop' id='shop_1' /> */}
+        {/* <ui.Separator title='123' /> */}
+        {/* <ui.DocumentItem usePreview={useUserPreview1} tag='shop2' id='shop_2' /> */}
+        <ui.DocumentItem usePreview={useUserPreview1} tag='user' id='cool-user' />
       </ul>
     )
   },
 })
 
-// const Separator = (props: {title?:string}) =>
-const DocumentItem = (props: { tag: string; id: string }) => {
+const DocumentItem = (props: {
+  //
+  id: string
+  tag: string
+  usePreview?: UsePreview
+}) => {
   const ctx = useContext(segmentContext)
   const nextSegment = buildSegment(props.tag, props.id)
+  const preview = props.usePreview ? props.usePreview(props.id) : undefined
 
   return (
-    // <DebugWrapper value={{ nextSegment, realSeg: ctx.nextSegment ?? null }}>
     <button
       onClick={() => {
         ctx.navigateToSegment(nextSegment)
@@ -145,12 +158,11 @@ const DocumentItem = (props: { tag: string; id: string }) => {
     >
       <Preview
         preview={{
-          title: props.id,
-          subtitle: props.tag,
+          title: preview?.title ?? props.id,
+          subtitle: preview?.subtitle,
         }}
       />
     </button>
-    // </DebugWrapper>
   )
 }
 const DocumentForm = (props: { id: string }) => <article>form for document: {props.id}</article>
@@ -221,6 +233,7 @@ export function SegmentView({
   segment: SegmentProps
 } & ComponentProps<'section'>) {
   const navigate = useNavigate()
+  // const { studioPath } = useStudioConfig()
 
   // if not present, it means we are at /structure and nothing has been selected
   const segment = segments[segmentIndex]
@@ -238,8 +251,8 @@ export function SegmentView({
     const prevSegments = segments.slice(0, Math.max(segmentIndex, 0))
     const path = createPath({
       pathname: [
-        //
-        '/studio',
+        // change to use studio config
+        `/studio`,
         tool,
         ...prevSegments,
         segment,
@@ -254,7 +267,6 @@ export function SegmentView({
   return (
     <section {...attr} className={cn('flex group', attr.className)}>
       <main className={cn('min-w-[28ch] max-w-[28ch] flex')}>
-        {/* <DebugWrapper value={{ segment: segment ?? '---' }}> */}
         <segmentContext.Provider
           value={{
             segment,
@@ -271,7 +283,6 @@ export function SegmentView({
             <div className='h-full bg-zinc-500/10 border-x border-zinc-950' />
           </div>
         )}
-        {/* </DebugWrapper> */}
       </main>
       {nextSegment && (
         <SegmentView

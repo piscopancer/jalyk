@@ -26,7 +26,7 @@ export default function DocumentView(doc: { id: string; definition: DocumentDefi
               fieldName={fieldName}
               documentId={doc.id}
               fieldConfig={config}
-              shape={config.shape as unknown as z.ZodAny}
+              shape={config.shape as z.ZodType}
               toolbar={{
                 title: config.title,
                 icon: config.icon,

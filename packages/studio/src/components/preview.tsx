@@ -32,7 +32,7 @@ export default function Preview({ preview, ...attr }: { preview: PreviewProps } 
     sm: () => (
       <article {...attr} className={cn('flex p-1 gap-x-2 items-center', attr.className)}>
         {preview.media && <PreviewMedia media={preview.media} size={preview.size ?? 'default'} />}
-        <h1>{preview.title}</h1>
+        <h1 className='leading-none'>{preview.title}</h1>
       </article>
     ),
   })
@@ -44,7 +44,7 @@ export function PreviewMedia(props: { media: MediaType; size?: 'default' | 'sm' 
       literalSwitch(props.size ?? 'default', {
         default: () => (
           <div className='size-10 border border-zinc-800 hopper rounded-md'>
-            <media.icon className='size-2/5 stroke-zinc-400 place-self-center' />
+            <media.icon className='size-5 stroke-zinc-400 place-self-center' />
           </div>
         ),
         sm: () => <media.icon className='size-4 stroke-zinc-400 place-self-center' />,
@@ -55,7 +55,7 @@ export function PreviewMedia(props: { media: MediaType; size?: 'default' | 'sm' 
         className={cn(
           literalSwitch(props.size ?? 'default', {
             default: () => 'size-10',
-            sm: () => 'size-6',
+            sm: () => 'size-7',
           }),
           'rounded-md border border-zinc-800 object-cover'
         )}
