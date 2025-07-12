@@ -28,7 +28,6 @@ export default function DocumentView({ documentId, documentDefinition }: { docum
               }}
               fieldName={fieldName}
               field={config}
-              shape={config.shape}
               toolbar={{
                 title: config.title,
                 icon: config.icon,

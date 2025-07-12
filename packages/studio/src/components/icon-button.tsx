@@ -17,7 +17,7 @@ export default function IconButton({
       className={cn(
         'rounded-md hover:bg-zinc-800',
         literalSwitch(size, {
-          default: () => 'p-2',
+          default: () => 'p-1.5',
           sm: () => 'p-1',
         }),
         attr?.className

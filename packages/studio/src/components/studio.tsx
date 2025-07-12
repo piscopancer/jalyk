@@ -34,7 +34,7 @@ export default function Studio() {
   )
 
   return (
-    <main className='studio flex flex-col'>
+    <main className='studio flex flex-col bg-zinc-950'>
       <Header />
       {/* render only if path starts with that name of the tool (structure) */}
       <Structure />
@@ -155,7 +155,7 @@ const DocumentItem = (props: {
         ctx.navigateToSegment(nextSegment)
       }}
       disabled={ctx.nextSegment === nextSegment}
-      className={cn('border-y w-full', ctx.nextSegment === nextSegment ? 'border-zinc-700 bg-stripes-sm' : 'border-transparent hover:bg-zinc-900')}
+      className={cn('border-y w-full', ctx.nextSegment === nextSegment ? 'border-zinc-800 bg-zinc-900' : 'border-transparent hover:bg-zinc-925')}
     >
       <PreviewBase
         preview={{

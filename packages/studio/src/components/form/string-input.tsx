@@ -51,7 +51,7 @@ export default function StringFieldInput({ document, elementId, field, ...attr }
               )
             }
           >
-            <BaseMenu.Trigger className='rounded-md border-zinc-700 hover:bg-zinc-900 border hopper'>
+            <BaseMenu.Trigger className='rounded-md border-zinc-800 hover:border-zinc-700 border hopper bg-zinc-925'>
               <div className='self-center justify-self-left py-2 px-4 flex items-center gap-3'>
                 {selectedOption?.icon && <selectedOption.icon className='size-4' />}
                 <span className={cn(selectedOption?.title || selectedOption?.value ? '' : 'text-zinc-400')}>{selectedOption?.title ?? selectedOption?.value ?? options.placeholder ?? 'Select'}</span>
@@ -77,7 +77,7 @@ export default function StringFieldInput({ document, elementId, field, ...attr }
       onChange={({ target: { value } }) => {
         upsertField(value)
       }}
-      className='border px-4 py-2 rounded-md border-zinc-700'
+      className='border px-4 py-2 rounded-md border-zinc-800 bg-zinc-925 focus-visible:bg-zinc-900 hover:border-zinc-700'
     />
   )
 }

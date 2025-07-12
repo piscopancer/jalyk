@@ -31,12 +31,17 @@ export const useUserPreview1 = defineUsePreview(({ useParsedFieldQuery, document
     path: 'surname',
     shape: z.string(),
   })
+  const middlenameFieldQuery = useParsedFieldQuery({
+    documentId,
+    path: 'middlename',
+    shape: z.string(),
+  })
 
   const name = nameFieldQuery.data?.errors ? 'АШИБКА' : nameFieldQuery.data?.value || '*'
   const surname = surnameFieldQuery.data?.errors ? 'АШИБКА' : surnameFieldQuery.data?.value || '*'
 
   return {
     title: name + ' ' + surname,
-    subtitle: '123',
+    subtitle: middlenameFieldQuery.data?.errors ? '---' : middlenameFieldQuery.data?.value || ':)',
   }
 })

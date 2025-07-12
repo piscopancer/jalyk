@@ -1,4 +1,8 @@
+import { JalykDocument } from '@/document'
+import useStudioConfig from '@/hooks/use-project-ctx'
+import { UsePreview } from '@/preview'
 import { cn, keySwitch, literalSwitch, SvgComponentType } from '@/utils'
+import { LucideFileSymlink } from 'lucide-react'
 import { ComponentProps } from 'react'
 
 export type MediaType =
@@ -62,4 +66,25 @@ export function PreviewMedia(props: { media: MediaType; size?: 'default' | 'sm' 
       />
     ),
   })
+}
+
+export function Preview(props: { document?: Partial<JalykDocument>; usePreview: UsePreview; size: 'default' | 'sm' }) {
+  const preview = props.document?.id ? props.usePreview(props.document.id) : undefined
+  const { definitions } = useStudioConfig()
+  const icon = props.document?.type ? (definitions.find((d) => d.type === props.document!.type)!.icon ?? LucideFileSymlink) : LucideFileSymlink
+
+  return (
+    <PreviewBase
+      preview={{
+        title: preview?.title ?? props.document?.id ?? 'no document :(',
+        subtitle: preview?.subtitle,
+        size: props.size,
+        media: {
+          type: 'icon',
+          icon,
+        },
+      }}
+      className='flex-1'
+    />
+  )
 }

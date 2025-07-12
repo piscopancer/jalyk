@@ -2,14 +2,12 @@ import { JalykDocument } from '@/document'
 import { FieldDefinition } from '@/test/shapes'
 import { keySwitch, SvgComponentType } from '@/utils'
 import { useId } from 'react'
-import { z } from 'zod/v4'
 import FieldToolbar from './field-toolbar'
 
 type FieldsetProps = {
   document: JalykDocument
   fieldName: string
   field: FieldDefinition
-  shape: z.ZodType
   toolbar?: {
     title?: string
     icon?: SvgComponentType
@@ -22,7 +20,7 @@ export default function Fieldset(props: FieldsetProps) {
   return (
     <fieldset className='flex flex-col gap-1'>
       <FieldToolbar
-        shape={props.shape}
+        shape={props.field.shape}
         inputElementId={inputElementId}
         field={{
           name: props.fieldName,
@@ -38,7 +36,7 @@ export default function Fieldset(props: FieldsetProps) {
               document={props.document}
               field={{
                 path: props.fieldName,
-                shape: props.shape,
+                shape: cfg.shape,
                 config: {
                   icon: cfg.icon,
                   title: cfg.title,
@@ -55,7 +53,7 @@ export default function Fieldset(props: FieldsetProps) {
               document={props.document}
               field={{
                 path: props.fieldName,
-                shape: props.shape,
+                shape: cfg.shape,
                 config: {
                   icon: cfg.icon,
                   title: cfg.title,
