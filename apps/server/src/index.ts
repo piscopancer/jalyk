@@ -15,8 +15,8 @@ server.use(
     // allowedHeaders: ['Content-Type', 'Authorization'],
   })
 )
-server.all('/api/auth/{*any}', toNodeHandler(auth))
 server.use('/trpc', expressAdapter)
+server.all('/api/auth/{*any}', toNodeHandler(auth))
 server.use(bodyParser.json())
 server.use(express.json())
 

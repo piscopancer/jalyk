@@ -1,8 +1,8 @@
-import { db } from '@/db'
 import { FieldUpdateEvent, SubscriptionEvents } from '@/types'
 import EventEmitter, { on } from 'node:events'
 import { JsonValue, OverrideProperties } from 'type-fest'
 import { z } from 'zod/v4'
+import { db } from '../db'
 import { t } from './t'
 
 type EventMap = {

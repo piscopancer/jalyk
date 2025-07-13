@@ -210,13 +210,13 @@ const config = {
   "inlineDatasources": {
     "db": {
       "url": {
-        "fromEnvVar": "DATABASE_URL",
-        "value": null
+        "fromEnvVar": null,
+        "value": "postgresql://piscopancer:0109@localhost:5555/lol?schema=public"
       }
     }
   },
-  "inlineSchema": "datasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"./prisma\"\n}\n\nmodel User {\n  // provided by auth provider, must not generate by hand\n  id           String       @id\n  createdAt    DateTime     @default(now())\n  name         String\n  photoUrl     String?\n  authProvider AuthProvider\n\n  inProjects UserProjectRole[]\n}\n\nenum UserRole {\n  owner\n  editor\n  viewer\n}\n\nenum AuthProvider {\n  google\n  github\n}\n\nmodel UserProjectRole {\n  userId    String\n  projectId String\n  role      UserRole\n\n  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)\n  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)\n\n  @@id([userId, projectId])\n}\n\nmodel Project {\n  id        String   @id @default(cuid())\n  title     String\n  createdAt DateTime @default(now())\n\n  documents Document[]\n  users     UserProjectRole[]\n}\n\nmodel Field {\n  documentId String\n  path       String\n  value      Json?\n\n  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)\n\n  @@id([documentId, path])\n}\n\nmodel Document {\n  id        String   @id @default(cuid())\n  type      String\n  createdAt DateTime @default(now())\n  fields    Field[]\n  projectId String\n\n  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)\n}\n",
-  "inlineSchemaHash": "a8afd82f4b00ce810ac91ce1e6ea7eaa4de24dd35e5b7c5e2eac16a8106ad8a0",
+  "inlineSchema": "datasource db {\n  provider = \"postgresql\"\n  // url      = env(\"DATABASE_URL\")\n  url      = \"postgresql://piscopancer:0109@localhost:5555/lol?schema=public\"\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"./prisma\"\n}\n\nmodel User {\n  // provided by auth provider, must not generate by hand\n  id           String       @id\n  createdAt    DateTime     @default(now())\n  name         String\n  photoUrl     String?\n  authProvider AuthProvider\n\n  inProjects UserProjectRole[]\n}\n\nenum UserRole {\n  owner\n  editor\n  viewer\n}\n\nenum AuthProvider {\n  google\n  github\n}\n\nmodel UserProjectRole {\n  userId    String\n  projectId String\n  role      UserRole\n\n  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)\n  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)\n\n  @@id([userId, projectId])\n}\n\nmodel Project {\n  id        String   @id @default(cuid())\n  title     String\n  createdAt DateTime @default(now())\n\n  documents Document[]\n  users     UserProjectRole[]\n}\n\nmodel Field {\n  documentId String\n  path       String\n  value      Json?\n\n  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)\n\n  @@id([documentId, path])\n}\n\nmodel Document {\n  id        String   @id @default(cuid())\n  type      String\n  createdAt DateTime @default(now())\n  fields    Field[]\n  projectId String\n\n  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)\n}\n",
+  "inlineSchemaHash": "0b8742a9d3a00d6b314ea31b8fbbc65c77458bceb4b65300c1c42941859bc8de",
   "copyEngine": true
 }
 config.dirname = '/'
@@ -227,9 +227,7 @@ config.engineWasm = undefined
 config.compilerWasm = undefined
 
 config.injectableEdgeEnv = () => ({
-  parsed: {
-    DATABASE_URL: typeof globalThis !== 'undefined' && globalThis['DATABASE_URL'] || typeof process !== 'undefined' && process.env && process.env.DATABASE_URL || undefined
-  }
+  parsed: {}
 })
 
 if (typeof globalThis !== 'undefined' && globalThis['DEBUG'] || typeof process !== 'undefined' && process.env && process.env.DEBUG || undefined) {
