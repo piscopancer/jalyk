@@ -1,10 +1,10 @@
 import { cn } from '@/utils'
 import { Tooltip as T } from '@base-ui-components/react'
-import { ReactNode } from 'react'
+import { ComponentProps, ComponentType } from 'react'
 
 type TooltipProps = {
-  content: React.ReactNode
-  children?: ReactNode
+  content: T.Popup.Props['children']
+  children?: ComponentType<ComponentProps<'button'>> | typeof T.Trigger | any
   providerProps?: T.Provider.Props
   rootProps?: T.Root.Props
   contentProps?: Omit<T.Popup.Props, 'content'>
@@ -15,7 +15,7 @@ export function Tooltip({ children, content, rootProps, contentProps, providerPr
   return (
     <T.Provider delay={providerProps?.delay ?? 250}>
       <T.Root open={rootProps?.open} onOpenChange={rootProps?.onOpenChange}>
-        <T.Popup render={children} />
+        <T.Trigger render={<>{children}</>} />
         <T.Portal>
           <T.Positioner sideOffset={positionProps?.sideOffset ?? 4}>
             <T.Popup {...contentProps} className={cn('rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-1 text-sm', contentProps?.className as string)}>

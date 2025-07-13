@@ -10,9 +10,9 @@
   "scripts": {
     "db-dev": "prisma dev",
     "db-gen": "prisma generate",
-    "db-dev-mig-create": "prisma migrate dev --create-only",
-    "db-dev-mig-run": "prisma migrate dev",
-    "db-dev-con": "psql -h localhost -p 5555 -U piscopancer -d lol"
+    "db-migration-create": "prisma migrate dev --create-only",
+    "db-migration-run": "prisma migrate dev",
+    "db-connect": "psql -h localhost -p 5555 -U piscopancer -d lol"
   },
   "dependencies": {
     "@auth/express": "^0.11.0",
