@@ -16,7 +16,7 @@ export function Menu({ children, content, popupProps, positionProps, rootProps }
       {children}
       <M.Portal>
         <M.Positioner {...positionProps}>
-          <M.Popup {...popupProps} className={cn('bg-zinc-950 p-2 rounded-xl border border-zinc-800', popupProps?.className as string)}>
+          <M.Popup {...popupProps} className={cn('bg-zinc-950 p-1 rounded-md border border-zinc-800', popupProps?.className as string)}>
             {content({
               Item,
               Separator,

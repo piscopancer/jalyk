@@ -6,5 +6,6 @@ export const t = initTRPC.create({
       enabled: true,
       intervalMs: 30_000,
     },
+    maxDurationMs: 5000,
   },
 })

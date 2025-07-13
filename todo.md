@@ -56,6 +56,8 @@ if type of field is `object`, there's an additional field `shape` that takes a z
 
 # Field
 
+! добавить контекст из base ui, который будет работать как доп меню
+
 новый вариант для field: у field будут поля `project_id`, `document_id`, `path`. Если массив `animals` в документе с `id` `zoo123`, то его полем будет `<project_id>.zoo123.animals.12` (???). Если мы вдруг решили что animals должен стать объектом `{cats: string[], wolves: string[]}`, то `x.animals.[1..12]` останутся, но новые поля будут добавлены как `<project_id>.zoo123.animals.cats.0` и `<project_id>.zoo123.animals.wolves.0`.
 
 Если поле не имеет `type` а определяется исходя из типа `value`, то если в массиве объявлены 2 типа строчного значения (разная валидация и компонент), то при создании такого поля не получится отличать их, ведь нет никакой разницы в БД - оба хранятся как строки JSON. Решение
@@ -84,8 +86,9 @@ when clicking `+` to create a new document, the new "window" will open where gen
 
 ## Preview
 
-! справа как истории в тг показывает людей, которые редактируют поле документа
+! справа как истории в тг показывает людей, которые сидят в поле документа
 ! превью документа с повторяющимся фоном стрелка вправо чтобы показать движение вправо
+! добавить контекст из base ui, который будет работать как доп меню
 
 for an automatic preview there must be at least one string field in the document which content will be taken to the `title` of the preview. the actions, media will be resolved from the document declaration as the document's `type` is used to find it in the schema. if there's 0 string titles, the id is displayed in the title unless preview props are specified.
 

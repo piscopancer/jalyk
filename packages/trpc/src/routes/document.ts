@@ -1,5 +1,5 @@
+import { db } from '@/db'
 import { z } from 'zod/v4'
-import { db } from '../db'
 import { t } from './t'
 
 export const documentRouter = t.router({

@@ -4,9 +4,8 @@ import { DocumentForPreview, useDefaultPreview, UsePreview, useUserPreview1 } fr
 // import { shopDefinition, userDefinition } from '@/structure'
 import { trpc } from '@/trpc'
 import { cn } from '@/utils'
-import { faker } from '@faker-js/faker'
 import { Separator } from '@repo/ui'
-import { LucidePlus, LucideSearch } from 'lucide-react'
+import { LucideChevronRight, LucidePlus, LucideSearch } from 'lucide-react'
 import { ComponentProps, createContext, ReactNode, useContext } from 'react'
 import { createPath, useNavigate, useParams } from 'react-router'
 import DocumentView from './form/document-view'
@@ -92,41 +91,22 @@ export const testStructure = defineSegment({
         },
       })
     },
-    // shop(id) {
-    //   return defineSegment({
-    //     next: {
-    //       users() {
-    //         return defineSegment({
-    //           next: {
-    //             megaUser(id) {
-    //               return defineSegment({
-    //                 content(ui) {
-    //                   return 'this user is TAMERLAN ✈🏝'
-    //                 },
-    //               })
-    //             },
-    //           },
-    //           content(ui) {
-    //             return (
-    //               <ul>
-    //                 <ui.DocumentItem tag='megaUser' id='tamik' />
-    //                 <ui.DocumentItems tag='megaUser' type='user' />
-    //               </ul>
-    //             )
-    //           },
-    //         })
-    //       },
-    //     },
-    //     content(ui) {
-    //       return (
-    //         <div>
-    //           <ui.DocumentForm id={id} />
-    //           <ui.DocumentItem tag='users' id='users' />
-    //         </div>
-    //       )
-    //     },
-    //   })
-    // },
+    users() {
+      return defineSegment({
+        content(ui) {
+          return <ui.DocumentItems tag='user' type='user' />
+        },
+        next: {
+          user(id) {
+            return defineSegment({
+              content(ui) {
+                return <ui.DocumentForm id={id} />
+              },
+            })
+          },
+        },
+      })
+    },
   },
   content(ui) {
     return (
@@ -140,7 +120,7 @@ export const testStructure = defineSegment({
           }}
         />
         <ui.Separator />
-        {/* <ui.DocumentItem usePreview={useUserPreview1} tag='shop2' id='shop_2' /> */}
+        <ui.ToDocumentItems tag='users' type='user' />
         <ui.DocumentItem
           usePreview={useUserPreview1}
           tag='user'
@@ -162,7 +142,6 @@ const DocumentItem = (props: {
 }) => {
   const ctx = useContext(segmentContext)
   const nextSegment = buildSegment(props.tag, props.document.id)
-
   return (
     <button
       onClick={() => {
@@ -175,14 +154,29 @@ const DocumentItem = (props: {
     </button>
   )
 }
-const DocumentForm = (props: { id: string }) => <article>form for document: {props.id}</article>
-const TEST_IDS = Array.from({ length: 6 }).map(() => faker.color.human() + '_' + faker.company.buzzNoun())
+const DocumentForm = (props: { id: string }) => {
+  const { definitions } = useStudioConfig()
+  return (
+    <article>
+      <p>form for document: {props.id}</p>
+      <DocumentView documentId={props.id} documentDefinition={definitions[1]!} />
+    </article>
+  )
+}
 const DocumentItems = (props: { tag: string; type: string }) => {
+  const ctx = useContext(segmentContext)
+  const documentIdsQuery = trpc.document.idsOfType.useQuery({ type: props.type })
+
   return (
     <article>
       <header className='flex mb-2'>
         <h1 className='mr-auto'>{props.type}</h1>
-        <button>
+        <button
+          onClick={() => {
+            const randomId = '666'
+            ctx.navigateToSegment(buildSegment(props.tag, randomId))
+          }}
+        >
           <LucidePlus />
         </button>
       </header>
@@ -191,23 +185,47 @@ const DocumentItems = (props: { tag: string; type: string }) => {
         <LucideSearch className='stroke-zinc-500 size-5 self-center ml-3' />
       </div>
       <ul>
-        {TEST_IDS.map((id) => (
+        {documentIdsQuery.data?.map(({ id }) => (
           <li key={id}>
-            <DocumentItem tag={props.tag} document={{ id }} usePreview={useDefaultPreview} />
+            <DocumentItem tag={props.tag} document={{ id, type: props.type }} usePreview={useDefaultPreview} />
           </li>
         ))}
       </ul>
     </article>
   )
 }
+const ToDocumentItems = (props: { type: string; tag: string }) => {
+  const ctx = useContext(segmentContext)
+  const { definitions } = useStudioConfig()
+  const def = definitions.find((d) => d.type === props.type)!
+  const nextSegment = buildSegment(props.tag)
+  const selected = ctx.nextSegment === nextSegment
+
+  return (
+    <button
+      onClick={() => {
+        ctx.navigateToSegment(buildSegment(props.tag))
+      }}
+      disabled={selected}
+      className={cn('py-2 px-2 flex items-center w-full text-left', selected ? 'bg-zinc-900' : 'hover:bg-zinc-925')}
+    >
+      <div className='flex items-center gap-2 flex-1'>
+        {def.icon && <def.icon className='size-5' />}
+        <span>{def.title ?? def.type}</span>
+      </div>
+      <LucideChevronRight className='size-5' />
+    </button>
+  )
+}
 
 type Ui = typeof ui
 
 const ui = {
-  Separator: Separator,
+  Separator,
   DocumentItem,
   DocumentItems,
   DocumentForm,
+  ToDocumentItems,
 }
 
 function buildSegment(tag: string, id?: string) {
@@ -289,8 +307,8 @@ export function SegmentView({
           </div>
         </segmentContext.Provider>
         {true && (
-          <div className='h-full w-3 border-x border-zinc-800 px-0.5'>
-            <div className='h-full bg-zinc-500/10 border-x border-zinc-950' />
+          <div className='h-full w-3 border-x border-zinc-800 px-1'>
+            <div className='h-full bg-zinc-500/10' />
           </div>
         )}
       </main>
