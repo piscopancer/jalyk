@@ -8,8 +8,8 @@ export const client = new S3Client({
   endpoint: 'https://storage.yandexcloud.net',
   region: 'ru-central1',
   credentials: {
-    accessKeyId: process.env.YANDEX_S3_ACCESS_KEY_ID,
-    secretAccessKey: process.env.YANDEX_S3_SECRET_ACCESS_KEY,
+    accessKeyId: process.env.YANDEX_S3_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.YANDEX_S3_SECRET_ACCESS_KEY!,
   },
 })
 

@@ -69,7 +69,7 @@ export function PreviewMedia(props: { media: MediaType; size?: 'default' | 'sm' 
 }
 
 export function Preview(props: { document?: Partial<JalykDocument>; usePreview: UsePreview; size: 'default' | 'sm' }) {
-  const preview = props.document?.id ? props.usePreview(props.document.id) : undefined
+  const preview = props.document?.id ? props.usePreview({ id: props.document.id }) : undefined
   const { definitions } = useStudioConfig()
   const icon = props.document?.type ? (definitions.find((d) => d.type === props.document!.type)!.icon ?? LucideFileSymlink) : LucideFileSymlink
 

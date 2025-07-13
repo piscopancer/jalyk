@@ -6,9 +6,9 @@
     "skipLibCheck": true,
     "strict": true,
     "module": "esnext",
-    "moduleResolution": "bundler"
-    // "paths": {
-    //   "@/*": ["./src/*"]
-    // }
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   }
 }

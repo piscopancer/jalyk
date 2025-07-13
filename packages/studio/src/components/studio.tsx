@@ -1,6 +1,6 @@
 import { auth } from '@/auth'
 import useStudioConfig from '@/hooks/use-project-ctx'
-import { UsePreview, useUserPreview1 } from '@/preview'
+import { DocumentForPreview, useDefaultPreview, UsePreview, useUserPreview1 } from '@/preview'
 // import { shopDefinition, userDefinition } from '@/structure'
 import { trpc } from '@/trpc'
 import { cn } from '@/utils'
@@ -11,7 +11,7 @@ import { ComponentProps, createContext, ReactNode, useContext } from 'react'
 import { createPath, useNavigate, useParams } from 'react-router'
 import DocumentView from './form/document-view'
 import Header from './header'
-import PreviewBase from './preview'
+import { Preview } from './preview'
 
 export default function Studio() {
   const authQuery = auth.useSession()
@@ -80,7 +80,7 @@ export const testStructure = defineSegment({
       return defineSegment({
         content(ui) {
           const { definitions } = useStudioConfig()
-          return <DocumentView documentDefinition={definitions[0]!} documentId='cool-user' />
+          return <DocumentView documentDefinition={definitions.find((d) => d.type === 'user')!} documentId='cool-user' />
         },
       })
     },
@@ -88,7 +88,7 @@ export const testStructure = defineSegment({
       return defineSegment({
         content(ui) {
           const { definitions } = useStudioConfig()
-          return <DocumentView documentDefinition={definitions[0]!} documentId='shop_0' />
+          return <DocumentView documentDefinition={definitions.find((d) => d.type === 'shop')!} documentId='shop_0' />
         },
       })
     },
@@ -131,10 +131,24 @@ export const testStructure = defineSegment({
   content(ui) {
     return (
       <ul>
-        <ui.DocumentItem tag='shop' id='shop_0' />
+        <ui.DocumentItem
+          usePreview={useDefaultPreview}
+          tag='shop'
+          document={{
+            id: 'shop_0',
+            type: 'shop',
+          }}
+        />
         <ui.Separator />
         {/* <ui.DocumentItem usePreview={useUserPreview1} tag='shop2' id='shop_2' /> */}
-        <ui.DocumentItem usePreview={useUserPreview1} tag='user' id='cool-user' />
+        <ui.DocumentItem
+          usePreview={useUserPreview1}
+          tag='user'
+          document={{
+            id: 'cool-user',
+            type: 'user',
+          }}
+        />
       </ul>
     )
   },
@@ -142,14 +156,12 @@ export const testStructure = defineSegment({
 
 const DocumentItem = (props: {
   //
-  id: string
+  document: DocumentForPreview
   tag: string
-  usePreview?: UsePreview
+  usePreview: UsePreview
 }) => {
   const ctx = useContext(segmentContext)
-  const nextSegment = buildSegment(props.tag, props.id)
-  // todo: insulting hook rules?
-  const preview = props.usePreview ? props.usePreview(props.id) : undefined
+  const nextSegment = buildSegment(props.tag, props.document.id)
 
   return (
     <button
@@ -159,12 +171,7 @@ const DocumentItem = (props: {
       disabled={ctx.nextSegment === nextSegment}
       className={cn('border-y w-full', ctx.nextSegment === nextSegment ? 'border-zinc-800 bg-zinc-900' : 'border-transparent hover:bg-zinc-925')}
     >
-      <PreviewBase
-        preview={{
-          title: preview?.title ?? props.id,
-          subtitle: preview?.subtitle,
-        }}
-      />
+      <Preview size='default' usePreview={props.usePreview} document={props.document} />
     </button>
   )
 }
@@ -186,7 +193,7 @@ const DocumentItems = (props: { tag: string; type: string }) => {
       <ul>
         {TEST_IDS.map((id) => (
           <li key={id}>
-            <DocumentItem tag={props.tag} id={id} />
+            <DocumentItem tag={props.tag} document={{ id }} usePreview={useDefaultPreview} />
           </li>
         ))}
       </ul>

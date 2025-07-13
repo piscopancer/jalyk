@@ -2,6 +2,7 @@ import { useProjectUsers } from '@/hooks/query/use-users'
 import { useProjectQuery } from '@/hooks/use-project-info'
 import { providerIcons, rolesInfo } from '@/user'
 import { Menu } from '@base-ui-components/react'
+import {} from '@repo/trpc'
 import { LucideUsers2 } from 'lucide-react'
 
 export default function Header() {
@@ -26,13 +27,19 @@ export default function Header() {
                       <div className='size-9 hopper'>
                         <img src={user.photoUrl ?? undefined} className='size-full rounded-full' />
                         {(() => {
-                          const Icon = providerIcons[user.authProvider]
+                          // @ts-ignore
+                          const Icon = providerIcons[user.authProvider]!
                           return <Icon className='place-self-end size-4 bg-zinc-950 rounded-full translate-0.5' />
                         })()}
                       </div>
                       <div className='flex flex-col min-w-32'>
                         <span className='leading-tight'>{user.name}</span>
-                        <span className='text-zinc-400 text-sm leading-tight'>{rolesInfo[user.inProjects[0]!.role]}</span>
+                        <span className='text-zinc-400 text-sm leading-tight'>
+                          {
+                            // @ts-ignore
+                            rolesInfo[user.inProjects[0]!.role]
+                          }
+                        </span>
                       </div>
                     </Menu.Item>
                   ))}

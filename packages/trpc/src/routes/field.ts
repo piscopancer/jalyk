@@ -1,11 +1,9 @@
+import { db } from '@/db'
+import { FieldUpdateEvent, SubscriptionEvents } from '@/types'
 import EventEmitter, { on } from 'node:events'
 import { JsonValue, OverrideProperties } from 'type-fest'
 import { z } from 'zod/v4'
-import { db } from '../db'
-import { FieldUpdateEvent, SubscriptionEvents } from '../types'
 import { t } from './t'
-
-// export const pathSchema = z.array(z.union([z.string(), z.number()]))
 
 type EventMap = {
   [Key in keyof SubscriptionEvents]: [SubscriptionEvents[Key]]

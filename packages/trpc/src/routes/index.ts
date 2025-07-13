@@ -5,6 +5,7 @@ import { projectRouter } from './project'
 import { t } from './t'
 import { userRouter } from './user'
 
+// todo: cannot build bcs of inference in dts???
 export const trpcRouter = t.router({
   user: userRouter,
   field: fieldRouter,
