@@ -1,7 +1,7 @@
 import { auth } from '@/auth'
 import useStudioConfig from '@/hooks/use-project-ctx'
 import { UsePreview, useUserPreview1 } from '@/preview'
-import { shopDefinition, userDefinition } from '@/test/shapes'
+// import { shopDefinition, userDefinition } from '@/structure'
 import { trpc } from '@/trpc'
 import { cn } from '@/utils'
 import { faker } from '@faker-js/faker'
@@ -79,14 +79,16 @@ export const testStructure = defineSegment({
     user() {
       return defineSegment({
         content(ui) {
-          return <DocumentView documentDefinition={userDefinition} documentId='cool-user' />
+          const { definitions } = useStudioConfig()
+          return <DocumentView documentDefinition={definitions[0]!} documentId='cool-user' />
         },
       })
     },
     shop() {
       return defineSegment({
         content(ui) {
-          return <DocumentView documentDefinition={shopDefinition} documentId='shop_0' />
+          const { definitions } = useStudioConfig()
+          return <DocumentView documentDefinition={definitions[0]!} documentId='shop_0' />
         },
       })
     },

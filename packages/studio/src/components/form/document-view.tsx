@@ -1,4 +1,4 @@
-import { DocumentDefinition } from '@/test/shapes'
+import { DocumentDefinition } from '@/structure'
 import { objectEntries } from '@/utils'
 import { LucideEllipsis } from 'lucide-react'
 import Fieldset from './fieldset'

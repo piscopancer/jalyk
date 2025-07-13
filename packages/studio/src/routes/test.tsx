@@ -1,5 +1,5 @@
 import ReferenceFieldInput from '@/components/form/reference-input'
-import { referenceShape } from '@/test/shapes'
+import { referenceShape } from '@/structure'
 
 export default function TestPage() {
   return (

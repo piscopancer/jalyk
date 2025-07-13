@@ -2,7 +2,7 @@
 // import { trpc } from '@/trpc'
 import { JalykDocument } from '@/document'
 import { useParsedFieldQuery, useUpsertFieldFunnel } from '@/field'
-import { StringFieldConfig, StringShape } from '@/test/shapes'
+import { StringFieldConfig, StringShape } from '@/structure'
 import { cn } from '@/utils'
 import { Menu as BaseMenu } from '@base-ui-components/react'
 import { Menu } from '@repo/ui'

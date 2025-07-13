@@ -1,7 +1,7 @@
 import { JalykDocument } from '@/document'
 import { useParsedFieldQuery, useUpsertFieldFunnel } from '@/field'
 import { useUserPreview1 } from '@/preview'
-import { ReferenceFieldConfig, ReferenceShape } from '@/test/shapes'
+import { ReferenceFieldConfig, ReferenceShape } from '@/structure'
 import { trpc } from '@/trpc'
 import { cn, literalSwitch } from '@/utils'
 import { Menu as BaseMenu } from '@base-ui-components/react'

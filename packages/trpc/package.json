@@ -2,12 +2,14 @@
   "name": "@repo/trpc",
   "version": "0.0.1",
   "exports": {
-    ".": "./index.ts"
+    ".": "./dist/index.js"
   },
   "author": "piscopancer",
   "license": "ISC",
   "type": "module",
   "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
     "db-dev": "prisma dev",
     "db-gen": "prisma generate",
     "db-migration-create": "prisma migrate dev --create-only",

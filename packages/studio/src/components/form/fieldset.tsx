@@ -1,5 +1,5 @@
 import { JalykDocument } from '@/document'
-import { FieldDefinition } from '@/test/shapes'
+import { FieldDefinition } from '@/structure'
 import { keySwitch, SvgComponentType } from '@/utils'
 import { useId } from 'react'
 import FieldToolbar from './field-toolbar'

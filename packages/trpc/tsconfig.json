@@ -1,0 +1,14 @@
+{
+  "include": ["."],
+  "exclude": ["node_modules", "dist"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "strict": true,
+    "module": "esnext",
+    "moduleResolution": "bundler"
+    // "paths": {
+    //   "@/*": ["./src/*"]
+    // }
+  }
+}
