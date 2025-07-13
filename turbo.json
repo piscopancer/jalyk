@@ -6,12 +6,11 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**"]
     },
-    "@jalyk/server#dev": {},
     "@repo/trpc#db-dev": {},
     "dev": {
       "cache": false,
       "persistent": true,
-      "with": ["@jalyk/server#dev", "@repo/trpc#db-dev"]
+      "with": ["@repo/trpc#db-dev"]
     }
   }
 }
