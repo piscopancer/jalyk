@@ -1,5 +1,4 @@
 import '@/style.css'
-import '../ui/src/style.css'
 
 export * from '@/components/form'
 export * from '@/config'

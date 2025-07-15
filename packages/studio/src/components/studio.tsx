@@ -1,9 +1,9 @@
-import { auth } from '@/auth'
+import { useFieldUpdateSubscription } from '@/field'
 import useStudioConfig from '@/hooks/use-project-ctx'
 import { DocumentForPreview, useDefaultPreview, UsePreview, useUserPreview1 } from '@/preview'
-// import { shopDefinition, userDefinition } from '@/structure'
+import Assets from '@/routes/assets'
 import { trpc } from '@/trpc'
-import { cn } from '@/utils'
+import { cn, literalSwitch } from '@/utils'
 import { Separator } from '@repo/ui'
 import { LucideChevronRight, LucidePlus, LucideSearch } from 'lucide-react'
 import { ComponentProps, createContext, ReactNode, useContext } from 'react'
@@ -12,46 +12,31 @@ import DocumentView from './form/document-view'
 import Header from './header'
 import { Preview } from './preview'
 
+type Tool = 'structure' | 'assets'
+
 export default function Studio() {
-  const authQuery = auth.useSession()
-  const utils = trpc.useUtils()
-  const { projectId } = useStudioConfig()
-  const fieldUpdateSub = trpc.field.onFieldUpdate.useSubscription(
-    { projectId },
-    {
-      onData(updatedField) {
-        // console.log('field updated received', updatedField)
-        utils.field.find.setData(
-          {
-            documentId: updatedField.documentId,
-            path: updatedField.path,
-          },
-          { value: updatedField.value }
-        )
-      },
-    }
-  )
+  const params = useParams<'*'>()
+  const catchall = params['*']?.split('/') ?? []
+  const [tool, ...segments] = catchall as [Tool, ...string[]]
+
+  useFieldUpdateSubscription()
 
   return (
     <main className='studio flex flex-col bg-zinc-950'>
       <Header />
-      {/* render only if path starts with that name of the tool (structure) */}
-      <Structure />
+      {literalSwitch(tool, {
+        assets: () => <Assets />,
+        structure: () => <Structure segments={segments} />,
+      })}
     </main>
   )
 }
 
-function Structure() {
-  const params = useParams<'*'>()
-  const catchall = params['*']?.split('/') ?? []
-  const [tool, ...segments] = catchall
-
+function Structure({ segments }: { segments: string[] }) {
   return (
     <>
-      <pre>{catchall.join('/')}</pre>
       <SegmentView
         segment={{
-          tool: tool!,
           segments,
           segmentDefinition: testStructure,
         }}
@@ -246,7 +231,11 @@ function parseSegment(segment: string) {
 
 const segmentContext = createContext<{ segment: string | undefined; navigateToSegment: (segment: string) => void; nextSegment: string | undefined }>(null!)
 
-type SegmentProps = { segmentIndex?: number; segmentDefinition: Segment; segments: string[]; tool: string }
+type SegmentProps = {
+  segmentIndex?: number
+  segmentDefinition: Segment
+  segments: string[]
+}
 
 export function SegmentView({
   segment: {
@@ -254,7 +243,6 @@ export function SegmentView({
     segmentIndex = -1,
     segmentDefinition,
     segments,
-    tool,
   },
   ...attr
 }: {
@@ -281,7 +269,7 @@ export function SegmentView({
       pathname: [
         // change to use studio config
         `/studio`,
-        tool,
+        'structure' satisfies Tool,
         ...prevSegments,
         segment,
         to,
@@ -316,7 +304,6 @@ export function SegmentView({
         <SegmentView
           segment={{
             segmentIndex: segmentIndex + 1,
-            tool,
             segments,
             segmentDefinition: nextSegment,
           }}

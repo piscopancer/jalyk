@@ -6,6 +6,26 @@ import { JalykDocument } from './document'
 import useStudioConfig from './hooks/use-project-ctx'
 import { trpc } from './trpc'
 
+export function useFieldUpdateSubscription() {
+  const { projectId } = useStudioConfig()
+  const utils = trpc.useUtils()
+  trpc.field.onFieldUpdate.useSubscription(
+    { projectId },
+    {
+      onData(updatedField) {
+        // console.log('field updated received', updatedField)
+        utils.field.find.setData(
+          {
+            documentId: updatedField.documentId,
+            path: updatedField.path,
+          },
+          { value: updatedField.value }
+        )
+      },
+    }
+  )
+}
+
 export function useParsedFieldQuery<S extends z.ZodType>({ documentId, path, shape }: { documentId: string; path: string; shape: S }) {
   return trpc.field.find.useQuery(
     {
