@@ -79,7 +79,7 @@ if type of field is `object`, there's an additional field `shape` that takes a z
 
 `referenceShape` must take some sort of filter and search functions. filter describes what documents appear at all. search
 
-when clicking `+` to create a new document, the new "window" will open where generated (on the client) id will be passed. document is not created until one of its inputs calls upsert which in turn will create a missing document. the list rendering
+<!-- when clicking `+` to create a new document, the new "window" will open where generated (on the client) id will be passed. document is not created until one of its inputs calls upsert which in turn will create a missing document. the list rendering -->
 
 ! форму документа можно открыть на весь экран, когда та рендерится для ссылки в другом документе. Потому что форма может быть широкой, нужно обернуть ее в контейнер, и компоненты внутри
 ! если массив содержит только документы одного типа - есть кнопка рендерить как таблицу. поле станет столбиком, который можно свернуть - оно останется, но скроются значения и будет показана иконка поля.
@@ -102,3 +102,9 @@ for an automatic preview there must be at least one string field in the document
 ! разные виды отображения структуры, которые сохраняются в локал стораж. 1. видовс подобный - водновременно открыты 3 панели (предыдущая, текущая, следущая). 2. листающаяся - просто листает горизонтально все карты
 
 Segment logic. All have `expanded` flag. When below min width it collapses, but can be expanded manually again.
+
+# Запросы с клиента
+
+все запросы должны быть ограничены айди этого проекта
+
+юзер должен запрашивать документы и поля. для поля указать айди (состоит из айди документа и пути).

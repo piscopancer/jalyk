@@ -13,12 +13,12 @@
     "**/node_modules/**": true
   },
   "terminal.integrated.profiles.windows": {
-    "_apps/client": {
+    "_apps/test-client": {
       "source": "PowerShell",
       "icon": "globe",
       "overrideName": true,
       "color": "terminal.ansiBlue",
-      "args": ["-WorkingDirectory", "apps/client"]
+      "args": ["-WorkingDirectory", "apps/test-client"]
     },
     "_apps/server": {
       "source": "PowerShell",
@@ -26,6 +26,13 @@
       "overrideName": true,
       "color": "terminal.ansiRed",
       "args": ["-WorkingDirectory", "apps/server"]
+    },
+    "_packages/client": {
+      "source": "PowerShell",
+      "icon": "link",
+      "overrideName": true,
+      "color": "terminal.ansiBlue",
+      "args": ["-WorkingDirectory", "packages/client"]
     },
     "_packages/studio": {
       "source": "PowerShell",

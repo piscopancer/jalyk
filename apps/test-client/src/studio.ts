@@ -1,4 +1,4 @@
-import { StudioConfig, defineReference, defineString } from '@repo/studio'
+import { DocumentDefinition, StudioConfig, defineReference, defineString } from '@repo/studio'
 import { LucideGlobe, LucideHeading1, LucideShoppingBasket, LucideUser2 } from 'lucide-react'
 
 export const shopDefinition = {
@@ -30,7 +30,7 @@ export const shopDefinition = {
       },
     }),
   },
-}
+} as const satisfies DocumentDefinition
 
 export const userDefinition = {
   type: 'user',
@@ -40,7 +40,7 @@ export const userDefinition = {
     surname: defineString({}),
     middlename: defineString({}),
   },
-}
+} as const satisfies DocumentDefinition
 
 export const studioConfig: StudioConfig = {
   projectId: 'la',

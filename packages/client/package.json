@@ -1,0 +1,22 @@
+{
+  "name": "@jalyk/client",
+  "version": "0.0.1",
+  "exports": {
+    ".": "./dist/index.mjs"
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup"
+  },
+  "author": "piscopancer",
+  "license": "ISC",
+  "dependencies": {
+    "@trpc/client": "^11.4.1",
+    "@trpc/react-query": "^11.4.1"
+  },
+  "devDependencies": {
+    "@repo/trpc": "workspace:*",
+    "tsup": "^8.5.0",
+    "type-fest": "^4.41.0"
+  }
+}

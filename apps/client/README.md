@@ -1,1 +1,0 @@
-Client app for CMS
