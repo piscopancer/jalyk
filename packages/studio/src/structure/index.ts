@@ -38,9 +38,13 @@ export type StringFieldOptions = {
   }
 }
 
-export type ReferenceShapeOptions = { size: 'default' | 'sm' }
-export type ReferenceFieldConfig = { icon?: SvgComponentType; title?: string; options: ReferenceShapeOptions }
-export function defineReference(config?: ReferenceFieldConfig) {
+export type ReferenceShapeOptions<To extends string[]> = { to: To; size: 'default' | 'sm' }
+export type ReferenceFieldConfig<To extends string[]> = {
+  icon?: SvgComponentType
+  title?: string
+  options: ReferenceShapeOptions<To>
+}
+export function defineReference<To extends string[]>(config?: ReferenceFieldConfig<To>) {
   return {
     type: 'reference' as const,
     icon: config?.icon,
