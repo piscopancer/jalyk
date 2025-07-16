@@ -5,8 +5,6 @@ export default defineConfig((options) => {
     entry: ['index.ts'],
     format: 'esm',
     silent: true,
-    experimentalDts: true,
     watch: options.watch,
-    skipNodeModulesBundle: true,
   }
 })
