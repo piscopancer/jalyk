@@ -1,11 +1,12 @@
 import useStudioConfig from '@/hooks/use-project-ctx'
 import { trpc } from '@/trpc'
-import { cn, objectEntries, SvgComponentType } from '@/utils'
+import { cn, SvgComponentType } from '@/utils'
 import { ContextMenu as CM } from '@base-ui-components/react'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { filesize } from 'filesize'
 import { LucideFile, LucideFileText, LucideFilm, LucideImage, LucideMusic, LucideSearch, LucideUploadCloud } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { entries } from 'remeda'
 
 const assetTypeExtensions = {
   text: {
@@ -75,7 +76,7 @@ export default function Assets() {
         title: 'All',
         total: assetsQuery.data?.length ?? 0,
       },
-      ...objectEntries(assetTypeExtensions).map(
+      ...entries(assetTypeExtensions).map(
         ([key, info]) =>
           ({
             name: key,

@@ -1,6 +1,6 @@
 import { DocumentDefinition } from '@/structure'
-import { objectEntries } from '@/utils'
 import { LucideEllipsis } from 'lucide-react'
+import { entries } from 'remeda'
 import Fieldset from './fieldset'
 
 export default function DocumentView({ documentId, documentDefinition }: { documentId: string; documentDefinition: DocumentDefinition }) {
@@ -19,7 +19,7 @@ export default function DocumentView({ documentId, documentDefinition }: { docum
         </menu>
       </header>
       <ul className='flex flex-col gap-6'>
-        {objectEntries(documentDefinition.fields).map(([fieldName, config]) => (
+        {entries(documentDefinition.fields).map(([fieldName, config]) => (
           <li key={fieldName}>
             <Fieldset
               document={{
