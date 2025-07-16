@@ -29,9 +29,9 @@ export function createJalykClient(opts: {
 
   return {
     field: (query: FindFirstFieldSafe) =>
-      trpcClient.client.field.query({
+      trpcClient.api.field.query({
         projectId: opts.projectId,
-        query: {},
+        query,
       }),
   }
 }

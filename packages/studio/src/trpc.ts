@@ -1,6 +1,12 @@
 import { type TRPCRouter } from '@repo/trpc'
 import { createTRPCReact, httpBatchLink, httpSubscriptionLink, loggerLink, splitLink } from '@trpc/react-query'
 
+// todo: fix?
+import type * as T from '../node_modules/@trpc/react-query/dist/getQueryKey.d-CruH3ncI.mjs'
+import type * as T2 from '../node_modules/zod/dist/types/v4/core/util'
+type _ = typeof T
+type _2 = typeof T2
+
 export const trpc = createTRPCReact<TRPCRouter>()
 export const trpcClient = trpc.createClient({
   links: [

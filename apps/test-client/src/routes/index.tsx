@@ -1,3 +1,4 @@
+import { client } from '@/cms'
 import { AssetInput } from '@repo/studio'
 import { createFileRoute } from '@tanstack/react-router'
 import { filesize } from 'filesize'
@@ -7,6 +8,8 @@ export const Route = createFileRoute('/')({
 })
 
 function App() {
+  const d = client.field({}).then((f) => console.log('FIELD IN THE VITE APP', f))
+
   return (
     <div className='m-12'>
       <AssetInput

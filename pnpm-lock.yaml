@@ -185,6 +185,9 @@ importers:
 
   packages/studio:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.828.0
+        version: 3.828.0
       '@base-ui-components/react':
         specifier: 1.0.0-beta.1
         version: 1.0.0-beta.1(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -243,6 +246,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.1.8
         version: 4.1.10
+      '@trpc/server':
+        specifier: ^11.4.1
+        version: 11.4.1(typescript@5.8.3)
       '@types/react':
         specifier: ^19.0.8
         version: 19.1.8

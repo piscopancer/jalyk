@@ -1,14 +1,15 @@
 import { createExpressMiddleware } from '@trpc/server/adapters/express'
-import * as SUS from '../../node_modules/zod/dist/types/v4/core/util'
+import { apiRouter } from './api'
 import { assetRouter } from './asset'
-import { clientRouter } from './client'
 import { documentRouter } from './document'
 import { fieldRouter } from './field'
 import { projectRouter } from './project'
 import { t } from './t'
 import { userRouter } from './user'
 
-const s = 1 as unknown as SUS.AnyFunc
+// todo: fix this lol bruh
+import type * as T from 'zod/v4'
+type _ = typeof T
 
 // todo: https://stackoverflow.com/questions/72041763/typescript-inferred-type-cannot-be-named-without-reference
 // todo: https://stackoverflow.com/a/78037438
@@ -19,7 +20,7 @@ export const trpcRouter = t.router({
   document: documentRouter,
   project: projectRouter,
   asset: assetRouter,
-  client: clientRouter,
+  api: apiRouter,
 })
 
 export type TRPCRouter = typeof trpcRouter

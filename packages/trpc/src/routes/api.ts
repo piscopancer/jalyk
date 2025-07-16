@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client'
 import { z } from 'zod/v4'
 import { t } from './t'
 
-export const clientRouter = t.router({
+export const apiRouter = t.router({
   field: t.procedure
     .input(
       z.object({
@@ -13,16 +13,25 @@ export const clientRouter = t.router({
       })
     )
     .query(({ input: { projectId, query } }) => {
-      return db.field.findFirst({
-        ...(query as FindFirstField),
+      return db.field.findMany({
         where: {
-          ...(query as FindFirstField).where,
           document: {
-            projectId: projectId,
+            projectId,
           },
         },
       })
     }),
+  // .query(({ input: { projectId, query } }) => {
+  //   return db.field.findFirst({
+  //     ...(query as FindFirstField),
+  //     where: {
+  //       ...(query as FindFirstField).where,
+  //       document: {
+  //         projectId: projectId,
+  //       },
+  //     },
+  //   })
+  // }),
 })
 
 export type FindFirstFieldSafe = OmitRecursively<FindFirstField, 'project' | 'projectId'>

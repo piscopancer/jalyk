@@ -26,6 +26,10 @@ export function useFieldUpdateSubscription() {
   )
 }
 
+// todo: fix?
+import * as T from '../node_modules/@trpc/react-query/dist/getQueryKey.d-CruH3ncI.mjs'
+type _ = typeof T
+
 export function useParsedFieldQuery<S extends z.ZodType>({ documentId, path, shape }: { documentId: string; path: string; shape: S }) {
   return trpc.field.find.useQuery(
     {
