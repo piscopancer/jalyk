@@ -1,8 +1,9 @@
+import 'dotenv/config'
+
 import { auth, expressAdapter } from '@repo/trpc'
 import { toNodeHandler } from 'better-auth/node'
 import bodyParser from 'body-parser'
 import cors from 'cors'
-import 'dotenv/config'
 import express from 'express'
 
 const server = express()
