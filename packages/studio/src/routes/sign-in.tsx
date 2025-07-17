@@ -6,7 +6,7 @@ import { trpc } from '@/trpc'
 import { LoaderPinwheel } from 'lucide-react'
 import { useEffect } from 'react'
 import { useHref, useNavigate } from 'react-router'
-import { AuthProvider } from '../../../trpc/prisma'
+import { AuthProvider } from '../../../trpc/src/prisma'
 
 export default function SignIn() {
   const studio = useStudioConfig()
@@ -52,7 +52,9 @@ export default function SignIn() {
             ) : projectQuery.data ? (
               <>
                 <header className='flex flex-col items-center py-12 border-b border-zinc-800'>
-                  <div className='uppercase size-16 bg-zinc-900/50 border border-zinc-800 rounded-lg flex items-center justify-center text-xl mb-2'>{projectQuery.data.title[0]}</div>
+                  <div className='uppercase size-16 bg-zinc-900/50 border border-zinc-800 rounded-lg flex items-center justify-center text-xl mb-2'>
+                    {projectQuery.data.title[0]}
+                  </div>
                   <h1 className='mb-1'>{projectQuery.data.title}</h1>
                   <pre className='text-xs bg-zinc-900 text-zinc-400 px-[1ch] rounded-sm'>{studio.projectId}</pre>
                 </header>

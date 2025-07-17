@@ -14,6 +14,7 @@ export default function TestPage() {
           config: {
             options: {
               size: 'default',
+              to: ['shop'],
             },
           },
           path: 'test_path',

@@ -15,7 +15,7 @@ type Props = {
   elementId: string | undefined
   field: {
     path: string
-    config: ReferenceFieldConfig
+    config: ReferenceFieldConfig<string[]>
     shape: ReferenceShape
   }
 } & ComponentProps<'article'>
@@ -35,7 +35,14 @@ export default function ReferenceFieldInput({ field, document, elementId, ...att
   }
 
   return (
-    <article {...attr} ref={selfRef} className={cn('flex items-center border rounded-md border-zinc-800 hover:border-zinc-700 gap-1 bg-zinc-925', attr.className)}>
+    <article
+      {...attr}
+      ref={selfRef}
+      className={cn(
+        'flex items-center border rounded-md border-zinc-800 hover:border-zinc-700 gap-1 bg-zinc-925',
+        attr.className
+      )}
+    >
       {fieldQuery.isSuccess && (
         <Preview
           document={{
@@ -62,7 +69,10 @@ export default function ReferenceFieldInput({ field, document, elementId, ...att
                 <div className='border-b border-zinc-800 p-2'>
                   <div className='hopper bg-zinc-900 rounded-md'>
                     <LucideSearch className='size-5 self-center ml-2 stroke-zinc-500' />
-                    <input placeholder='Start typing...' className='py-2 pl-9 placeholder:text-zinc-500 rounded-[inherit]' />
+                    <input
+                      placeholder='Start typing...'
+                      className='py-2 pl-9 placeholder:text-zinc-500 rounded-[inherit]'
+                    />
                   </div>
                 </div>
                 <ul>

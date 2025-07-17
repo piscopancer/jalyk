@@ -40,7 +40,7 @@ export default function Fieldset(props: FieldsetProps) {
                 config: {
                   icon: cfg.icon,
                   title: cfg.title,
-                  options: cfg.options ?? { size: 'default' },
+                  options: cfg.options ?? { size: 'default', to: [] },
                 },
               }}
             />

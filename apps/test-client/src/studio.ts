@@ -14,6 +14,7 @@ export const shopDefinition = {
       title: 'Directorrr',
       options: {
         size: 'default',
+        to: ['shop'],
       },
     }),
     location: defineString({

@@ -1,3 +1,6 @@
-import { PrismaClient } from '../prisma'
+import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaClient } from './prisma'
 
-export const db = new PrismaClient()
+export const db = new PrismaClient({
+  adapter: new PrismaPg({}),
+})

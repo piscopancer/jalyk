@@ -1,6 +1,6 @@
 import { db } from '@/db'
 import { z } from 'zod/v4'
-import { AuthProvider } from '../../prisma'
+import { AuthProvider } from '../prisma'
 import { t } from './t'
 
 export const userRouter = t.router({

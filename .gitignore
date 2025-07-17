@@ -4,3 +4,4 @@ node_modules
 dist
 test
 apps/server/prisma
+packages/trpc/src/prisma
