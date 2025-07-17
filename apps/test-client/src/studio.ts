@@ -1,7 +1,7 @@
-import { DocumentDefinition, StudioConfig, defineReference, defineString } from '@repo/studio'
+import { StudioConfig, defineDocument, defineQueryForDocument, defineReference, defineString } from '@repo/studio'
 import { LucideGlobe, LucideHeading1, LucideShoppingBasket, LucideUser2 } from 'lucide-react'
 
-export const shopDefinition = {
+export const shopDefinition = defineDocument({
   type: 'shop',
   icon: LucideShoppingBasket,
   fields: {
@@ -14,7 +14,7 @@ export const shopDefinition = {
       title: 'Directorrr',
       options: {
         size: 'default',
-        to: ['shop'],
+        to: ['employee'],
       },
     }),
     location: defineString({
@@ -31,9 +31,13 @@ export const shopDefinition = {
       },
     }),
   },
-} as const satisfies DocumentDefinition
+})
 
-export const userDefinition = {
+const q = defineQueryForDocument({
+  select: {},
+})
+
+export const userDefinition = defineDocument({
   type: 'user',
   icon: LucideUser2,
   fields: {
@@ -41,9 +45,17 @@ export const userDefinition = {
     surname: defineString({}),
     middlename: defineString({}),
   },
-} as const satisfies DocumentDefinition
+})
 
 export const studioConfig: StudioConfig = {
   projectId: 'la',
   definitions: [shopDefinition, userDefinition],
+}
+
+declare module '@repo/studio' {
+  interface CustomDocumentDefinitions {
+    // wrong solution
+    shop: { type: 'shop' }
+    employee: { type: 'employee' }
+  }
 }

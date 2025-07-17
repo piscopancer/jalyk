@@ -4,5 +4,5 @@ import { studioConfig } from './studio'
 export const client = createJalykClient({
   projectId: 'la',
   token: '...',
-  config: studioConfig,
+  definitions: studioConfig.definitions,
 })

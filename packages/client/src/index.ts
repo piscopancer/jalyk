@@ -19,11 +19,12 @@ const trpcClient = trpc.createClient({
   ],
 })
 
-export function createJalykClient(opts: {
+// todo
+export function createJalykClient<D extends any[]>(opts: {
   //
   projectId: string
   token?: string
-  config: Record<string, any>
+  definitions: D
 }) {
   // add documents on query object as i loop over the config
 

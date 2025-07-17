@@ -15,7 +15,7 @@ type Props = {
   elementId: string | undefined
   field: {
     path: string
-    config: ReferenceFieldConfig<string[]>
+    config: ReferenceFieldConfig
     shape: ReferenceShape
   }
 } & ComponentProps<'article'>

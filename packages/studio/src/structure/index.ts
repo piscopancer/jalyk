@@ -1,5 +1,6 @@
 import ReferenceFieldInput from '@/components/form/reference-input'
 import StringFieldInput from '@/components/form/string-input'
+import { CustomDocumentDefinitionType } from '@/query'
 import { SvgComponentType } from '@/utils'
 import { z } from 'zod/v4'
 
@@ -10,6 +11,10 @@ export type DocumentDefinition = {
   title?: string
   icon?: SvgComponentType
   fields: Record<string, FieldDefinition>
+}
+
+export function defineDocument<D extends DocumentDefinition>(document: D) {
+  return document
 }
 
 export const stringShape = z.string().nullable()
@@ -38,13 +43,13 @@ export type StringFieldOptions = {
   }
 }
 
-export type ReferenceShapeOptions<To extends string[]> = { to: To; size: 'default' | 'sm' }
-export type ReferenceFieldConfig<To extends string[]> = {
+export type ReferenceShapeOptions = { to: CustomDocumentDefinitionType[]; size: 'default' | 'sm' }
+export type ReferenceFieldConfig = {
   icon?: SvgComponentType
   title?: string
-  options: ReferenceShapeOptions<To>
+  options: ReferenceShapeOptions
 }
-export function defineReference<To extends string[]>(config?: ReferenceFieldConfig<To>) {
+export function defineReference(config?: ReferenceFieldConfig) {
   return {
     type: 'reference' as const,
     icon: config?.icon,

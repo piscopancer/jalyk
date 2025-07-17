@@ -1,10 +1,7 @@
-import ReferenceFieldInput from '@/components/form/reference-input'
-import { referenceShape } from '@/structure'
-
 export default function TestPage() {
   return (
     <div className='m-12'>
-      <ReferenceFieldInput
+      {/* <ReferenceFieldInput
         elementId='_'
         document={{
           id: 'test_123',
@@ -14,13 +11,12 @@ export default function TestPage() {
           config: {
             options: {
               size: 'default',
-              to: ['shop'],
             },
           },
           path: 'test_path',
           shape: referenceShape,
         }}
-      />
+      /> */}
     </div>
   )
 }
