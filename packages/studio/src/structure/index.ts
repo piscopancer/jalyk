@@ -2,6 +2,7 @@ import ReferenceFieldInput from '@/components/form/reference-input'
 import StringFieldInput from '@/components/form/string-input'
 import { CustomDocumentDefinitionType } from '@/query'
 import { SvgComponentType } from '@/utils'
+import { ComponentType } from 'react'
 import { z } from 'zod/v4'
 
 export type FieldDefinition = ReturnType<typeof defineReference> | ReturnType<typeof defineString>
@@ -34,13 +35,20 @@ export function defineString(config?: StringFieldConfig) {
     component: StringFieldInput,
   }
 }
+export type PredefinedString = {
+  icon?: SvgComponentType
+  value: string
+  title?: string
+}
 export type StringFieldOptions = {
   placeholder?: string
-  predefined?: {
-    display: 'dropdown' | 'select'
-    // todo: can be an async callback, called in the input component
-    options: { icon?: SvgComponentType; value: string; title?: string }[]
-  }
+  input?:
+    | { type: 'default' }
+    | { type: 'multiline'; minLines?: number; maxLines?: number }
+    | { type: 'dropdown'; predefined: PredefinedString[] }
+    | { type: 'select'; predefined: PredefinedString[] }
+    | { type: 'editor' }
+    | ComponentType<{ todo: true }>
 }
 
 export type ReferenceShapeOptions = { to: CustomDocumentDefinitionType[]; size: 'default' | 'sm' }

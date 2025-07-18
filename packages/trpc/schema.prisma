@@ -7,7 +7,7 @@ generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["queryCompiler", "driverAdapters"]
   moduleFormat    = "esm"
-  output          = "./src/prisma"
+  output          = "src/prisma"
 }
 
 model User {

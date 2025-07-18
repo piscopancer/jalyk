@@ -1,5 +1,5 @@
 import { StudioConfig, defineDocument, defineQueryForDocument, defineReference, defineString } from '@repo/studio'
-import { LucideGlobe, LucideHeading1, LucideShoppingBasket, LucideUser2 } from 'lucide-react'
+import { LucideGlobe, LucideHeading1, LucideInfo, LucideShoppingBasket, LucideUser2 } from 'lucide-react'
 
 export const shopDefinition = defineDocument({
   type: 'shop',
@@ -8,6 +8,14 @@ export const shopDefinition = defineDocument({
     title: defineString({
       icon: LucideHeading1,
       title: 'Title',
+    }),
+    description: defineString({
+      icon: LucideInfo,
+      options: {
+        input: {
+          type: 'editor',
+        },
+      },
     }),
     director: defineReference({
       icon: LucideUser2,
@@ -20,9 +28,9 @@ export const shopDefinition = defineDocument({
     location: defineString({
       options: {
         placeholder: 'Country',
-        predefined: {
-          display: 'dropdown',
-          options: [
+        input: {
+          type: 'dropdown',
+          predefined: [
             { value: 'russia', title: 'Russia', icon: LucideGlobe },
             { value: 'moldova', title: 'Moldova', icon: LucideGlobe },
             { value: 'new-york', title: 'New York', icon: LucideGlobe },
