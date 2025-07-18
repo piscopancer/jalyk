@@ -27,6 +27,7 @@ export default function ReferenceFieldInput({ field, document, elementId, ...att
     shape: field.shape,
   })
   const selfRef = useRef(null!)
+  // todo: replace user with real type
   const documentsQuery = trpc.document.idsOfType.useQuery({ type: 'user' })
   const { upsertField } = useUpsertFieldFunnel(document, field)
 

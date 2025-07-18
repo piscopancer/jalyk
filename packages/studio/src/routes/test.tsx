@@ -1,22 +1,9 @@
+import { TiptapEditor } from '@/components/form/tiptap/editor'
+
 export default function TestPage() {
   return (
-    <div className='m-12'>
-      {/* <ReferenceFieldInput
-        elementId='_'
-        document={{
-          id: 'test_123',
-          type: 'user',
-        }}
-        field={{
-          config: {
-            options: {
-              size: 'default',
-            },
-          },
-          path: 'test_path',
-          shape: referenceShape,
-        }}
-      /> */}
+    <div className='my-12 mx-auto max-w-5xl'>
+      <TiptapEditor placeholder='Your ad here...' />
     </div>
   )
 }
