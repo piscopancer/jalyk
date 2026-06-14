@@ -11,12 +11,12 @@
   "author": "piscopancer",
   "license": "ISC",
   "dependencies": {
-    "@trpc/client": "^11.4.1",
-    "@trpc/react-query": "^11.4.1"
+    "@trpc/client": "^11.17.0",
+    "@trpc/react-query": "^11.17.0"
   },
   "devDependencies": {
     "@repo/trpc": "workspace:*",
-    "tsup": "^8.5.0",
-    "type-fest": "^4.41.0"
+    "tsup": "^8.5.1",
+    "type-fest": "^5.7.0"
   }
 }

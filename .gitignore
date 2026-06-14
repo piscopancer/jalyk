@@ -5,3 +5,15 @@ dist
 test
 apps/server/prisma
 packages/trpc/src/prisma
+
+# Сгенерированный клиент Prisma (создаётся `prisma generate`)
+**/src/generated/
+# Локальные базы SQLite
+*.db
+*.db-journal
+# Кэш и сборка TanStack Start
+.tanstack
+.output
+.nitro
+# Дерево роутов, генерируется плагином TanStack
+routeTree.gen.ts
