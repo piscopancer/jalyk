@@ -1,4 +1,4 @@
-import { createInMemoryClient } from '@jalyk/db'
+import { createSeedClient, seedDatabaseUrl } from '@jalyk/db'
 import schemaDdl from '@jalyk/db/schema.sql?raw'
 import { Layer, ManagedRuntime } from 'effect'
 import { DatabaseLive, DatabaseSeed, DatabaseTest } from './db'
@@ -12,13 +12,15 @@ export const AppLive = Layer.mergeAll(DatabaseLive)
 /** Окружение под тесты: своя БД, всё остальное как в прод. */
 export const AppTest = (dbUrl: string) => Layer.mergeAll(DatabaseTest(dbUrl))
 
-/** Окружение сид-профиля: свежая in-memory БД, наполненная при первом запросе. */
+/**
+ * Окружение сид-профиля: отдельная база jalyk_seed, схема которой при старте
+ * пересоздаётся начисто и наполняется данными профиля. Так среда возвращается в
+ * исходное состояние при каждом рестарте процесса.
+ */
 export const AppSeed = Layer.mergeAll(
   DatabaseSeed(async () => {
-    const db = await createInMemoryClient(schemaDdl)
-    // Сидим только пустую БД: при горячей перезагрузке in-memory БД сохраняется,
-    // повторный сид привёл бы к дублям/конфликтам уникальности.
-    if ((await db.user.count()) === 0) await runSeed(db, seedProfile!)
+    const db = await createSeedClient(seedDatabaseUrl, schemaDdl)
+    await runSeed(db, seedProfile!)
     return db
   }),
 )

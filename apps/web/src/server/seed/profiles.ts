@@ -31,7 +31,7 @@ async function seedMany(db: PrismaClient): Promise<void> {
   await db.user.createMany({ data: users })
 }
 
-/** Применить выбранный профиль к свежей in-memory БД. */
+/** Применить выбранный профиль к свежей (только что пересозданной) БД. */
 export async function runSeed(db: PrismaClient, profile: SeedProfile): Promise<void> {
   switch (profile) {
     case 'demo':

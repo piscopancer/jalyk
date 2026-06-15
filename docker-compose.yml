@@ -1,0 +1,28 @@
+# Локальная БД для разработки. Postgres с расширениями pgvector (семантический
+# поиск) и pg_trgm (fuzzy-поиск по опечаткам). Запуск: `docker compose up -d`,
+# остановка: `docker compose down`. Данные лежат в именованном томе pg-data —
+# чтобы стереть базу начисто: `docker compose down -v`.
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: jalyk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jalyk
+      POSTGRES_PASSWORD: jalyk
+      POSTGRES_DB: jalyk
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      # Скрипты из этой папки выполняются один раз при создании пустого тома —
+      # включаем расширения, чтобы не делать это руками.
+      - ./docker/initdb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jalyk -d jalyk"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pg-data:

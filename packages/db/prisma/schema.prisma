@@ -1,6 +1,6 @@
-// Платформенная БД Jalyk: только пользователи, проекты, участники,
-// приглашения и подписки. Сам контент (документы, ассеты) живёт в другом
-// хранилище и здесь не описывается.
+// Единая БД Jalyk на Postgres: платформа (пользователи, проекты, участники,
+// приглашения, подписки) и контент (документы, ассеты, учёт запросов) живут в
+// одном инстансе. Расширения pgvector и pg_trgm включены через docker/initdb.
 
 generator client {
   provider = "prisma-client"
@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // --- better-auth ---------------------------------------------------------
@@ -89,6 +89,11 @@ enum Plan {
   paid
 }
 
+enum Scope {
+  read
+  write
+}
+
 model Project {
   id        String   @id @default(cuid())
   name      String
@@ -99,9 +104,26 @@ model Project {
 
   members     Member[]
   invitations Invitation[]
+  apiKeys     ApiKey[]
 
   @@index([ownerId])
   @@map("project")
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  projectId  String
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name       String
+  prefix     String
+  hash       String    @unique
+  scope      Scope     @default(read)
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+
+  @@index([projectId])
+  @@map("api_key")
 }
 
 model Member {

@@ -1,44 +1,37 @@
-import { PrismaLibSql } from '@prisma/adapter-libsql'
+import { PrismaPg } from '@prisma/adapter-pg'
+import { databaseUrl } from './config.ts'
 import { PrismaClient } from './generated/client.ts'
 
 // Один экземпляр на процесс. В dev TanStack/Vite перезапускает модули,
 // поэтому держим клиент на globalThis, чтобы не плодить пулы соединений.
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient }
 
-// Prisma 7 работает через driver adapter; для SQLite берём libsql — у него
-// готовые бинарники, не требует нативной сборки (важно на Windows).
-const adapter = new PrismaLibSql({
-  url: process.env.DATABASE_URL ?? 'file:./dev.db',
-})
+// Prisma 7 работает через driver adapter; для Postgres берём pg.
+const adapter = new PrismaPg({ connectionString: databaseUrl })
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
-/** Новый клиент на произвольную БД — для тестов с изолированным файлом. */
-export const createClient = (url: string) =>
-  new PrismaClient({ adapter: new PrismaLibSql({ url }) })
+/** Новый клиент на произвольную БД — для тестов и сид-сред на отдельной базе. */
+export const createClient = (connectionString: string) =>
+  new PrismaClient({ adapter: new PrismaPg({ connectionString }) })
 
 /**
- * Клиент на in-memory SQLite со схемой, применённой из DDL. Используется
- * тестовыми средами: при каждом запуске процесса БД пустая, поэтому таблицы
- * нужно создать вручную (db push к памяти не применить). Весь DDL и все
- * последующие запросы идут через одно соединение адаптера — это та же
- * in-memory БД. `ddl` берётся из `@jalyk/db/schema.sql?raw`.
+ * Клиент для тестовой/сид-среды: подключается к отдельной базе, начисто
+ * пересоздаёт схему `public` и накатывает на неё DDL. При каждом запуске
+ * процесса база возвращается в исходное состояние («сброс при рестарте»).
+ * `ddl` берётся из `@jalyk/db/schema.sql?raw`.
  */
-export const createInMemoryClient = async (ddl: string) => {
-  // `cache=shared` обязателен: иначе каждое соединение адаптера получает свою
-  // отдельную in-memory БД и не видит таблиц, созданных при применении DDL.
-  const client = new PrismaClient({
-    adapter: new PrismaLibSql({ url: 'file::memory:?cache=shared' }),
-  })
-  // Делаем DDL идемпотентным: in-memory БД с cache=shared переживает горячую
-  // перезагрузку модулей в dev, поэтому таблицы/индексы могут уже существовать.
+export const createSeedClient = async (connectionString: string, ddl: string) => {
+  const client = createClient(connectionString)
+  // Чистим всё содержимое базы и накатываем схему заново.
+  await client.$executeRawUnsafe('DROP SCHEMA IF EXISTS public CASCADE')
+  await client.$executeRawUnsafe('CREATE SCHEMA public')
   const statements = ddl
     .split(';')
     .map((s) => s.trim())
     .filter((s) => s.length > 0)
-    .map((s) => s.replace(/^CREATE (TABLE|UNIQUE INDEX|INDEX) /i, 'CREATE $1 IF NOT EXISTS '))
   for (const statement of statements) {
     await client.$executeRawUnsafe(statement)
   }

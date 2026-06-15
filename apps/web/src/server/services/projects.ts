@@ -1,3 +1,4 @@
+import { getMembership } from '@jalyk/core'
 import { PLAN_LIMITS } from '@jalyk/db'
 import { Effect } from 'effect'
 import { query } from '../db'
@@ -16,7 +17,7 @@ export const listForUser = (userId: string) =>
 
 /** Роль пользователя в проекте, либо ошибка доступа. */
 export const requireMember = (projectId: string, userId: string) =>
-  query((db) => db.member.findUnique({ where: { projectId_userId: { projectId, userId } } })).pipe(
+  getMembership(projectId, userId).pipe(
     Effect.flatMap((m) =>
       m ? Effect.succeed(m) : Effect.fail(new NotFoundError({ what: 'project' })),
     ),

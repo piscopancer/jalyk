@@ -1,0 +1,20 @@
+{
+  "name": "@jalyk/schema",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "author": "piscopancer",
+  "license": "ISC",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "effect": "^3.21.3"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}

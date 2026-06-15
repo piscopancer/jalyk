@@ -1,13 +1,10 @@
-import { PrismaClient, createClient, prisma } from '@jalyk/db'
-import { Context, Effect, Layer } from 'effect'
-import { DbError } from './errors'
+import { PrismaClient, createClient } from '@jalyk/db'
+import { Database } from '@jalyk/core'
+import { Effect, Layer } from 'effect'
 
-// Сервис БД. Тег несёт PrismaClient, чтобы окружения (prod/test) могли
-// подставлять разные подключения, не трогая бизнес-логику.
-export class Database extends Context.Tag('Database')<Database, PrismaClient>() {}
-
-/** Прод: общий клиент из @jalyk/db (DATABASE_URL из окружения). */
-export const DatabaseLive = Layer.succeed(Database, prisma)
+// Тег Database, прод-Layer и хелпер query живут в @jalyk/core — их использует и
+// api. Здесь остаются только специфичные для веба окружения: тест и сид.
+export { Database, DatabaseLive, query } from '@jalyk/core'
 
 /**
  * Тест: отдельный клиент на изолированный файл/память, с отключением по
@@ -32,10 +29,4 @@ export const DatabaseSeed = (init: () => Promise<PrismaClient>) =>
   Layer.scoped(
     Database,
     Effect.acquireRelease(Effect.promise(init), (client) => Effect.promise(() => client.$disconnect())),
-  )
-
-/** Выполнить операцию Prisma внутри Effect, обернув ошибку в DbError. */
-export const query = <A>(f: (db: PrismaClient) => Promise<A>) =>
-  Effect.flatMap(Database, (db) =>
-    Effect.tryPromise({ try: () => f(db), catch: (cause) => new DbError({ cause }) }),
   )

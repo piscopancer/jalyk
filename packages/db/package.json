@@ -18,13 +18,15 @@
     "ddl": "prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script --output prisma/schema.sql"
   },
   "dependencies": {
-    "@libsql/client": "^0.15.0",
-    "@prisma/adapter-libsql": "7.8.0",
+    "@prisma/adapter-pg": "7.8.0",
     "@prisma/client": "7.8.0",
-    "@prisma/client-runtime-utils": "7.8.0"
+    "@prisma/client-runtime-utils": "7.8.0",
+    "effect": "^3.21.3",
+    "pg": "^8.13.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
     "prisma": "7.8.0"
   }
 }
