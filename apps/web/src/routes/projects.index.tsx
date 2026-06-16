@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { Button } from '@jalyk/ui'
+import { Card, CardContent, CardHeader, CardTitle } from '@jalyk/ui'
+import { Input } from '@jalyk/ui'
 import { projectsQuery, qk } from '@/lib/queries'
 import { createProject } from '@/server/functions/projects'
 

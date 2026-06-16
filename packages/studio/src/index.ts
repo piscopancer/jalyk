@@ -1,0 +1,44 @@
+// Публичный вход @jalyk/studio.
+export { Studio, type StudioProps } from './Studio.tsx'
+// Дефолтные view и блоки — для композиции/частичного переопределения.
+export { MillerView } from './views/MillerView.tsx'
+export { TypesColumn, DocumentsColumn } from './views/columns.tsx'
+export { DocumentEditor } from './views/DocumentEditor.tsx'
+export { FieldInput } from './fields/FieldInput.tsx'
+export { StringField, NumberField, BooleanField, FallbackField } from './fields/defaults.tsx'
+export { ImageField } from './fields/image.tsx'
+export { ReferenceField } from './fields/reference.tsx'
+export {
+  FieldComponentsProvider,
+  useFieldComponents,
+  useFieldComponent,
+  type FieldComponent,
+  type FieldComponentProps,
+  type FieldComponents,
+} from './fields/registry.tsx'
+export {
+  StudioProvider,
+  useStudio,
+  type EventListener,
+  type StudioContextValue,
+  type StudioProviderProps,
+  type UploadedAsset,
+} from './data/context.tsx'
+export { DocumentProvider, useDocumentContext, type DocumentContextValue } from './data/document.tsx'
+export { useField, type FieldHandle } from './data/field.ts'
+export { useProjectEvents, useLiveInvalidation } from './data/events-hooks.ts'
+export { studioKeys } from './data/keys.ts'
+export { getAtPath, setAtPath, samePath } from './data/path.ts'
+export {
+  useDocuments,
+  useDocument,
+  useDocumentCounts,
+  useCreateDocument,
+  useSetField,
+  usePublishDocument,
+  useDeleteDocument,
+  useSchemaSnapshot,
+  usePutSchemaSnapshot,
+  useUploadAsset,
+} from './data/hooks.ts'
+export type { StudioApiClient, StudioRuntime } from './data/runtime.ts'

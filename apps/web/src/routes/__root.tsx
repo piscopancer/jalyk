@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useEffect } from 'react'
 import { Outlet, createRootRouteWithContext, HeadContent, Scripts, Link } from '@tanstack/react-router'
 import { getSession } from '@/server/functions/auth'
+import { AccountMenu } from '@/components/account-menu'
 import styles from '@/styles.css?url'
 
 // Блокирующий скрипт: ставит класс `.dark` по системной теме ещё до отрисовки,
@@ -63,6 +64,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
               <Link to="/plan" className="text-muted-foreground hover:text-foreground">
                 План
               </Link>
+              <AccountMenu />
             </nav>
           </div>
         </header>

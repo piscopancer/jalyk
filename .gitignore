@@ -3,8 +3,8 @@ node_modules
 .turbo
 dist
 test
-apps/server/prisma
-packages/trpc/src/prisma
+_legacy/apps/server/prisma
+_legacy/packages/trpc/src/prisma
 
 # Сгенерированный клиент Prisma (создаётся `prisma generate`)
 **/src/generated/
@@ -17,3 +17,5 @@ packages/trpc/src/prisma
 .nitro
 # Дерево роутов, генерируется плагином TanStack
 routeTree.gen.ts
+# Локальное хранилище ассетов (тестовый драйвер storage)
+apps/api/uploads/

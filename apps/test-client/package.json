@@ -1,40 +1,28 @@
 {
-  "name": "@repo/test-client",
+  "name": "@jalyk/test-client",
+  "version": "0.0.1",
+  "private": true,
   "type": "module",
+  "author": "piscopancer",
+  "license": "ISC",
   "scripts": {
-    "dev": "vite --port 3000",
-    "start": "vite --port 3000",
-    "build": "vite build && tsc",
-    "serve": "vite preview"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@jalyk/client": "workspace:*",
-    "@repo/studio": "workspace:*",
-    "@repo/ui": "workspace:*",
-    "@tailwindcss/vite": "^4.3.1",
-    "@tanstack/react-query": "^5.101.0",
-    "@tanstack/react-router": "^1.170.15",
-    "@tanstack/react-router-devtools": "^1.167.0",
-    "@tanstack/router-plugin": "^1.168.18",
-    "@trpc/client": "^11.17.0",
-    "@trpc/react-query": "^11.17.0",
-    "filesize": "^11.0.17",
-    "lucide-react": "^1.18.0",
+    "@jalyk/schema": "workspace:^",
+    "@jalyk/studio": "workspace:^",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "tailwindcss": "^4.3.1",
-    "ws": "^8.21.0"
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/react": "^16.3.2",
+    "@tailwindcss/vite": "^4.3.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^6.0.2",
-    "jsdom": "^29.1.1",
-    "vite": "^8.0.16",
-    "vitest": "^4.1.8",
-    "web-vitals": "^5.3.0"
+    "tailwindcss": "^4.3.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16"
   }
 }

@@ -7,11 +7,9 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**"]
     },
-    "@repo/trpc#db-dev": {},
     "dev": {
       "cache": false,
-      "persistent": true,
-      "with": ["@repo/trpc#db-dev"]
+      "persistent": true
     }
   }
 }

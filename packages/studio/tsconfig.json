@@ -2,17 +2,19 @@
   "include": ["."],
   "exclude": ["node_modules", "dist"],
   "compilerOptions": {
-    "outDir": "dist",
-    "jsx": "react-jsx",
-    "noUncheckedIndexedAccess": true,
-    "noFallthroughCasesInSwitch": true,
-    "skipDefaultLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "verbatimModuleSyntax": true,
+    "jsx": "react-jsx",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "esModuleInterop": true,
+    "target": "esnext",
+    "lib": ["esnext", "DOM", "DOM.Iterable"],
+    "types": ["react", "react-dom"],
+    "ignoreDeprecations": "6.0"
   }
 }

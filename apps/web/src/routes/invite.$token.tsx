@@ -1,8 +1,8 @@
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
-import { Button } from '@/components/ui/button'
-import { buttonVariants } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@jalyk/ui'
+import { buttonVariants } from '@jalyk/ui'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@jalyk/ui'
 import { invitationQuery } from '@/lib/queries'
 import { acceptInvitation } from '@/server/functions/invitations'
 

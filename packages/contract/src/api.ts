@@ -1,0 +1,219 @@
+import { HttpApi, HttpApiEndpoint, HttpApiGroup } from '@effect/platform'
+import { Schema } from 'effect'
+import { Forbidden, NotFound } from './errors.ts'
+import { Authentication, Authorization } from './middleware.ts'
+
+// Ответ healthcheck: статус сервиса и доступность БД. Растёт по мере добавления
+// зависимостей (S3, очереди) — пока только Postgres.
+export const HealthStatus = Schema.Struct({
+  status: Schema.Literal('ok'),
+  db: Schema.Literal('up', 'down'),
+})
+
+// Группа служебных эндпоинтов. /health не требует авторизации — её зовёт
+// инфраструктура (docker healthcheck, мониторинг).
+export const HealthGroup = HttpApiGroup.make('health').add(
+  HttpApiEndpoint.get('check', '/health').addSuccess(HealthStatus),
+)
+
+// Текущий пользователь, выведенный из bearer-токена сессии.
+export const CurrentUserInfo = Schema.Struct({
+  id: Schema.String,
+  email: Schema.String,
+  name: Schema.String,
+  image: Schema.NullOr(Schema.String),
+})
+
+// Группа эндпоинтов аутентифицированного редактора. Защищена Authentication —
+// без действительной сессии ответ 401. Пока только /me для проверки.
+export const MeGroup = HttpApiGroup.make('me')
+  .add(HttpApiEndpoint.get('me', '/me').addSuccess(CurrentUserInfo))
+  .middleware(Authentication)
+
+// Доступ принципала к проекту — результат проверки изоляции. role есть только у
+// пользователя, scope — только у ключа; canWrite сводит права к флагу записи.
+export const ProjectAccessInfo = Schema.Struct({
+  kind: Schema.Literal('user', 'key'),
+  projectId: Schema.String,
+  canWrite: Schema.Boolean,
+  role: Schema.optional(Schema.Literal('owner', 'editor')),
+  scope: Schema.optional(Schema.Literal('read', 'write')),
+})
+
+// Контентные эндпоинты вложены под /projects/:projectId и защищены единым
+// middleware Authorization. Пока только проверочный /access — отдаёт разрешённый
+// доступ, упадёт 404 для чужого проекта (изоляция) и 401 без принципала.
+export const ProjectsGroup = HttpApiGroup.make('projects')
+  .add(
+    HttpApiEndpoint.get('access', '/projects/:projectId/access')
+      .setPath(Schema.Struct({ projectId: Schema.String }))
+      .addSuccess(ProjectAccessInfo)
+      .addError(NotFound)
+      .addError(Forbidden),
+  )
+  .middleware(Authorization)
+
+// --- документы -----------------------------------------------------------
+
+// Значение документа и его полей — нетипизированный JSON: форму диктует
+// клиентская схема студии, сервер её не знает и не валидирует.
+const JsonValue = Schema.Unknown
+
+// Документ на проводе. Даты отдаём ISO-строками (обработчик приводит из Date).
+export const DocumentInfo = Schema.Struct({
+  id: Schema.String,
+  type: Schema.String,
+  draft: JsonValue,
+  published: Schema.NullOr(JsonValue),
+  publishedAt: Schema.NullOr(Schema.String),
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
+})
+
+// Количество документов по типу — для дефолтного <AllDocumentTypes/>.
+export const DocumentTypeCount = Schema.Struct({
+  type: Schema.String,
+  count: Schema.Number,
+})
+
+// Путь к полю внутри документа: массив ключей (индекс массива — строкой).
+const FieldPath = Schema.Array(Schema.String)
+
+// Применённая path-дельта — основа field-level подписок (SSE).
+export const FieldDelta = Schema.Struct({
+  path: FieldPath,
+  value: JsonValue,
+})
+
+export const SchemaSnapshotInfo = Schema.Struct({
+  snapshot: Schema.NullOr(JsonValue),
+})
+
+const ProjectIdPath = Schema.Struct({ projectId: Schema.String })
+const DocumentIdPath = Schema.Struct({ projectId: Schema.String, id: Schema.String })
+
+// Контентные эндпоинты документов, вложены под /projects/:projectId и защищены
+// тем же middleware Authorization. Изоляция (404 для чужого проекта) и проверка
+// прав записи (403) — в обработчиках через getProjectAccess + canWrite.
+export const DocumentsGroup = HttpApiGroup.make('documents')
+  .add(
+    HttpApiEndpoint.post('create', '/projects/:projectId/documents')
+      .setPath(ProjectIdPath)
+      .setPayload(Schema.Struct({ type: Schema.String, draft: Schema.optional(JsonValue) }))
+      .addSuccess(DocumentInfo)
+      .addError(NotFound)
+      .addError(Forbidden),
+  )
+  .add(
+    HttpApiEndpoint.get('list', '/projects/:projectId/documents')
+      .setPath(ProjectIdPath)
+      .setUrlParams(Schema.Struct({ type: Schema.String }))
+      .addSuccess(Schema.Array(DocumentInfo))
+      .addError(NotFound),
+  )
+  .add(
+    HttpApiEndpoint.get('counts', '/projects/:projectId/documents/counts')
+      .setPath(ProjectIdPath)
+      .addSuccess(Schema.Array(DocumentTypeCount))
+      .addError(NotFound),
+  )
+  .add(
+    HttpApiEndpoint.get('get', '/projects/:projectId/documents/:id')
+      .setPath(DocumentIdPath)
+      .addSuccess(DocumentInfo)
+      .addError(NotFound),
+  )
+  .add(
+    HttpApiEndpoint.post('setField', '/projects/:projectId/documents/:id/field')
+      .setPath(DocumentIdPath)
+      .setPayload(Schema.Struct({ path: FieldPath, value: JsonValue }))
+      .addSuccess(FieldDelta)
+      .addError(NotFound)
+      .addError(Forbidden),
+  )
+  .add(
+    HttpApiEndpoint.post('publish', '/projects/:projectId/documents/:id/publish')
+      .setPath(DocumentIdPath)
+      .addSuccess(DocumentInfo)
+      .addError(NotFound)
+      .addError(Forbidden),
+  )
+  .add(
+    HttpApiEndpoint.del('delete', '/projects/:projectId/documents/:id')
+      .setPath(DocumentIdPath)
+      .addError(NotFound)
+      .addError(Forbidden),
+  )
+  .add(
+    HttpApiEndpoint.put('putSchema', '/projects/:projectId/schema')
+      .setPath(ProjectIdPath)
+      .setPayload(Schema.Struct({ snapshot: JsonValue }))
+      .addSuccess(SchemaSnapshotInfo)
+      .addError(NotFound)
+      .addError(Forbidden),
+  )
+  .add(
+    HttpApiEndpoint.get('getSchema', '/projects/:projectId/schema')
+      .setPath(ProjectIdPath)
+      .addSuccess(SchemaSnapshotInfo)
+      .addError(NotFound),
+  )
+  .middleware(Authorization)
+
+// --- ассеты --------------------------------------------------------------
+
+// Ассет на проводе. Байты раздаются отдельно по GET /assets/:id; здесь только
+// метаданные. Студия строит URL картинки как `${apiUrl}/assets/${id}`.
+export const AssetInfo = Schema.Struct({
+  id: Schema.String,
+  projectId: Schema.String,
+  filename: Schema.String,
+  contentType: Schema.String,
+  size: Schema.Number,
+})
+
+// Загрузка ассета: тело запроса — сырые байты файла, имя и тип идут в query
+// (multipart не используем — так проще и в типах, и на клиенте через fetch).
+// Вложена под /projects/:projectId, защищена Authorization, требует прав записи.
+export const AssetsGroup = HttpApiGroup.make('assets')
+  .add(
+    HttpApiEndpoint.post('upload', '/projects/:projectId/assets')
+      .setPath(ProjectIdPath)
+      .setUrlParams(Schema.Struct({ filename: Schema.String, contentType: Schema.String }))
+      .addSuccess(AssetInfo)
+      .addError(NotFound)
+      .addError(Forbidden),
+  )
+  .middleware(Authorization)
+
+// Публичная раздача байтов ассета по id. Без middleware: <img> не шлёт X-Api-Key,
+// а cuid неугадываем (как у CDN-ссылок Sanity). Ответ — сырые байты (handleRaw).
+export const AssetsPublicGroup = HttpApiGroup.make('assetsPublic').add(
+  HttpApiEndpoint.get('serve', '/assets/:id')
+    .setPath(Schema.Struct({ id: Schema.String }))
+    .addError(NotFound),
+)
+
+// --- поток событий -------------------------------------------------------
+
+// SSE-поток изменений проекта: один на проект, раздаёт все дельты (field/create/
+// publish/delete), клиент фильтрует по docId/type/path сам. Ответ — сырой
+// text/event-stream (handleRaw), поэтому addSuccess не объявляем.
+export const EventsGroup = HttpApiGroup.make('events')
+  .add(
+    HttpApiEndpoint.get('events', '/projects/:projectId/events')
+      .setPath(Schema.Struct({ projectId: Schema.String }))
+      .addError(NotFound),
+  )
+  .middleware(Authorization)
+
+// Корневое описание HTTP-API студии. Сюда подключаются остальные группы
+// (документы, ассеты, проекты) по мере реализации.
+export class Api extends HttpApi.make('jalyk')
+  .add(HealthGroup)
+  .add(MeGroup)
+  .add(ProjectsGroup)
+  .add(DocumentsGroup)
+  .add(AssetsGroup)
+  .add(AssetsPublicGroup)
+  .add(EventsGroup) {}

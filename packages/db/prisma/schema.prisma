@@ -105,6 +105,10 @@ model Project {
   members     Member[]
   invitations Invitation[]
   apiKeys     ApiKey[]
+  documents   Document[]
+  assets      Asset[]
+  usage       Usage[]
+  schema      ProjectSchema?
 
   @@index([ownerId])
   @@map("project")
@@ -166,4 +170,65 @@ model Subscription {
   updatedAt DateTime @updatedAt
 
   @@map("subscription")
+}
+
+// --- контент -------------------------------------------------------------
+
+// Документ — сущность, адресуемая (projectId, type, id), с данными в JSONB.
+// draft — текущее редактируемое состояние, published — снимок последней
+// публикации (null до неё). Гранулярность (правка поля-по-пути через jsonb_set,
+// частичная выборка) — на уровне запросов, не хранения; форму data диктует
+// клиентская схема, сервер её не валидирует.
+model Document {
+  id          String    @id @default(cuid())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type        String
+  draft       Json
+  published   Json?
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([projectId, type])
+  @@map("document")
+}
+
+// Снапшот схемы проекта — один текущий на проект. Студия синхронизирует его при
+// изменении конфига; сервер хранит впрок (read-эндпоинты появятся позже).
+model ProjectSchema {
+  projectId String   @id
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  snapshot  Json
+  updatedAt DateTime @updatedAt
+
+  @@map("project_schema")
+}
+
+// Загруженный ассет — метаданные файла в объектном хранилище (key — путь в S3).
+model Asset {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  key         String
+  filename    String
+  contentType String
+  size        Int
+  width       Int?
+  height      Int?
+  createdAt   DateTime @default(now())
+
+  @@index([projectId])
+  @@map("asset")
+}
+
+// Учёт запросов по дням — агрегат для тарификации и лимитов плана.
+model Usage {
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  count     Int      @default(0)
+
+  @@id([projectId, date])
+  @@map("usage")
 }

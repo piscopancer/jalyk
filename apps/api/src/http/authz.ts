@@ -1,23 +1,12 @@
-import { HttpApiMiddleware, HttpServerRequest } from '@effect/platform'
+import { HttpServerRequest } from '@effect/platform'
+import { Authorization, Unauthorized } from '@jalyk/contract'
 import { DatabaseLive, findApiKey, type Principal } from '@jalyk/core'
-import { Context, Effect, Layer } from 'effect'
+import { Effect, Layer } from 'effect'
 import { auth } from '../lib/auth.ts'
-import { Unauthorized } from './errors.ts'
 
-// Принципал текущего запроса, разрешённый из заголовков. Доступен в обработчиках
-// контентных эндпоинтов через тег; дальше его проверяет getProjectAccess по
-// projectId из пути.
-export class CurrentPrincipal extends Context.Tag('CurrentPrincipal')<CurrentPrincipal, Principal>() {}
-
-// Единый middleware доступа на все контентные операции (docs/05). Два режима:
-// клиентское приложение шлёт api-ключ в заголовке `X-Api-Key`, студия — сессию в
-// `Authorization: Bearer`. X-Api-Key имеет приоритет. Любой невалидный/отсутствующий
-// принципал → 401. Привязку к конкретному проекту проверяет уже getProjectAccess.
-export class Authorization extends HttpApiMiddleware.Tag<Authorization>()('Authorization', {
-  failure: Unauthorized,
-  provides: CurrentPrincipal,
-}) {}
-
+// Серверная реализация middleware доступа. Тег Authorization и предоставляемый им
+// CurrentPrincipal объявлены в @jalyk/contract (общий контракт сервера и студии);
+// здесь — только Layer, разрешающий принципала из заголовков запроса.
 export const AuthorizationLive = Layer.effect(
   Authorization,
   Effect.gen(function* () {

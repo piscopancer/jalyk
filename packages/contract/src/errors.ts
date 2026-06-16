@@ -3,7 +3,8 @@ import { Schema } from 'effect'
 
 // HTTP-обёртки доменных ошибок. Schema-варианты (а не Data-ошибки из @jalyk/core),
 // потому что HttpApi сериализует ошибки на провод по их схеме и выставляет статус.
-// Обработчики мапят доменные ошибки core в эти через Effect.catchTag.
+// Общие для сервера (apps/api мапит сюда доменные ошибки core) и клиента (студия
+// получает их типизированными в канале ошибок HttpApiClient).
 
 /** Нет действительной сессии или api-ключа. */
 export class Unauthorized extends Schema.TaggedError<Unauthorized>()(

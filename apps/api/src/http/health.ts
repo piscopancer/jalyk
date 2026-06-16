@@ -1,7 +1,7 @@
 import { HttpApiBuilder } from '@effect/platform'
+import { Api } from '@jalyk/contract'
 import { query } from '@jalyk/core'
 import { Effect } from 'effect'
-import { Api } from './api.ts'
 
 // Обработчик /health: пингуем БД простым SELECT 1. Сбой подключения не роняет
 // эндпоинт, а отражается полем db: 'down' — мониторингу нужен ответ, а не 500.

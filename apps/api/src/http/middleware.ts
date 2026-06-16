@@ -1,28 +1,11 @@
-import { HttpApiMiddleware, HttpServerRequest } from '@effect/platform'
-import { Context, Effect, Layer } from 'effect'
+import { HttpServerRequest } from '@effect/platform'
+import { Authentication, Unauthorized } from '@jalyk/contract'
+import { Effect, Layer } from 'effect'
 import { auth } from '../lib/auth.ts'
-import { Unauthorized } from './errors.ts'
 
-// Аутентифицированный редактор студии, разрешённый из bearer-токена сессии.
-// Доступен в обработчиках эндпоинтов, защищённых middleware Authentication.
-export class CurrentUser extends Context.Tag('CurrentUser')<
-  CurrentUser,
-  {
-    readonly id: string
-    readonly email: string
-    readonly name: string
-    readonly image: string | null
-  }
->() {}
-
-// Middleware, требующее аутентифицированного пользователя. Подключается к группам
-// и эндпоинтам через `.middleware(Authentication)`; в обработчиках появляется
-// доступ к тегу CurrentUser.
-export class Authentication extends HttpApiMiddleware.Tag<Authentication>()('Authentication', {
-  failure: Unauthorized,
-  provides: CurrentUser,
-}) {}
-
+// Серверная реализация middleware аутентификации. Тег Authentication и
+// предоставляемый им CurrentUser объявлены в @jalyk/contract; здесь — только
+// Layer, разрешающий пользователя из bearer-токена сессии.
 export const AuthenticationLive = Layer.effect(
   Authentication,
   Effect.gen(function* () {

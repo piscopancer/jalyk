@@ -1,4 +1,5 @@
 import { queryOptions } from '@tanstack/react-query'
+import { listApiKeys } from '@/server/functions/apikeys'
 import { getProject, listProjects } from '@/server/functions/projects'
 import { peekInvitation } from '@/server/functions/invitations'
 import { getPlanStatus } from '@/server/functions/subscription'
@@ -10,6 +11,7 @@ export const qk = {
   project: (projectId: string) => ['projects', projectId] as const,
   plan: ['plan'] as const,
   invitation: (token: string) => ['invitation', token] as const,
+  apiKeys: (projectId: string) => ['projects', projectId, 'api-keys'] as const,
 }
 
 export const projectsQuery = () => queryOptions({ queryKey: qk.projects, queryFn: () => listProjects() })
@@ -21,3 +23,6 @@ export const planQuery = () => queryOptions({ queryKey: qk.plan, queryFn: () => 
 
 export const invitationQuery = (token: string) =>
   queryOptions({ queryKey: qk.invitation(token), queryFn: () => peekInvitation({ data: { token } }) })
+
+export const apiKeysQuery = (projectId: string) =>
+  queryOptions({ queryKey: qk.apiKeys(projectId), queryFn: () => listApiKeys({ data: { projectId } }) })

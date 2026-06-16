@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@jalyk/ui'
 
 export const Route = createFileRoute('/')({
   component: Home,

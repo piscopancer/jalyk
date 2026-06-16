@@ -1,0 +1,22 @@
+{
+  "name": "@jalyk/contract",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "author": "piscopancer",
+  "license": "ISC",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@effect/platform": "^0.96.1",
+    "effect": "^3.21.3"
+  },
+  "devDependencies": {
+    "@jalyk/core": "workspace:^",
+    "typescript": "^6.0.3"
+  }
+}

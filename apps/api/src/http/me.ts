@@ -1,7 +1,6 @@
 import { HttpApiBuilder } from '@effect/platform'
 import { Effect } from 'effect'
-import { Api } from './api.ts'
-import { CurrentUser } from './middleware.ts'
+import { Api, CurrentUser } from '@jalyk/contract'
 
 // Обработчик /me: возвращает пользователя, выведенного middleware Authentication
 // из bearer-токена. Минимальная проверка того, что аутентификация студии работает.

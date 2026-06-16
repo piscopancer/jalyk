@@ -1,5 +1,9 @@
-@import 'tailwindcss';
+/* Стили студии (токены, базовые слои, классы компонентов) приходят отсюда. */
+@import '@jalyk/studio/styles.css';
 
-body {
-  @apply dark:bg-black dark:text-zinc-200;
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
 }

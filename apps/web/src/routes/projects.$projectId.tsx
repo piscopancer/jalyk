@@ -1,12 +1,13 @@
-import type { Role } from '@jalyk/db'
-import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import type { Role, Scope } from '@jalyk/db'
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { NativeSelect } from '@/components/ui/native-select'
-import { projectQuery, qk } from '@/lib/queries'
+import { Button } from '@jalyk/ui'
+import { Card, CardContent, CardHeader, CardTitle } from '@jalyk/ui'
+import { Input } from '@jalyk/ui'
+import { NativeSelect } from '@jalyk/ui'
+import { apiKeysQuery, projectQuery, qk } from '@/lib/queries'
+import { createApiKey, revokeApiKey } from '@/server/functions/apikeys'
 import { createInvitation, revokeInvitation } from '@/server/functions/invitations'
 import { removeMember, setMemberRole } from '@/server/functions/members'
 import { deleteProject, renameProject } from '@/server/functions/projects'
@@ -41,6 +42,8 @@ function ProjectPage() {
       <MembersCard projectId={project.id} members={project.members} myId={myId} canManage={isOwner} />
 
       {isOwner && <InvitationsCard projectId={project.id} invitations={project.invitations} />}
+
+      {isOwner && <ApiKeysCard projectId={project.id} />}
 
       {isOwner && <DangerCard projectId={project.id} />}
     </div>
@@ -207,6 +210,118 @@ function InvitationsCard({ projectId, invitations }: { projectId: string; invita
                   size="sm"
                   disabled={revoke.isPending}
                   onClick={() => revoke.mutate(inv.id)}
+                >
+                  Отозвать
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+const scopeLabel = (scope: Scope) => (scope === 'write' ? 'Чтение и запись' : 'Чтение')
+
+function ApiKeysCard({ projectId }: { projectId: string }) {
+  const queryClient = useQueryClient()
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: qk.apiKeys(projectId) })
+  const { data: keys } = useQuery(apiKeysQuery(projectId))
+
+  const [name, setName] = useState('')
+  const [scope, setScope] = useState<Scope>('read')
+  // Сырой ключ, выпущенный только что: показываем один раз, в БД его уже нет.
+  const [issued, setIssued] = useState<string | null>(null)
+
+  const create = useMutation({
+    mutationFn: (vars: { name: string; scope: Scope }) =>
+      createApiKey({ data: { projectId, name: vars.name, scope: vars.scope } }),
+    onSuccess: (res) => {
+      setIssued(res.raw)
+      setName('')
+      setScope('read')
+      invalidate()
+    },
+  })
+  const revoke = useMutation({
+    mutationFn: (keyId: string) => revokeApiKey({ data: { projectId, keyId } }),
+    onSuccess: invalidate,
+  })
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>API-ключи</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            create.mutate({ name: name.trim(), scope })
+          }}
+        >
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Название ключа"
+          />
+          <NativeSelect value={scope} onChange={(e) => setScope(e.target.value as Scope)}>
+            <option value="read">Чтение</option>
+            <option value="write">Чтение и запись</option>
+          </NativeSelect>
+          <Button type="submit" disabled={create.isPending || !name.trim()}>
+            {create.isPending ? 'Создание…' : 'Создать ключ'}
+          </Button>
+        </form>
+
+        {create.isError && (
+          <p className="text-sm text-destructive">
+            {create.error instanceof Error ? create.error.message : 'Не удалось создать ключ'}
+          </p>
+        )}
+
+        {issued && (
+          <div className="flex flex-col gap-2 rounded-md border border-primary/40 bg-primary/5 p-3">
+            <p className="text-sm font-medium">Ключ создан — скопируйте его сейчас</p>
+            <p className="text-xs text-muted-foreground">
+              Это значение показывается один раз. После закрытия восстановить его будет нельзя.
+            </p>
+            <div className="flex items-center gap-2">
+              <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-1 text-xs">{issued}</code>
+              <Button size="sm" variant="ghost" onClick={() => navigator.clipboard?.writeText(issued)}>
+                Скопировать
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setIssued(null)}>
+                Закрыть
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {!keys || keys.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Действующих ключей нет.</p>
+        ) : (
+          <div className="flex flex-col divide-y">
+            {keys.map((k) => (
+              <div key={k.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium">{k.name}</div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    {k.prefix}… · {scopeLabel(k.scope)} · создан{' '}
+                    {new Date(k.createdAt).toLocaleDateString('ru')}
+                    {k.lastUsedAt && ` · использован ${new Date(k.lastUsedAt).toLocaleDateString('ru')}`}
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={revoke.isPending}
+                  onClick={() => {
+                    if (!confirm('Отозвать ключ? Приложения с ним потеряют доступ.')) return
+                    revoke.mutate(k.id)
+                  }}
                 >
                   Отозвать
                 </Button>

@@ -20,6 +20,26 @@ export const generateApiKey = () => {
 export const findApiKey = (raw: string) =>
   query((db) => db.apiKey.findFirst({ where: { hash: hashApiKey(raw), revokedAt: null } }))
 
+/** Поля ключа, безопасные для показа в списке (без хеша). */
+export const apiKeyListSelect = {
+  id: true,
+  name: true,
+  prefix: true,
+  scope: true,
+  createdAt: true,
+  lastUsedAt: true,
+} as const
+
+/** Действующие ключи проекта для списка — без хеша, отозванные не включаются. */
+export const listApiKeys = (projectId: string) =>
+  query((db) =>
+    db.apiKey.findMany({
+      where: { projectId, revokedAt: null },
+      select: apiKeyListSelect,
+      orderBy: { createdAt: 'desc' },
+    }),
+  )
+
 /** Выпустить ключ для проекта. Возвращает сырое значение и запись. */
 export const issueApiKey = (projectId: string, name: string, scope: Scope) =>
   Effect.gen(function* () {

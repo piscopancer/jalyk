@@ -1,9 +1,7 @@
 import { HttpApiBuilder } from '@effect/platform'
 import { getProjectAccess } from '@jalyk/core'
 import { Effect } from 'effect'
-import { Api } from './api.ts'
-import { CurrentPrincipal } from './authz.ts'
-import { NotFound } from './errors.ts'
+import { Api, CurrentPrincipal, NotFound } from '@jalyk/contract'
 
 // Обработчик /projects/:projectId/access: берёт принципала из middleware и
 // projectId из пути, прогоняет через ядро изоляции. NotFoundError/DbError из core

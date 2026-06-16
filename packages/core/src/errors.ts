@@ -6,6 +6,9 @@ import { Data } from 'effect'
 /** Сбой обращения к БД. */
 export class DbError extends Data.TaggedError('DbError')<{ cause: unknown }> {}
 
+/** Сбой хранилища ассетов (запись/чтение файла или объекта). */
+export class StorageError extends Data.TaggedError('StorageError')<{ cause: unknown }> {}
+
 /** Запрошенной сущности нет (или нет доступа — не раскрываем какой именно). */
 export class NotFoundError extends Data.TaggedError('NotFoundError')<{ what: string }> {}
 
