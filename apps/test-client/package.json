@@ -13,6 +13,7 @@
   "dependencies": {
     "@jalyk/schema": "workspace:^",
     "@jalyk/studio": "workspace:^",
+    "lucide-react": "^1.18.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },

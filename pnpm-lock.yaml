@@ -57,6 +57,9 @@ importers:
       '@jalyk/studio':
         specifier: workspace:^
         version: link:../../packages/studio
+      lucide-react:
+        specifier: ^1.18.0
+        version: 1.18.0(react@19.2.7)
       react:
         specifier: ^19.2.7
         version: 19.2.7

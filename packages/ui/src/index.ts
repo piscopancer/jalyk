@@ -4,6 +4,18 @@ export { Card, CardHeader, CardTitle, CardAction, CardDescription, CardContent, 
 export { Input } from './components/input.tsx'
 export { NativeSelect } from './components/native-select.tsx'
 export {
+  Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
+  SelectScrollUpButton,
+  SelectScrollDownButton,
+} from './components/select.tsx'
+export {
   DropdownMenu,
   DropdownMenuPortal,
   DropdownMenuTrigger,

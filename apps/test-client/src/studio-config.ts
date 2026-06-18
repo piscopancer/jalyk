@@ -1,4 +1,6 @@
-import { defineArray, defineConfig, defineDocument, defineNumber, defineObject, defineReference, defineString } from '@jalyk/schema'
+import { defineArray, defineBoolean, defineConfig, defineDocument, defineNumber, defineObject, defineReference, defineString } from '@jalyk/schema'
+import { CalendarDays, Disc3, FileText, Languages, ListMusic, Mic2, Music2, PenLine, ShieldAlert, Tag, Type, User, Users } from 'lucide-react'
+import { AlbumPreview } from './album-preview.tsx'
 
 // Языки переводов лирики. Фиксированный список: значение — код языка, title —
 // подпись для select. Редактируется правкой этого массива.
@@ -17,45 +19,61 @@ export const config = defineConfig({
   documents: {
     band: defineDocument({
       title: 'Группа',
+      icon: Users,
       preview: { title: 'name' },
       fields: {
-        name: defineString({ title: 'Название', required: true }),
-        artists: defineArray({ title: 'Исполнители', of: defineReference({ to: ['artist'] }) }),
+        name: defineString({ title: 'Название', icon: Tag, required: true }),
+        artists: defineArray({ title: 'Исполнители', icon: Users, of: defineReference({ to: ['artist'] }) }),
       },
     }),
     artist: defineDocument({
       title: 'Исполнитель',
+      icon: Mic2,
       preview: { title: 'fullName' },
       fields: {
-        fullName: defineString({ title: 'Полное имя', required: true }),
-        bio: defineString({ title: 'Биография', input: { type: 'multiline' } }),
+        fullName: defineString({ title: 'Полное имя', icon: User, required: true }),
+        bio: defineString({ title: 'Биография', icon: FileText, input: { type: 'multiline' } }),
       },
     }),
     album: defineDocument({
       title: 'Альбом',
+      icon: Disc3,
       preview: { title: 'title' },
+      previewComponent: AlbumPreview,
       fields: {
-        title: defineString({ title: 'Название', required: true }),
-        year: defineNumber({ title: 'Год', min: 0 }),
-        band: defineReference({ title: 'Группа', to: ['band'] }),
-        tracks: defineArray({ title: 'Треки', of: defineReference({ to: ['track'] }) }),
+        title: defineString({ title: 'Название', icon: Tag, required: true }),
+        year: defineNumber({ title: 'Год', icon: CalendarDays, min: 0 }),
+        band: defineReference({ title: 'Группа', icon: Users, to: ['band'] }),
+        tracks: defineArray({ title: 'Треки', icon: ListMusic, of: defineReference({ to: ['track'] }) }),
       },
     }),
     track: defineDocument({
       title: 'Трек',
+      icon: Music2,
       preview: { title: 'title' },
       fields: {
-        title: defineString({ title: 'Название', required: true }),
-        albums: defineArray({ title: 'Альбомы', of: defineReference({ to: ['album'] }) }),
-        performers: defineArray({ title: 'Группы и исполнители', of: defineReference({ to: ['band', 'artist'] }) }),
+        title: defineString({ title: 'Название', icon: Tag, required: true }),
+        explicit: defineBoolean({ title: 'Ненормативный контент', icon: ShieldAlert }),
+        albums: defineArray({ title: 'Альбомы', icon: Disc3, of: defineReference({ to: ['album'] }) }),
+        performers: defineArray({ title: 'Группы и исполнители', icon: Users, of: defineReference({ to: ['band', 'artist'] }) }),
+        originalLyrics: defineObject({
+          title: 'Оригинальная лирика',
+          icon: FileText,
+          fields: {
+            language: defineString({ title: 'Язык оригинала', icon: Languages, required: true, input: { type: 'select', predefined: languages } }),
+            text: defineString({ title: 'Текст оригинала', icon: Type, required: true, input: { type: 'multiline' } }),
+            authors: defineArray({ title: 'Авторы текста', icon: PenLine, of: defineString({}) }),
+          },
+        }),
         lyrics: defineArray({
           title: 'Лирика',
+          icon: Languages,
           of: defineObject({
             title: 'Перевод',
             fields: {
-              language: defineString({ title: 'Язык', required: true, input: { type: 'select', predefined: languages } }),
-              text: defineString({ title: 'Текст', required: true, input: { type: 'multiline' } }),
-              translator: defineString({ title: 'Автор перевода' }),
+              language: defineString({ title: 'Язык', icon: Languages, required: true, input: { type: 'select', predefined: languages } }),
+              text: defineString({ title: 'Текст', icon: Type, required: true, input: { type: 'multiline' } }),
+              translator: defineString({ title: 'Автор перевода', icon: PenLine }),
             },
           }),
         }),

@@ -60,7 +60,8 @@ export function toSnapshot(config: AnyConfig): SchemaSnapshot {
       const snap: DocumentSnapshot = { fields: fieldsSnapshot(doc.fields) }
       if (doc.title !== undefined) snap.title = doc.title
       if (doc.description !== undefined) snap.description = doc.description
-      if (doc.preview) snap.preview = doc.preview
+      const preview = doc.preview as { title?: string } | undefined
+      if (preview?.title) snap.preview = { title: preview.title }
       return [type, snap]
     }),
   )

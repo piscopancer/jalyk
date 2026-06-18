@@ -1,4 +1,4 @@
-import { Checkbox, Input, NativeSelect, Textarea } from '@jalyk/ui'
+import { Checkbox, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from '@jalyk/ui'
 import { useEffect, useState } from 'react'
 import { useField } from '../data/field.ts'
 import type { FieldComponentProps } from './registry.tsx'
@@ -19,17 +19,23 @@ function useCommittedText(path: readonly string[]) {
 
 export function StringField({ path, field }: FieldComponentProps) {
   const { local, setLocal, commit, handle } = useCommittedText(path)
-  // Поле-селект из предопределённых значений рендерим выпадающим списком.
+  // Поле-селект из предопределённых значений — выпадающий список shadcn. Radix не
+  // допускает пустое значение элемента, поэтому пустую строку отдаём как undefined,
+  // тогда показывается placeholder.
   if (field.input?.type === 'select' && field.input.predefined) {
     return (
-      <NativeSelect value={local} onChange={(e) => handle.set(e.target.value)}>
-        <option value="" />
-        {field.input.predefined.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.title ?? option.value}
-          </option>
-        ))}
-      </NativeSelect>
+      <Select value={local || undefined} onValueChange={(value) => handle.set(value)}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Не выбрано" />
+        </SelectTrigger>
+        <SelectContent>
+          {field.input.predefined.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.title ?? option.value}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     )
   }
   // Многострочное поле — textarea: переносы хранятся как обычные \n в строке.

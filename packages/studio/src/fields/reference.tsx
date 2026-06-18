@@ -24,7 +24,7 @@ import type { FieldComponentProps } from './registry.tsx'
 function useTitleOf() {
   const { config } = useStudio()
   return (type: string, draft: unknown) => {
-    const titleField = config.documents[type]?.preview?.title
+    const titleField = (config.documents[type]?.preview as { title?: string } | undefined)?.title
     const value = titleField ? getAtPath(draft, [titleField]) : undefined
     return typeof value === 'string' && value.length > 0 ? value : '(без названия)'
   }
