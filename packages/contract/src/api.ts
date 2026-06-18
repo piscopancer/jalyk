@@ -184,6 +184,18 @@ export const AssetsGroup = HttpApiGroup.make('assets')
       .addError(NotFound)
       .addError(Forbidden),
   )
+  .add(
+    HttpApiEndpoint.get('list', '/projects/:projectId/assets')
+      .setPath(ProjectIdPath)
+      .addSuccess(Schema.Array(AssetInfo))
+      .addError(NotFound),
+  )
+  .add(
+    HttpApiEndpoint.del('delete', '/projects/:projectId/assets/:id')
+      .setPath(Schema.Struct({ projectId: Schema.String, id: Schema.String }))
+      .addError(NotFound)
+      .addError(Forbidden),
+  )
   .middleware(Authorization)
 
 // Публичная раздача байтов ассета по id. Без middleware: <img> не шлёт X-Api-Key,

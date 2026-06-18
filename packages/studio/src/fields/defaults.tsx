@@ -1,4 +1,4 @@
-import { Input, NativeSelect } from '@jalyk/ui'
+import { Checkbox, Input, NativeSelect, Textarea } from '@jalyk/ui'
 import { useEffect, useState } from 'react'
 import { useField } from '../data/field.ts'
 import type { FieldComponentProps } from './registry.tsx'
@@ -32,6 +32,10 @@ export function StringField({ path, field }: FieldComponentProps) {
       </NativeSelect>
     )
   }
+  // Многострочное поле — textarea: переносы хранятся как обычные \n в строке.
+  if (field.input?.type === 'multiline') {
+    return <Textarea className="min-h-24" value={local} onChange={(e) => setLocal(e.target.value)} onBlur={commit} />
+  }
   return <Input value={local} onChange={(e) => setLocal(e.target.value)} onBlur={commit} />
 }
 
@@ -50,14 +54,7 @@ export function NumberField({ path }: FieldComponentProps) {
 
 export function BooleanField({ path }: FieldComponentProps) {
   const handle = useField<boolean>(path)
-  return (
-    <input
-      type="checkbox"
-      className="size-4"
-      checked={handle.value ?? false}
-      onChange={(e) => handle.set(e.target.checked)}
-    />
-  )
+  return <Checkbox checked={handle.value ?? false} onCheckedChange={(checked) => handle.set(checked === true)} />
 }
 
 // Фолбэк для видов без специального редактора (richText/image/reference/object/
@@ -77,8 +74,8 @@ export function FallbackField({ path }: FieldComponentProps) {
   }
   return (
     <div className="flex flex-col gap-1">
-      <textarea
-        className="min-h-24 rounded-md border bg-transparent px-3 py-2 font-mono text-xs"
+      <Textarea
+        className="min-h-24 font-mono text-xs"
         value={text}
         onChange={(e) => setText(e.target.value)}
         onBlur={commit}

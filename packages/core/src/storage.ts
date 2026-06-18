@@ -1,5 +1,5 @@
 import { Config, Context, Effect, Layer } from 'effect'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { StorageError } from './errors.ts'
 
@@ -13,6 +13,7 @@ export class AssetStorage extends Context.Tag('AssetStorage')<
   {
     readonly write: (key: string, bytes: Uint8Array) => Effect.Effect<void, StorageError>
     readonly read: (key: string) => Effect.Effect<Uint8Array, StorageError>
+    readonly remove: (key: string) => Effect.Effect<void, StorageError>
   }
 >() {}
 
@@ -42,6 +43,13 @@ export const LocalAssetStorageLive = Layer.effect(
           try: async () => new Uint8Array(await readFile(pathFor(key))),
           catch: (cause) => new StorageError({ cause }),
         }),
+      // Удаление байтов; force, чтобы отсутствующий файл не считался ошибкой
+      // (запись в БД — источник истины, хранилище лишь догоняем).
+      remove: (key) =>
+        Effect.tryPromise({
+          try: () => rm(pathFor(key), { force: true }),
+          catch: (cause) => new StorageError({ cause }),
+        }),
     })
   }),
 )
@@ -54,5 +62,6 @@ export const YandexAssetStorageLive = Layer.succeed(
   AssetStorage.of({
     write: () => Effect.fail(new StorageError({ cause: 'yandex storage не реализован' })),
     read: () => Effect.fail(new StorageError({ cause: 'yandex storage не реализован' })),
+    remove: () => Effect.fail(new StorageError({ cause: 'yandex storage не реализован' })),
   }),
 )

@@ -29,6 +29,12 @@ export type FieldMeta = {
   icon?: FieldIcon
   /** Обязательность — клиентская проверка перед отправкой изменения на сервер. */
   required?: boolean
+  /**
+   * Имя члена разнотипного массива — пишется в служебное `_type` элемента, чтобы
+   * студия знала, каким редактором его рисовать. Для однородных полей не нужно;
+   * если не задано, в качестве `_type` берётся `kind` члена.
+   */
+  name?: string
 }
 
 export type FieldKind = 'string' | 'number' | 'boolean' | 'richText' | 'image' | 'reference' | 'object' | 'array'
@@ -41,8 +47,12 @@ export type RichTextValue = { type?: string; content?: RichTextValue[]; [key: st
 /** Значение поля-картинки — ссылка на загруженный ассет. */
 export type ImageValue = { assetId: string }
 
-/** Значение поля-ссылки: id целевого документа и его тип (один из `to`). */
-export type ReferenceValue<K extends string = string> = { _ref: string; _type: K }
+/**
+ * Значение поля-ссылки: id целевого документа и его тип (один из `to`). Тип лежит
+ * в `_toType`, а не `_type`, чтобы `_type` остался свободен под дискриминатор члена
+ * разнотипного массива — тогда ссылку можно класть и в такой массив.
+ */
+export type ReferenceValue<K extends string = string> = { _ref: string; _toType: K }
 
 // --- Структурный супертип поля ----------------------------------------------
 // Все фабрики возвращают объекты, присваиваемые AnyField. Используется как
@@ -51,10 +61,14 @@ export type ReferenceValue<K extends string = string> = { _ref: string; _type: K
 export type AnyField = FieldMeta & {
   kind: FieldKind
   __value?: unknown
+  /** Значение поля по умолчанию — то, к чему его сбрасывает студия. */
+  default?: unknown
   // Возможные специфичные свойства разных видов полей — нужны для рантайм-обхода
   // (валидация, снапшот), при описании заполняются только релевантные.
   fields?: FieldMap
-  of?: AnyField
+  // Тип элемента массива: одно описание (однородный массив) либо список описаний-
+  // членов (разнотипный массив).
+  of?: AnyField | readonly AnyField[]
   to?: readonly string[]
   min?: number
   max?: number
@@ -87,6 +101,7 @@ type Predefined = readonly { value: string; title?: string; icon?: FieldIcon }[]
 
 type StringOptions = FieldMeta & {
   placeholder?: string
+  default?: string
   input?:
     | { type?: 'normal' }
     | { type: 'multiline' }
@@ -111,6 +126,7 @@ export function defineString<const O extends StringOptions>(options: O = {} as O
 type NumberOptions = FieldMeta & {
   min?: number
   max?: number
+  default?: number
   check?: Check<number> | Check<number>[]
 }
 
@@ -120,17 +136,17 @@ export function defineNumber<const O extends NumberOptions>(options: O = {} as O
 }
 
 /** Булево поле. */
-export function defineBoolean<const O extends FieldMeta & { check?: Check<boolean> | Check<boolean>[] }>(options: O = {} as O) {
+export function defineBoolean<const O extends FieldMeta & { default?: boolean; check?: Check<boolean> | Check<boolean>[] }>(options: O = {} as O) {
   return { kind: 'boolean', ...options } as { kind: 'boolean' } & O & { __value?: boolean }
 }
 
 /** Rich-text поле (редактор Tiptap). */
-export function defineRichText<const O extends FieldMeta & { check?: Check<RichTextValue> | Check<RichTextValue>[] }>(options: O = {} as O) {
+export function defineRichText<const O extends FieldMeta & { default?: RichTextValue; check?: Check<RichTextValue> | Check<RichTextValue>[] }>(options: O = {} as O) {
   return { kind: 'richText', ...options } as { kind: 'richText' } & O & { __value?: RichTextValue }
 }
 
 /** Поле-картинка — выбор/загрузка ассета. */
-export function defineImage<const O extends FieldMeta & { check?: Check<ImageValue> | Check<ImageValue>[] }>(options: O = {} as O) {
+export function defineImage<const O extends FieldMeta & { default?: ImageValue; check?: Check<ImageValue> | Check<ImageValue>[] }>(options: O = {} as O) {
   return { kind: 'image', ...options } as { kind: 'image' } & O & { __value?: ImageValue }
 }
 
@@ -138,6 +154,7 @@ type ReferenceOptions = FieldMeta & {
   /** Ключи (типы) документов, на которые можно ссылаться. */
   to: readonly string[]
   size?: 'default' | 'compact'
+  default?: ReferenceValue
 }
 
 /**
@@ -151,6 +168,7 @@ export function defineReference<const O extends ReferenceOptions>(options: O) {
 
 type ObjectOptions = FieldMeta & {
   fields: FieldMap
+  default?: Record<string, unknown>
   check?: Check<any> | Check<any>[]
 }
 
@@ -159,13 +177,33 @@ export function defineObject<const O extends ObjectOptions>(options: O) {
   return { kind: 'object', ...options } as { kind: 'object' } & O & { __value?: InferFields<O['fields']> }
 }
 
+/**
+ * Значение элемента разнотипного массива: значение члена плюс служебные `_key`
+ * (стабильная идентичность элемента в массиве) и `_type` (имя члена — `name` или,
+ * если не задано, его `kind`). По `_type` студия выбирает редактор элемента.
+ */
+export type ArrayItemValue<M extends AnyField> = Prettify<
+  { _key: string; _type: M extends { name: infer N extends string } ? N : M['kind'] } & FieldValue<M>
+>
+
 type ArrayOptions = FieldMeta & {
-  /** Тип элемента массива (однородный массив). */
-  of: AnyField
+  /**
+   * Тип элемента: одно описание — однородный массив (элементы хранятся как есть),
+   * либо список описаний-членов — разнотипный массив (элементы получают `_type` и
+   * `_key`, см. ArrayItemValue).
+   */
+  of: AnyField | readonly AnyField[]
+  default?: unknown[]
   check?: Check<any> | Check<any>[]
 }
 
-/** Массив однородных элементов. */
+/** Массив элементов — однородный (of — одно поле) или разнотипный (of — список полей). */
 export function defineArray<const O extends ArrayOptions>(options: O) {
-  return { kind: 'array', ...options } as { kind: 'array' } & O & { __value?: FieldValue<O['of']>[] }
+  return { kind: 'array', ...options } as { kind: 'array' } & O & {
+    __value?: O['of'] extends readonly AnyField[]
+      ? ArrayItemValue<O['of'][number]>[]
+      : O['of'] extends AnyField
+        ? FieldValue<O['of']>[]
+        : never
+  }
 }

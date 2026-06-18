@@ -10,12 +10,14 @@ export type FieldSnapshot = {
   required?: boolean
   title?: string
   description?: string
+  name?: string
   min?: number
   max?: number
   input?: { type: string; predefined?: { value: string; title?: string }[] }
   to?: string[]
   fields?: Record<string, FieldSnapshot>
-  of?: FieldSnapshot
+  // Однородный массив — одно описание, разнотипный — список членов.
+  of?: FieldSnapshot | FieldSnapshot[]
 }
 
 export type DocumentSnapshot = {
@@ -32,6 +34,7 @@ function fieldSnapshot(field: AnyField): FieldSnapshot {
   if (field.required) snap.required = true
   if (field.title !== undefined) snap.title = field.title
   if (field.description !== undefined) snap.description = field.description
+  if (field.name !== undefined) snap.name = field.name
   if (field.min !== undefined) snap.min = field.min
   if (field.max !== undefined) snap.max = field.max
   if (field.input?.type) {
@@ -42,7 +45,7 @@ function fieldSnapshot(field: AnyField): FieldSnapshot {
   }
   if (field.to) snap.to = [...field.to]
   if (field.fields) snap.fields = fieldsSnapshot(field.fields)
-  if (field.of) snap.of = fieldSnapshot(field.of)
+  if (field.of) snap.of = Array.isArray(field.of) ? field.of.map(fieldSnapshot) : fieldSnapshot(field.of as AnyField)
   return snap
 }
 

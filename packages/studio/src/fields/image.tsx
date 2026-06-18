@@ -1,9 +1,10 @@
 import type { ImageValue } from '@jalyk/schema'
-import { Button } from '@jalyk/ui'
-import { useRef } from 'react'
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@jalyk/ui'
+import { useRef, useState } from 'react'
 import { useStudio } from '../data/context.tsx'
 import { useField } from '../data/field.ts'
 import { useUploadAsset } from '../data/hooks.ts'
+import { AssetGallery } from './AssetGallery.tsx'
 import type { FieldComponentProps } from './registry.tsx'
 
 // Редактор поля-картинки. Значение — { assetId }. Выбор файла загружает ассет и
@@ -14,6 +15,7 @@ export function ImageField({ path }: FieldComponentProps) {
   const { assetUrl } = useStudio()
   const upload = useUploadAsset()
   const inputRef = useRef<HTMLInputElement>(null)
+  const [galleryOpen, setGalleryOpen] = useState(false)
 
   const assetId = handle.value?.assetId
 
@@ -51,6 +53,25 @@ export function ImageField({ path }: FieldComponentProps) {
         >
           {upload.isPending ? 'Загрузка…' : assetId ? 'Заменить' : 'Загрузить'}
         </Button>
+        <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
+          <DialogTrigger asChild>
+            <Button type="button" size="sm" variant="outline">
+              Смотреть все
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-[90vw] sm:max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Файлы проекта</DialogTitle>
+            </DialogHeader>
+            <AssetGallery
+              currentAssetId={assetId}
+              onSelect={(id) => {
+                handle.set({ assetId: id })
+                setGalleryOpen(false)
+              }}
+            />
+          </DialogContent>
+        </Dialog>
         {assetId ? (
           <Button type="button" size="sm" variant="ghost" onClick={() => handle.set(null as unknown as ImageValue)}>
             Удалить

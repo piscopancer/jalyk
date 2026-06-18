@@ -40,13 +40,13 @@ const post: Post = {
   _type: 'post',
   title: 'Привет',
   status: 'draft', // должно сужаться до 'draft' | 'published'
-  author: { _ref: 'a1', _type: 'author' },
+  author: { _ref: 'a1', _toType: 'author' },
 }
 
 // Необязательные поля можно опускать.
 void post.cover
 // @ts-expect-error — status сужен до объединения литералов, 'foo' недопустим.
-const bad: Post = { _id: 'x', _type: 'post', title: 't', status: 'foo', author: { _ref: 'a', _type: 'author' } }
+const bad: Post = { _id: 'x', _type: 'post', title: 't', status: 'foo', author: { _ref: 'a', _toType: 'author' } }
 
 void post
 void bad

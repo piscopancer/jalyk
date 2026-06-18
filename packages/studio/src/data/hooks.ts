@@ -98,8 +98,31 @@ export function useSchemaSnapshot() {
 
 /** Загрузить файл-ассет. Статус (pending/error) пробрасывается в редактор поля. */
 export function useUploadAsset() {
-  const { uploadAsset } = useStudio()
-  return useMutation({ mutationFn: (file: File) => uploadAsset(file) })
+  const { uploadAsset, projectId } = useStudio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => uploadAsset(file),
+    onSuccess: () => qc.invalidateQueries({ queryKey: studioKeys.assets(projectId) }),
+  })
+}
+
+/** Все ассеты проекта (новые сверху) — для галереи выбора картинки. */
+export function useAssets() {
+  const { projectId, client, run } = useStudio()
+  return useQuery({
+    queryKey: studioKeys.assets(projectId),
+    queryFn: () => run(client.assets.list({ path: { projectId } })),
+  })
+}
+
+/** Удалить ассет проекта (запись + байты). Инвалидирует список ассетов. */
+export function useDeleteAsset() {
+  const { projectId, client, run } = useStudio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => run(client.assets.delete({ path: { projectId, id } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: studioKeys.assets(projectId) }),
+  })
 }
 
 /** Синхронизировать снапшот схемы проекта. */

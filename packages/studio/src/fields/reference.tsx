@@ -1,5 +1,18 @@
 import type { ReferenceValue } from '@jalyk/schema'
-import { cn } from '@jalyk/ui'
+import {
+  Button,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  cn,
+} from '@jalyk/ui'
+import { CheckIcon, ChevronsUpDownIcon, XIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useStudio } from '../data/context.tsx'
 import { useField } from '../data/field.ts'
@@ -17,100 +30,98 @@ function useTitleOf() {
   }
 }
 
-// Грузит документы одного типа и отдаёт их как опции ссылки. Отдельный компонент,
+// Грузит документы одного типа и отдаёт их пунктами Command. Отдельный компонент,
 // потому что число типов в field.to может быть больше одного, а хуки нельзя звать
 // в цикле переменной длины — поэтому на каждый тип свой смонтированный загрузчик.
+// Фильтрацию по строке поиска делает сам Command (cmdk) по value пункта.
 function TypeOptions({
   type,
   titleOf,
-  filter,
   selectedId,
   onPick,
 }: {
   type: string
   titleOf: (type: string, draft: unknown) => string
-  filter: string
   selectedId?: string
   onPick: (id: string, type: string) => void
 }) {
+  const { config } = useStudio()
   const documents = useDocuments(type)
-  const docs = (documents.data ?? []).filter((d) => {
-    if (!filter) return true
-    return titleOf(type, d.draft).toLowerCase().includes(filter.toLowerCase())
-  })
+  const docs = documents.data ?? []
+  if (docs.length === 0) return null
   return (
-    <>
-      {docs.map((d) => (
-        <button
-          key={d.id}
-          type="button"
-          className={cn(
-            'w-full px-3 py-2 text-left text-sm hover:bg-accent',
-            selectedId === d.id && 'bg-accent font-medium',
-          )}
-          onClick={() => onPick(d.id, type)}
-        >
-          {titleOf(type, d.draft)}
-        </button>
-      ))}
-    </>
+    <CommandGroup heading={config.documents[type]?.title ?? type}>
+      {docs.map((d) => {
+        const title = titleOf(type, d.draft)
+        return (
+          <CommandItem
+            key={d.id}
+            // value содержит id, чтобы пункты с одинаковым заголовком были
+            // различимы для cmdk; поиск по заголовку при этом сохраняется.
+            value={`${title} ${d.id}`}
+            onSelect={() => onPick(d.id, type)}
+          >
+            <CheckIcon className={cn('size-4', selectedId === d.id ? 'opacity-100' : 'opacity-0')} />
+            <span className="truncate">{title}</span>
+          </CommandItem>
+        )
+      })}
+    </CommandGroup>
   )
 }
 
-// Редактор поля-ссылки. Значение — { _ref, _type }. Список документов допустимых
-// типов (field.to) с поиском по preview-заголовку; выбор пишет ссылку, очистка —
-// null. Выбранный документ показываем чипом сверху.
+// Редактор поля-ссылки. Значение — { _ref, _toType }. Триггер-кнопка показывает
+// заголовок выбранного документа; по клику открывается поповер с поиском по
+// документам допустимых типов (field.to). Поповер закрывается по Esc и клику вне
+// (Popover/Command из @jalyk/ui). Кнопка-крест рядом очищает значение.
 export function ReferenceField({ path, field }: FieldComponentProps) {
   const handle = useField<ReferenceValue>(path)
   const titleOf = useTitleOf()
-  const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const types = field.to ?? []
 
   const ref = handle.value?._ref
-  const refType = handle.value?._type
+  const refType = handle.value?._toType
 
   const pick = (id: string, type: string) => {
-    handle.set({ _ref: id, _type: type } as ReferenceValue)
+    handle.set({ _ref: id, _toType: type } as ReferenceValue)
     setOpen(false)
-    setQuery('')
-  }
-
-  if (ref) {
-    return (
-      <div className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm">
-        <span className="truncate">
-          <RefTitle type={refType} id={ref} titleOf={titleOf} />
-        </span>
-        <button
-          type="button"
-          className="shrink-0 text-xs text-muted-foreground hover:text-destructive"
-          onClick={() => handle.set(null as unknown as ReferenceValue)}
-        >
-          Очистить
-        </button>
-      </div>
-    )
   }
 
   return (
-    <div className="flex flex-col gap-1">
-      <input
-        className="rounded-md border bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        placeholder="Поиск документа…"
-        value={query}
-        onFocus={() => setOpen(true)}
-        onChange={(e) => {
-          setQuery(e.target.value)
-          setOpen(true)
-        }}
-      />
-      {open ? (
-        <div className="max-h-48 overflow-y-auto rounded-md border">
-          {types.map((type) => (
-            <TypeOptions key={type} type={type} titleOf={titleOf} filter={query} onPick={pick} />
-          ))}
-        </div>
+    <div className="flex items-center gap-2">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" role="combobox" aria-expanded={open} className="flex-1 justify-between font-normal">
+            <span className={cn('truncate', !ref && 'text-muted-foreground')}>
+              {ref ? <RefTitle type={refType} id={ref} titleOf={titleOf} /> : 'Поиск документа…'}
+            </span>
+            <ChevronsUpDownIcon className="size-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Поиск документа…" />
+            <CommandList>
+              <CommandEmpty>Ничего не найдено</CommandEmpty>
+              {types.map((type) => (
+                <TypeOptions key={type} type={type} titleOf={titleOf} selectedId={ref} onPick={pick} />
+              ))}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      {ref ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Очистить"
+          className="shrink-0 text-muted-foreground"
+          onClick={() => handle.set(null as unknown as ReferenceValue)}
+        >
+          <XIcon />
+        </Button>
       ) : null}
     </div>
   )

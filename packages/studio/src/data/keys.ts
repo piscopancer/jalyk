@@ -7,4 +7,6 @@ export const studioKeys = {
   document: (projectId: string, id: string) => ['jalyk', projectId, 'document', id] as const,
   counts: (projectId: string) => ['jalyk', projectId, 'counts'] as const,
   schema: (projectId: string) => ['jalyk', projectId, 'schema'] as const,
+  access: (projectId: string) => ['jalyk', projectId, 'access'] as const,
+  assets: (projectId: string) => ['jalyk', projectId, 'assets'] as const,
 }

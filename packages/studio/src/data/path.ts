@@ -12,12 +12,20 @@ export function getAtPath(root: unknown, path: readonly string[]): unknown {
 }
 
 /**
- * Иммутабельно записать значение по пути, создавая недостающие узлы как объекты
- * (как jsonb_set с create=true). Пустой путь заменяет корень целиком.
+ * Иммутабельно записать значение по пути, создавая недостающие узлы (как jsonb_set
+ * с create=true). Пустой путь заменяет корень целиком. Если текущий узел — массив,
+ * сегмент пути трактуется как индекс и массив сохраняется массивом (иначе запись по
+ * индексу превратила бы его в объект, ломая элементы массива).
  */
 export function setAtPath(root: unknown, path: readonly string[], value: unknown): unknown {
   if (path.length === 0) return value
   const [head, ...rest] = path
+  if (Array.isArray(root)) {
+    const index = Number(head)
+    const next = root.slice()
+    next[index] = setAtPath(root[index], rest, value)
+    return next
+  }
   const base = root != null && typeof root === 'object' ? (root as Record<string, unknown>) : {}
   return { ...base, [head!]: setAtPath(base[head!], rest, value) }
 }

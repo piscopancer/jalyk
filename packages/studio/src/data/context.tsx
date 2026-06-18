@@ -1,7 +1,6 @@
 import type { ProjectEvent } from '@jalyk/contract'
 import type { AnyConfig } from '@jalyk/schema'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Effect, Either } from 'effect'
+import { Cause, Effect, Either, Exit } from 'effect'
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { makeClient, makeRuntime, type StudioApiClient, type StudioRuntime } from './runtime.ts'
 
@@ -79,7 +78,6 @@ function parseFrame(frame: string): ProjectEvent | null {
 // единственное SSE-соединение на проект. Клиент строится синхронно: его сборка не
 // делает запросов, нужен лишь готовый слой HttpClient.
 export function StudioProvider({ projectId, apiKey, apiUrl, config, children }: StudioProviderProps) {
-  const queryClient = useMemo(() => new QueryClient(), [])
   const runtime = useMemo(() => makeRuntime(), [])
   const client = useMemo(() => runtime.runSync(makeClient({ apiUrl, apiKey })), [runtime, apiUrl, apiKey])
 
@@ -142,7 +140,13 @@ export function StudioProvider({ projectId, apiKey, apiUrl, config, children }: 
       config,
       client,
       runtime,
-      run: (effect) => runtime.runPromise(effect),
+      // Бросаем не FiberFailure, а исходное значение ошибки (squash причины) —
+      // чтобы react-query и слой ошибок студии получали чистую tagged-ошибку.
+      run: async (effect) => {
+        const exit = await runtime.runPromiseExit(effect)
+        if (Exit.isSuccess(exit)) return exit.value
+        throw Cause.squash(exit.cause)
+      },
       runEither: (effect) => runtime.runPromise(Effect.either(effect)),
       subscribeEvents: (listener) => {
         listeners.current.add(listener)
@@ -168,9 +172,5 @@ export function StudioProvider({ projectId, apiKey, apiUrl, config, children }: 
     [projectId, apiUrl, apiKey, config, client, runtime],
   )
 
-  return (
-    <StudioContext.Provider value={value}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </StudioContext.Provider>
-  )
+  return <StudioContext.Provider value={value}>{children}</StudioContext.Provider>
 }
