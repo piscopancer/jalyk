@@ -42,6 +42,8 @@ export { useField, type FieldHandle } from './data/field.ts'
 export { useProjectEvents, useLiveInvalidation } from './data/events-hooks.ts'
 export { studioKeys } from './data/keys.ts'
 export { getAtPath, setAtPath, samePath } from './data/path.ts'
+export { asIcon, asComponent, type IconComponent, type PreviewProps, type HeaderProps } from './data/react-bridge.tsx'
+export { createStudio, type StudioClient } from './data/createStudio.tsx'
 export {
   useDocuments,
   useDocument,

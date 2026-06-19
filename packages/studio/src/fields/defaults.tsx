@@ -49,11 +49,14 @@ export function NumberField({ path }: FieldComponentProps) {
   const handle = useField<number>(path)
   const [local, setLocal] = useState(handle.value?.toString() ?? '')
   useEffect(() => setLocal(handle.value?.toString() ?? ''), [handle.value])
+  // Пустая строка очищает поле (null), иначе пишем число, игнорируя нечисловой ввод.
   const commit = () => {
-    const next = local === '' ? undefined : Number(local)
-    if (next !== handle.value && !(next !== undefined && Number.isNaN(next))) {
-      handle.set(next as number)
+    if (local === '') {
+      if (handle.value !== undefined) handle.set(null)
+      return
     }
+    const next = Number(local)
+    if (!Number.isNaN(next) && next !== handle.value) handle.set(next)
   }
   return <Input type="number" value={local} onChange={(e) => setLocal(e.target.value)} onBlur={commit} />
 }

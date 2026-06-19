@@ -12,8 +12,12 @@ import { getAtPath, samePath, setAtPath } from './path.ts'
 export type FieldHandle<T> = {
   /** Текущее значение draft по пути (undefined, пока документ грузится или пусто). */
   value: T | undefined
-  /** Точечно записать значение поля-по-пути (PATCH через jsonb_set на сервере). */
-  set: (value: T) => void
+  /**
+   * Точечно записать значение поля-по-пути (PATCH через jsonb_set на сервере).
+   * `null` очищает поле (делает его пустым), поэтому редакторам не нужно приводить
+   * «пустое» значение к типу поля.
+   */
+  set: (value: T | null) => void
   /** Статус последней записи: idle | pending | success | error. */
   status: 'idle' | 'pending' | 'success' | 'error'
   /** Ошибка последней записи (типизирована каналом ошибок HttpApiClient). */
@@ -54,7 +58,7 @@ export function useField<T = unknown>(path: readonly string[]): FieldHandle<T> {
 
   return {
     value: getAtPath(doc.data?.draft, path) as T | undefined,
-    set: (value: T) => setField.mutate({ path, value }),
+    set: (value: T | null) => setField.mutate({ path, value }),
     status: setField.status,
     error: setField.error,
     isLoading: doc.isLoading,

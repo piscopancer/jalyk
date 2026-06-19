@@ -1,4 +1,5 @@
 import { defineArray, defineBoolean, defineConfig, defineDocument, defineNumber, defineObject, defineReference, defineString } from '@jalyk/schema'
+import { createStudio } from '@jalyk/studio'
 import { CalendarDays, Disc3, FileText, Languages, ListMusic, Mic2, Music2, PenLine, ShieldAlert, Tag, Type, User, Users } from 'lucide-react'
 import { AlbumPreview } from './album-preview.tsx'
 
@@ -81,3 +82,10 @@ export const config = defineConfig({
     }),
   },
 })
+
+// Типизированный клиент запросов проекта: studio.<type>.findMany/findUnique/count
+// и create/update/delete/publish. Типы where/select/join выводятся из config.
+// Создаётся здесь, после config: компоненты превью (AlbumPreview) импортируют
+// этот клиент, образуя цикл модулей, и при инициализации в studio.ts config был
+// бы ещё в TDZ. В одном модуле порядок объявлений это исключает.
+export const studio = createStudio(config)

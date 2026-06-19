@@ -4,6 +4,7 @@
 import { defineConfig, type InferDocument } from './config.ts'
 import { defineDocument } from './document.ts'
 import { defineArray, defineImage, defineNumber, defineReference, defineRichText, defineString } from './field.ts'
+import type { DocumentRecord, FindManyArgs, Project, QueryResult, Where } from './query.ts'
 
 const config = defineConfig({
   documents: {
@@ -50,3 +51,36 @@ const bad: Post = { _id: 'x', _type: 'post', title: 't', status: 'foo', author: 
 
 void post
 void bad
+
+// --- проверка типов запросов -------------------------------------------------
+
+type C = typeof config
+
+// where: скаляр по значению/оператору, ссылка по id.
+const where: Where<C, 'post'> = { title: { contains: 'a' }, status: 'draft', author: 'a1', id: { in: ['1', '2'] } }
+void where
+// @ts-expect-error — views число, contains строковый оператор недопустим.
+const badWhere: Where<C, 'post'> = { views: { contains: 'x' } }
+void badWhere
+
+// Полный документ без select.
+const full: QueryResult<C, 'post', FindManyArgs<C, 'post'>> = {
+  id: 'p1',
+  title: 't',
+  status: 'published',
+  author: { _ref: 'a1', _toType: 'author' },
+}
+void full
+
+// select со скаляром и джоином по ссылке author → проекция author с полем name.
+type PostPick = Project<C, 'post', { id: true; title: true; author: { name: true } }>
+const pick: PostPick = { id: 'p1', title: 't', author: { name: 'Имя' } }
+void pick
+// @ts-expect-error — author спроецирован до { name }, bio не выбрано.
+void pick.author?.bio
+// @ts-expect-error — views не выбрано в select, его нет в проекции.
+void pick.views
+
+// DocumentRecord сохраняет ссылку как ReferenceValue.
+const record: DocumentRecord<C, 'post'> = { id: 'p1', title: 't', status: 'draft', author: { _ref: 'a', _toType: 'author' } }
+void record.author?._ref

@@ -24,8 +24,8 @@ import type { FieldComponentProps } from './registry.tsx'
 function useTitleOf() {
   const { config } = useStudio()
   return (type: string, draft: unknown) => {
-    const titleField = (config.documents[type]?.preview as { title?: string } | undefined)?.title
-    const value = titleField ? getAtPath(draft, [titleField]) : undefined
+    const titleField = getAtPath(config.documents[type]?.preview, ['title'])
+    const value = typeof titleField === 'string' ? getAtPath(draft, [titleField]) : undefined
     return typeof value === 'string' && value.length > 0 ? value : '(без названия)'
   }
 }
@@ -84,7 +84,7 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
   const refType = handle.value?._toType
 
   const pick = (id: string, type: string) => {
-    handle.set({ _ref: id, _toType: type } as ReferenceValue)
+    handle.set({ _ref: id, _toType: type })
     setOpen(false)
   }
 
@@ -118,7 +118,7 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
           size="icon"
           aria-label="Очистить"
           className="shrink-0 text-muted-foreground"
-          onClick={() => handle.set(null as unknown as ReferenceValue)}
+          onClick={() => handle.set(null)}
         >
           <XIcon />
         </Button>

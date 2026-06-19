@@ -1,14 +1,12 @@
-import type { DefaultHeaderData, HeaderComponentProps } from '@jalyk/schema'
-import type { ComponentType } from 'react'
+import type { DefaultHeaderData } from '@jalyk/schema'
+import { asIcon, type HeaderProps } from '../data/react-bridge.tsx'
 import { FieldMenu } from './FieldMenu.tsx'
 
 // Заголовок поля по умолчанию: подпись с иконкой и меню-троеточием плюс описание
 // под ней. Рисует предопределённые данные (DefaultHeaderData); если разработчик
 // задал полю свой headerComponent, студия берёт его вместо этого (см. FieldInput).
-// Иконка из схемы приходит широким типом (FieldIcon = unknown) — трактуем её как
-// компонент в духе иконок lucide.
-export function DefaultHeader({ path, field, header }: HeaderComponentProps<DefaultHeaderData>) {
-  const Icon = header.icon as ComponentType<{ className?: string }> | undefined
+export function DefaultHeader({ path, field, header }: HeaderProps<DefaultHeaderData>) {
+  const Icon = asIcon(header.icon)
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between gap-2">

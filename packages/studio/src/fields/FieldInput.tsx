@@ -1,5 +1,6 @@
-import type { DefaultHeaderData, FieldKind, HeaderComponentProps } from '@jalyk/schema'
-import type { ReactNode } from 'react'
+import type { AnyField, DefaultHeaderData, FieldKind } from '@jalyk/schema'
+import { getAtPath } from '../data/path.ts'
+import { asComponent, type HeaderProps } from '../data/react-bridge.tsx'
 import { ArrayField } from './array.tsx'
 import { BooleanField, FallbackField, NumberField, StringField } from './defaults.tsx'
 import { DefaultHeader } from './DefaultHeader.tsx'
@@ -28,23 +29,32 @@ export function FieldEditor({ path, field }: FieldComponentProps) {
   return <Component path={path} field={field} />
 }
 
-// Рисует один редактор поля: заголовок плюс сам редактор (FieldEditor). Заголовок
-// берётся из field.headerComponent, а если его нет — рисуется DefaultHeader.
-// Данные заголовка — это field.header, а при его отсутствии они собираются из
-// привычных title/description/icon поля (или ключа пути), чтобы старые схемы без
-// явного header продолжали работать.
-type HeaderComponent = (props: HeaderComponentProps) => ReactNode
-
-export function FieldInput({ path, field }: FieldComponentProps) {
-  const header = (field.header as DefaultHeaderData | undefined) ?? {
-    title: field.title ?? path[path.length - 1] ?? '',
-    description: field.description,
-    icon: field.icon,
+// Данные заголовка для DefaultHeader: берём field.header.title, если он есть,
+// иначе title поля или последний сегмент пути; описание и иконку — из field.header
+// либо из привычных полей. Так схемы без явного header продолжают работать.
+function defaultHeaderData(field: AnyField, path: readonly string[]): DefaultHeaderData {
+  const headerTitle = getAtPath(field.header, ['title'])
+  const headerDescription = getAtPath(field.header, ['description'])
+  const headerIcon = getAtPath(field.header, ['icon'])
+  return {
+    title: typeof headerTitle === 'string' ? headerTitle : field.title ?? path[path.length - 1] ?? '',
+    description: typeof headerDescription === 'string' ? headerDescription : field.description,
+    icon: headerIcon ?? field.icon,
   }
-  const Header = (field.headerComponent as HeaderComponent | undefined) ?? DefaultHeader
+}
+
+// Рисует один редактор поля: заголовок плюс сам редактор (FieldEditor). Если полю
+// задан свой headerComponent — рисуем его с данными field.header как есть; иначе
+// рисуем DefaultHeader с собранными DefaultHeaderData.
+export function FieldInput({ path, field }: FieldComponentProps) {
+  const Custom = asComponent<HeaderProps>(field.headerComponent)
   return (
     <div className="flex flex-col gap-1.5">
-      <Header path={path} field={field} header={header} />
+      {Custom ? (
+        <Custom path={path} field={field} header={field.header} />
+      ) : (
+        <DefaultHeader path={path} field={field} header={defaultHeaderData(field, path)} />
+      )}
       <FieldEditor path={path} field={field} />
     </div>
   )

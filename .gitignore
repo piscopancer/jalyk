@@ -19,3 +19,5 @@ _legacy/packages/trpc/src/prisma
 routeTree.gen.ts
 # Локальное хранилище ассетов (тестовый драйвер storage)
 apps/api/uploads/
+# Логи отладки tsx watch
+_watchtest.*

@@ -63,7 +63,15 @@ export function defineHeader<const D>(data: D): D {
 export type HeaderComponentProps<D = unknown> = { path: readonly string[]; field: AnyField; header: D }
 
 /** Компонент заголовка поля. Схема не зависит от React — возврат намеренно широкий. */
-export type HeaderComponent<D = any> = (props: HeaderComponentProps<D>) => unknown
+export type HeaderComponent<D = unknown> = (props: HeaderComponentProps<D>) => unknown
+
+/**
+ * Рантайм-тип компонента, дорисовываемого студией (заголовок поля, превью
+ * документа). `never` в контравариантной позиции пропсов делает подтипом любой
+ * компонент с любыми пропсами, поэтому сюда присваивается React-компонент студии
+ * без приведения; точные пропсы при описании задают HeaderOptions/PreviewOptions.
+ */
+export type ErasedComponent = (props: never) => unknown
 
 /**
  * Опции заголовка, подмешиваемые в каждую фабрику поля. `headerComponent`
@@ -114,7 +122,7 @@ export type AnyField = FieldMeta & {
   check?: Check<any> | Check<any>[]
   // Заголовок поля: данные и (опционально) свой компонент рендера, см. HeaderOptions.
   header?: unknown
-  headerComponent?: HeaderComponent
+  headerComponent?: ErasedComponent
 }
 
 export type FieldMap = Record<string, AnyField>

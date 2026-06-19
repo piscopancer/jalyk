@@ -73,7 +73,7 @@ export function ImageField({ path }: FieldComponentProps) {
           </DialogContent>
         </Dialog>
         {assetId ? (
-          <Button type="button" size="sm" variant="ghost" onClick={() => handle.set(null as unknown as ImageValue)}>
+          <Button type="button" size="sm" variant="ghost" onClick={() => handle.set(null)}>
             Удалить
           </Button>
         ) : null}

@@ -1,9 +1,9 @@
-import type { AnyField, DefaultPreviewData, PreviewComponentProps } from '@jalyk/schema'
+import type { AnyField, DefaultPreviewData } from '@jalyk/schema'
 import { Button, cn } from '@jalyk/ui'
 import { FileText } from 'lucide-react'
-import type { ComponentType, ReactNode } from 'react'
 import { useStudio } from '../data/context.tsx'
 import { getAtPath } from '../data/path.ts'
+import { asComponent, asIcon, type PreviewProps } from '../data/react-bridge.tsx'
 import { useCreateDocument, useDocumentCounts, useDocuments } from '../data/hooks.ts'
 import { DefaultPreview } from './DefaultPreview.tsx'
 
@@ -17,7 +17,7 @@ export function TypesColumn({ selected, onSelect }: { selected?: string; onSelec
   return (
     <ul className="flex w-56 shrink-0 flex-col overflow-y-auto border-r">
       {Object.entries(config.documents).map(([type, definition]) => {
-        const Icon = definition.icon as ComponentType<{ className?: string }> | undefined
+        const Icon = asIcon(definition.icon)
         return (
           <li key={type}>
             <button
@@ -56,8 +56,14 @@ function stringFieldValue(draft: unknown, key: string | undefined): string | und
   return typeof value === 'string' && value.length > 0 ? value : undefined
 }
 
-type PreviewComponent = (props: PreviewComponentProps) => ReactNode
 type PreviewDoc = { id: string; type: string; draft: unknown }
+
+// Читает имя поля-источника (preview.title / preview.description) из данных превью
+// документа; данные приходят рантайм-стёртыми (preview?: unknown в DocumentOptions).
+function previewFieldKey(preview: unknown, key: 'title' | 'description'): string | undefined {
+  const value = getAtPath(preview, [key])
+  return typeof value === 'string' ? value : undefined
+}
 
 // Один пункт списка документов. Вычисляет дефолтные иконку/заголовок/описание из
 // схемы и значения черновика, затем рисует превью: свой previewComponent
@@ -75,13 +81,13 @@ function DocumentRow({
   const { config } = useStudio()
   const def = config.documents[doc.type]
   const fields = def?.fields ?? {}
-  const preview = (def?.preview as DefaultPreviewData | undefined) ?? {}
 
-  const title = stringFieldValue(doc.draft, preview.title ?? firstStringFieldKey(fields)) ?? doc.id
-  const description = stringFieldValue(doc.draft, preview.description)
-  const Icon = (preview.icon ?? def?.icon) as ComponentType<{ className?: string }> | undefined
+  const title = stringFieldValue(doc.draft, previewFieldKey(def?.preview, 'title') ?? firstStringFieldKey(fields)) ?? doc.id
+  const description = stringFieldValue(doc.draft, previewFieldKey(def?.preview, 'description'))
+  const Icon = asIcon(getAtPath(def?.preview, ['icon']) ?? def?.icon)
   const icon = Icon ? <Icon className="size-4" /> : <FileText className="size-4" />
-  const Preview = (def?.previewComponent as PreviewComponent | undefined) ?? DefaultPreview
+  const preview: DefaultPreviewData = { title: previewFieldKey(def?.preview, 'title'), description: previewFieldKey(def?.preview, 'description'), icon: getAtPath(def?.preview, ['icon']) }
+  const Preview = asComponent<PreviewProps<unknown, DefaultPreviewData>>(def?.previewComponent) ?? DefaultPreview
 
   return (
     <li>
