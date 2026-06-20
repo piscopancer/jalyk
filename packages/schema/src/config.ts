@@ -1,16 +1,18 @@
 import type { DocumentOptions } from './document.ts'
-import type { InferFields, Prettify } from './field.ts'
-
-// Реестр документов проекта. Ключи объекта `documents` — это типы документов;
-// из них выводятся все значения и по ним резолвятся ссылки.
+import type { DocumentRegistry, InferFields, Prettify } from './field.ts'
 
 export type AnyConfig = { documents: Record<string, DocumentOptions> }
 
-/**
- * Собирает конфигурацию проекта. Возвращает объект как есть с сохранением
- * литеральных типов — на нём строятся вывод значений (InferDocument) и снапшот.
- */
-export function defineConfig<const D extends Record<string, DocumentOptions>>(config: { documents: D }): { documents: D } {
+type RegisteredType = keyof DocumentRegistry & string
+
+/** Типы, по которым реестр DocumentRegistry разошёлся с documents; пусто = синхронны. */
+type RegistryDrift<D> = [RegisteredType] extends [never] ? never : Exclude<RegisteredType, keyof D & string> | Exclude<keyof D & string, RegisteredType>
+
+/** Собирает конфиг, сохраняя литералы; второй параметр требуется лишь при рассинхроне DocumentRegistry с documents. */
+export function defineConfig<const D extends Record<string, DocumentOptions>>(
+  config: { documents: D },
+  ..._drift: [RegistryDrift<D>] extends [never] ? [] : [error: `DocumentRegistry рассинхронизирован с documents: ${RegistryDrift<D>}`]
+): { documents: D } {
   return config
 }
 

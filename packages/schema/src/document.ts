@@ -1,22 +1,9 @@
-import type { ErasedComponent, FieldIcon, FieldMap, InferFields } from './field.ts'
+import type { DefaultHeaderData, ErasedComponent, FieldIcon, FieldMap, FieldValue, HeaderComponentProps, InferFields } from './field.ts'
 
-// Документ — это карта полей плюс мета. Тип (ключ реестра) документ не хранит:
-// им служит ключ в `documents` объекте defineConfig, что задаёт единый реестр
-// типов и снимает циклические зависимости между ссылками.
+// Документ — карта полей плюс мета; тип документа задаёт ключ в `documents`.
+// Превью и форма разведены на данные (схема) и компонент (студия).
 
-// --- Превью документа --------------------------------------------------------
-// Превью — это то, что рисуется для документа в списках. Как и заголовок поля,
-// оно разведено на данные и компонент. Данные (`preview`) декларативны: какое
-// поле взять под заголовок/описание и какую иконку показать. Компонент
-// (`previewComponent`) живёт в студии, по умолчанию — DefaultPreview; ему через
-// пропсы отдаются уже вычисленные иконка, заголовок и описание, а внутри хуками
-// студии можно дочитать поля документа и документов по ссылкам на любую глубину.
-
-/**
- * Предопределённые данные превью — то, что умеет рисовать DefaultPreview.
- * `title`/`description` — имена полей-источников (если `title` не задан, студия
- * берёт первое строковое поле). `icon` перекрывает иконку документа.
- */
+/** Данные превью под DefaultPreview: `title`/`description` — имена полей-источников, `icon` перекрывает иконку документа. */
 export type DefaultPreviewData = {
   title?: string
   description?: string
@@ -33,19 +20,10 @@ export function definePreview<const D>(data: D): D {
   return data
 }
 
-/**
- * Документ для превью: тип, id и черновик. `Draft` — выведенные значения полей
- * документа (ссылки остаются ссылками, без дереференса). Глубже (по ссылкам)
- * читается хуками студии.
- */
+/** Документ для превью: id, тип и черновик (`Draft` — значения полей, ссылки без дереференса). */
 export type PreviewDocument<Draft = unknown> = { id: string; type: string; draft: Draft }
 
-/**
- * Пропсы компонента превью. `D` — данные превью, `Draft` — тип черновика
- * документа, `Node` — тип «узла» рендера (схема без React, поэтому по умолчанию
- * `unknown`; студия подставляет `ReactNode`). Иконка, заголовок и описание
- * приходят уже вычисленными.
- */
+/** Пропсы превью: `D` — данные превью, `Draft` — черновик, `Node` — узел рендера; иконка/заголовок/описание уже вычислены. */
 export type PreviewComponentProps<D = unknown, Draft = unknown, Node = unknown> = {
   document: PreviewDocument<Draft>
   icon: Node
@@ -59,38 +37,58 @@ export type PreviewComponent<D = unknown, Draft = unknown, Node = unknown> = (
   props: PreviewComponentProps<D, Draft, Node>,
 ) => unknown
 
-/**
- * Опции превью, подмешиваемые в defineDocument. `previewComponent` определяет
- * форму `preview` (со своим компонентом `preview` обязан подойти его пропсам, без
- * компонента форма падает на DefaultPreviewData) и получает типизированный
- * черновик `Draft`. `NoInfer` запрещает выводить P из самого `preview`, чтобы
- * проверка шла против дефолта; `Node` выводится из переданного компонента.
- */
+/** Опции превью для defineDocument: `previewComponent` задаёт форму `preview`; `NoInfer` гонит проверку против дефолта, а не самого `preview`. */
 export type PreviewOptions<Draft, P, Node> = {
   preview?: NoInfer<P>
   previewComponent?: PreviewComponent<P, Draft, Node>
 }
 
-export type DocumentOptions = {
-  fields: FieldMap
+/** Мета документа без полей и без компонентов рендера. */
+export type DocumentMeta = {
   title?: string
   description?: string
   icon?: FieldIcon
-  // Превью: данные и (опционально) свой компонент рендера, см. PreviewOptions.
-  // Компонент типизирован рантайм-стёртым ErasedComponent — точные пропсы задаёт
-  // PreviewOptions при описании документа.
+  // Данные превью (декларативные), см. PreviewOptions. Компоненты — отдельно.
   preview?: unknown
-  previewComponent?: ErasedComponent
 }
 
-/**
- * Описывает документ. Возвращает объект как есть (с сохранением литералов через
- * `const`-дженерик), чтобы defineConfig вывел из него точные типы значений.
- * `Node` выводится из previewComponent, а его черновик типизируется значениями
- * полей этого документа (InferFields).
- */
-export function defineDocument<const O extends DocumentOptions, P = DefaultPreviewData, Node = unknown>(
-  options: O & PreviewOptions<InferFields<O['fields']>, P, Node>,
-): O & PreviewOptions<InferFields<O['fields']>, P, Node> {
+/** Хэндл поля формы: значение, запись (`null` очищает), статус и флаг загрузки; без узлов рендера. */
+export type FormFieldHandle<V> = {
+  value: V | undefined
+  set: (value: V | null) => void
+  status: 'idle' | 'pending' | 'success' | 'error'
+  error: unknown
+  isLoading: boolean
+}
+
+/** Пропсы `Field`: имя поля (ключ F), рычаги заголовка `header` (false/null скрывает) и `headerComponent`, плюс `className` обёртки. */
+export type FormFieldRenderProps<F extends FieldMap, Node> = {
+  name: keyof F & string
+  header?: DefaultHeaderData | false | null
+  headerComponent?: (props: HeaderComponentProps) => Node
+  className?: string
+}
+
+/** Пропсы кастомной формы (карта полей F): `document` (id/тип/черновик), `Field` по ключу, `fields` — хэндлы всех полей. */
+export type FormComponentProps<F extends FieldMap, Node> = {
+  document: { id: string; type: string; draft: Partial<InferFields<F>> }
+  Field: (props: FormFieldRenderProps<F, Node>) => Node
+  fields: { [K in keyof F]: FormFieldHandle<FieldValue<F[K]>> }
+}
+
+/** Компонент кастомной формы; если задан, студия рисует его вместо дефолтного перебора полей. */
+export type FormComponent<F extends FieldMap, Node> = (props: FormComponentProps<F, Node>) => Node
+
+/** Полные опции документа (с компонентами) для рантайма; компоненты стёрты в ErasedComponent, чтобы не было циклов. */
+export type DocumentOptions = DocumentMeta & {
+  fields: FieldMap
+  previewComponent?: ErasedComponent
+  formComponent?: ErasedComponent
+}
+
+/** Описывает документ; `const`-дженерик захватывает только `fields`, а форма/превью типизируются через выведенный F — это снимает цикл «конфиг → форма → тип конфига». */
+export function defineDocument<const F extends FieldMap, P = DefaultPreviewData, PNode = unknown, FNode = unknown>(
+  options: DocumentMeta & { fields: F } & PreviewOptions<InferFields<F>, P, PNode> & { formComponent?: FormComponent<F, FNode> },
+): DocumentMeta & { fields: F } & PreviewOptions<InferFields<F>, P, PNode> & { formComponent?: FormComponent<F, FNode> } {
   return options
 }

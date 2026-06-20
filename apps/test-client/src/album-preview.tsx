@@ -3,13 +3,7 @@ import type { PreviewProps } from "@jalyk/studio"
 import { Disc3 } from "lucide-react"
 import { studio } from "./studio-config.ts"
 
-// Кастомное превью альбома: иконка, название и список первых пяти треков. Названия
-// треков дочитываются по ссылкам (album.tracks — массив ссылок на track) через
-// типизированный клиент: studio.track.findMany с select даёт { id, title } без
-// приведений, треки сопоставляются по id.
-
-// Черновик альбома в той части, которую читает превью. Тип ссылки выводится из
-// схемы (ReferenceValue<'track'>); пустые (ещё не выбранные) ссылки приходят как null.
+/** Черновик альбома в части, нужной превью; тип ссылки из схемы, пустые ссылки приходят как null. */
 type AlbumDraft = { tracks?: (ReferenceValue<"track"> | null)[] }
 
 export function AlbumPreview({

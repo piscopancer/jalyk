@@ -8,6 +8,7 @@ export { JALYK_SITE_URL, JALYK_PROJECTS_URL } from './data/site.ts'
 export { TypesColumn, DocumentsColumn } from './views/columns.tsx'
 export { DefaultPreview } from './views/DefaultPreview.tsx'
 export { DocumentEditor } from './views/DocumentEditor.tsx'
+export { CustomForm, type FormProps, type FormFieldProps, type FormFieldComponent } from './views/form.tsx'
 export { FieldInput } from './fields/FieldInput.tsx'
 export { FieldMenu } from './fields/FieldMenu.tsx'
 export {

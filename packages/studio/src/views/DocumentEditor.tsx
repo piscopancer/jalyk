@@ -1,10 +1,13 @@
+import type { FieldMap } from '@jalyk/schema'
 import { Button } from '@jalyk/ui'
 import { useStudio } from '../data/context.tsx'
 import { DocumentProvider } from '../data/document.tsx'
 import { useDeleteDocument, useDocument, usePublishDocument } from '../data/hooks.ts'
+import { asComponent } from '../data/react-bridge.tsx'
 import { FieldInput } from '../fields/FieldInput.tsx'
+import { CustomForm, type FormProps } from './form.tsx'
 
-// Панель действий над документом: публикация и удаление со статусами мутаций.
+/** Панель действий: публикация и удаление со статусами мутаций. */
 function DocumentActions({ id, onDeleted }: { id: string; onDeleted?: () => void }) {
   const publish = usePublishDocument(id)
   const remove = useDeleteDocument(id)
@@ -25,10 +28,7 @@ function DocumentActions({ id, onDeleted }: { id: string; onDeleted?: () => void
   )
 }
 
-// Дефолтный редактор документа: проходит по полям типа из конфига и рисует для
-// каждого FieldInput. Оборачивает поддерево в DocumentProvider, чтобы useField
-// знал, какой документ правит. Переопределяется композицией — потребитель может
-// собрать свой редактор из тех же хуков.
+/** Дефолтный редактор документа: рисует FieldInput по полям типа внутри DocumentProvider (нужен useField). */
 export function DocumentEditor({ id, type, onDeleted }: { id: string; type: string; onDeleted?: () => void }) {
   const { config } = useStudio()
   const doc = useDocument(id)
@@ -38,15 +38,20 @@ export function DocumentEditor({ id, type, onDeleted }: { id: string; type: stri
     return <div className="p-4 text-sm text-destructive">Неизвестный тип документа: {type}</div>
   }
 
+  // formComponent (ErasedComponent) рисуется вместо перебора полей; narrow через asComponent на границе со схемой.
+  const Form = asComponent<FormProps<FieldMap>>(definition.formComponent)
+
   return (
     <DocumentProvider id={id} type={type}>
       <div className="flex h-full flex-col">
         <DocumentActions id={id} onDeleted={onDeleted} />
         <div className="flex flex-col gap-5 overflow-y-auto p-4">
           {doc.isLoading ? <span className="text-sm text-muted-foreground">Загрузка…</span> : null}
-          {Object.entries(definition.fields).map(([key, field]) => (
-            <FieldInput key={key} path={[key]} field={field} />
-          ))}
+          {Form ? (
+            <CustomForm fields={definition.fields} component={Form} />
+          ) : (
+            Object.entries(definition.fields).map(([key, field]) => <FieldInput key={key} path={[key]} field={field} />)
+          )}
         </div>
       </div>
     </DocumentProvider>

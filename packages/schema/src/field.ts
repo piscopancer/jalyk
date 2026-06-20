@@ -199,6 +199,12 @@ export function defineImage<const O extends FieldMeta & { default?: ImageValue; 
   return { kind: 'image', ...options } as { kind: 'image' } & O & HeaderOptions<H> & { __value?: ImageValue }
 }
 
+/** Реестр типов документов; клиент расширяет через `declare module` (приём Register из TanStack). Авто-вывод из documents даёт цикл — список ручной. */
+export interface DocumentRegistry {}
+
+/** Ключи зарегистрированных типов документов; пустой реестр → любая строка. */
+export type DocumentTypeKey = [keyof DocumentRegistry] extends [never] ? string : keyof DocumentRegistry & string
+
 type ReferenceOptions = FieldMeta & {
   /** Ключи (типы) документов, на которые можно ссылаться. */
   to: readonly string[]
@@ -206,12 +212,8 @@ type ReferenceOptions = FieldMeta & {
   default?: ReferenceValue
 }
 
-/**
- * Поле-ссылка на другой документ. `to` — ключи документов из defineConfig;
- * проверка их существования и дереференс происходят на уровне конфигурации и
- * find-запроса, что и решает циклические зависимости между типами.
- */
-export function defineReference<const O extends ReferenceOptions, H = DefaultHeaderData>(options: O & HeaderOptions<H>) {
+/** Поле-ссылка на документ; `to` ограничено реестром DocumentRegistry (автодополнение и проверка в месте вызова), дереференс — на уровне find-запроса. */
+export function defineReference<const O extends Omit<ReferenceOptions, 'to'> & { to: readonly DocumentTypeKey[] }, H = DefaultHeaderData>(options: O & HeaderOptions<H>) {
   return { kind: 'reference', ...options } as { kind: 'reference' } & O & HeaderOptions<H> & { __value?: ReferenceValue<O['to'][number]> }
 }
 
