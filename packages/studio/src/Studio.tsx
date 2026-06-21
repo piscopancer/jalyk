@@ -5,6 +5,7 @@ import { FieldClipboardProvider } from './data/clipboard.tsx'
 import { StudioProvider } from './data/context.tsx'
 import { StudioErrorProvider } from './data/error-context.tsx'
 import { useLiveInvalidation } from './data/events-hooks.ts'
+import { StudioPrefsProvider, useStudioLayout } from './data/prefs.tsx'
 import { StudioThemeProvider, useStudioDark } from './data/theme.tsx'
 import {
   FieldComponentsProvider,
@@ -13,6 +14,7 @@ import {
 import { LayerView } from './views/LayerView.tsx'
 import { MillerView } from './views/MillerView.tsx'
 import { ProjectGate } from './views/ProjectGate.tsx'
+import { Toolbar } from './views/Toolbar.tsx'
 
 /** Встроенные лейауты студии; ключ выбирается пропом `layout`. */
 const layouts = { miller: MillerView, layer: LayerView } as const
@@ -35,15 +37,10 @@ export type StudioProps = {
   children?: ReactNode
 }
 
-/** Внутренний слой под провайдерами: включает живую инвалидацию списков по SSE и рисует либо переданный потребителем вид (children), либо выбранный лейаут. */
-function StudioBody({
-  layout = 'miller',
-  children,
-}: {
-  layout?: StudioLayout
-  children?: ReactNode
-}) {
+/** Внутренний слой под провайдерами: включает живую инвалидацию списков по SSE и рисует либо переданный потребителем вид (children), либо лейаут из настроек (шестерёнка тулбара, персист в localStorage). */
+function StudioBody({ children }: { children?: ReactNode }) {
   useLiveInvalidation()
+  const [layout] = useStudioLayout()
   const Layout = layouts[layout]
   return <>{children ?? <Layout />}</>
 }
@@ -55,7 +52,6 @@ function StudioShell({
   apiUrl,
   config,
   fieldComponents,
-  layout,
   children,
 }: StudioProps) {
   const dark = useStudioDark()
@@ -75,7 +71,12 @@ function StudioShell({
               <FieldClipboardProvider>
                 <FieldComponentsProvider components={fieldComponents ?? {}}>
                   <ProjectGate>
-                    <StudioBody layout={layout}>{children}</StudioBody>
+                    <div className="flex h-full min-h-0 flex-col">
+                      <Toolbar />
+                      <div className="min-h-0 flex-1">
+                        <StudioBody>{children}</StudioBody>
+                      </div>
+                    </div>
                   </ProjectGate>
                 </FieldComponentsProvider>
                 <Toaster
@@ -94,8 +95,13 @@ function StudioShell({
 /** Встраиваемая студия. Потребитель монтирует её в своём React-приложении (обычно на маршруте /studio), передав projectId, api-ключ и конфиг схемы. Переопределение — композицией: fieldComponents меняет редакторы полей, children заменяет весь вид, а отдельные блоки можно собрать самому из экспортируемых хуков и компонентов. */
 export function Studio(props: StudioProps) {
   return (
-    <StudioThemeProvider>
-      <StudioShell {...props} />
-    </StudioThemeProvider>
+    <StudioPrefsProvider
+      projectId={props.projectId}
+      defaultLayout={props.layout ?? 'miller'}
+    >
+      <StudioThemeProvider>
+        <StudioShell {...props} />
+      </StudioThemeProvider>
+    </StudioPrefsProvider>
   )
 }

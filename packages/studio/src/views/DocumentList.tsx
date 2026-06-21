@@ -1,4 +1,8 @@
-import type { AnyField, DefaultPreviewData } from '@jalyk/schema'
+import type {
+  AnyField,
+  DefaultPreviewData,
+  DocumentPreviewState,
+} from '@jalyk/schema'
 import { matchesWhere } from '@jalyk/schema'
 import {
   Button,
@@ -27,7 +31,9 @@ import {
   useListState,
   type ListState,
 } from '../data/list-state.ts'
+import { jsonEqual } from '../data/json-equal.ts'
 import { getAtPath } from '../data/path.ts'
+import { PreviewStateProvider } from '../data/preview-state.tsx'
 import {
   asComponent,
   asIcon,
@@ -36,7 +42,6 @@ import {
 import { validateDraft } from '../data/validation.tsx'
 import { DefaultPreview } from './DefaultPreview.tsx'
 import { FilterBuilder } from './FilterBuilder.tsx'
-import { IssueBadge } from './IssueBadge.tsx'
 import { SortMenu } from './SortMenu.tsx'
 
 /** Ключ первого строкового поля документа — источник авто-заголовка, когда preview.title не задан. */
@@ -75,7 +80,13 @@ function previewFieldKey(
   return typeof value === 'string' ? value : undefined
 }
 
-type PreviewDoc = { id: string; type: string; draft: unknown }
+type PreviewDoc = {
+  id: string
+  type: string
+  draft: unknown
+  /** Опубликованная версия (null — не публиковался); нужна, чтобы понять, есть ли неопубликованный черновик. */
+  published?: unknown
+}
 
 /** Один пункт списка документов. Вычисляет дефолтные иконку/заголовок/описание из схемы и значения черновика, затем рисует превью: свой previewComponent документа либо DefaultPreview. Вынесен в отдельный компонент, чтобы кастомное превью могло звать хуки (дочитывать поля и документы по ссылкам). */
 export function DocumentRow({
@@ -115,27 +126,37 @@ export function DocumentRow({
     asComponent<PreviewProps<unknown, DefaultPreviewData>>(
       def?.previewComponent,
     ) ?? DefaultPreview
-  const issues = validateDraft(def?.validate, doc.draft).issues
+  const validation = validateDraft(def?.validate, doc.draft)
+  const hasDraft = doc.published == null || !jsonEqual(doc.draft, doc.published)
+  const state: DocumentPreviewState = {
+    hasDraft,
+    issues: validation.issues,
+    worst: validation.worst,
+    hasError: validation.hasError,
+  }
 
   return (
     <li>
       <button
         className={cn(
-          'flex w-full items-start justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-accent',
-          selected === doc.id && 'bg-accent font-medium',
+          'flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-muted/50',
+          selected === doc.id &&
+            'bg-accent font-medium hover:bg-accent dark:hover:bg-accent',
         )}
         onClick={() => onSelect(doc.id)}
       >
         <span className="min-w-0 flex-1">
-          <Preview
-            document={doc}
-            icon={icon}
-            title={title}
-            description={description}
-            preview={preview}
-          />
+          <PreviewStateProvider value={state}>
+            <Preview
+              document={doc}
+              icon={icon}
+              title={title}
+              description={description}
+              preview={preview}
+              state={state}
+            />
+          </PreviewStateProvider>
         </span>
-        <IssueBadge issues={issues} className="mt-0.5" />
       </button>
     </li>
   )
@@ -240,20 +261,27 @@ export function DocumentList({
           onCreated={(id) => onSelect(id)}
         />
       ) : null}
-      <ul className="flex flex-col overflow-y-auto">
+      <ul className="flex flex-col gap-0.5 overflow-y-auto p-1">
         {documents.isLoading ? (
-          <li className="px-3 py-2 text-xs text-muted-foreground">Загрузка…</li>
+          <li className="px-2 py-1.5 text-xs text-muted-foreground">
+            Загрузка…
+          </li>
         ) : null}
         {rows.map((doc) => (
           <DocumentRow
             key={doc.id}
-            doc={{ id: doc.id, type, draft: doc.draft }}
+            doc={{
+              id: doc.id,
+              type,
+              draft: doc.draft,
+              published: doc.published,
+            }}
             selected={selected}
             onSelect={onSelect}
           />
         ))}
         {documents.data && rows.length === 0 ? (
-          <li className="px-3 py-2 text-xs text-muted-foreground">
+          <li className="px-2 py-1.5 text-xs text-muted-foreground">
             {documents.data.length === 0
               ? 'Документов нет'
               : 'Ничего не найдено'}

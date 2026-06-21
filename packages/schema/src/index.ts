@@ -1,6 +1,7 @@
 export * from './field.ts'
 export * from './document.ts'
 export * from './config.ts'
+export * from './project.ts'
 export * from './validate.ts'
 export * from './snapshot.ts'
 export * from './query.ts'

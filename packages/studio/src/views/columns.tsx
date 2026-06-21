@@ -20,15 +20,16 @@ export function TypesColumn({
   )
 
   return (
-    <ul className="flex w-56 shrink-0 flex-col overflow-y-auto border-r">
+    <ul className="flex w-56 shrink-0 flex-col gap-0.5 overflow-y-auto border-r p-1">
       {Object.entries(config.documents).map(([type, definition]) => {
         const Icon = asIcon(definition.icon)
         return (
           <li key={type}>
             <button
               className={cn(
-                'flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent',
-                selected === type && 'bg-accent font-medium',
+                'flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-muted/50',
+                selected === type &&
+                  'bg-accent font-medium hover:bg-accent dark:hover:bg-accent',
               )}
               onClick={() => onSelect(type)}
             >

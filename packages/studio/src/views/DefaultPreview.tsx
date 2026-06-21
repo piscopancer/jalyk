@@ -1,7 +1,8 @@
 import type { DefaultPreviewData } from '@jalyk/schema'
 import type { PreviewProps } from '../data/react-bridge.tsx'
+import { DefaultPreviewIndicators } from './PreviewIndicators.tsx'
 
-/** Превью документа по умолчанию: иконка слева, заголовок и (если есть) описание справа. Иконка/заголовок/описание приходят уже вычисленными из схемы как ReactNode (см. DocumentRow). Если документу задан свой previewComponent, студия берёт его вместо этого компонента. */
+/** Превью документа по умолчанию: иконка слева, заголовок и (если есть) описание, справа индикаторы — синяя точка черновика и точки замечаний (см. DefaultPreviewIndicators). Иконка/заголовок/описание приходят уже вычисленными из схемы как ReactNode (см. DocumentRow). Если документу задан свой previewComponent, студия берёт его вместо этого компонента. */
 export function DefaultPreview({
   icon,
   title,
@@ -20,6 +21,7 @@ export function DefaultPreview({
           </span>
         ) : null}
       </div>
+      <DefaultPreviewIndicators className="ml-auto pl-2" />
     </div>
   )
 }

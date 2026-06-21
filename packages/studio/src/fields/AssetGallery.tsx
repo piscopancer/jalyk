@@ -16,13 +16,13 @@ import { useAssets, useDeleteAsset } from '../data/hooks.ts'
 
 type Asset = typeof AssetInfo.Type
 
-/** Галерея ассетов проекта внутри диалога «Смотреть все». Показывает только картинки (фильтр по contentType на клиенте — список с сервера приходит целиком). На превью: кнопка «Выбрать» (пишет assetId в поле и закрывает галерею через onSelect), глазик (просмотр целиком в доп. диалоге) и удаление (с подтверждением в ещё одном доп. диалоге). Удаление полное — запись в БД и байты в хранилище. */
+/** Галерея ассетов проекта внутри диалога «Смотреть все». Показывает только картинки (фильтр по contentType на клиенте — список с сервера приходит целиком). На превью: кнопка «Выбрать» (пишет assetId в поле и закрывает галерею через onSelect; без onSelect галерея работает как просмотрщик и кнопку не показывает), глазик (просмотр целиком в доп. диалоге) и удаление (с подтверждением в ещё одном доп. диалоге). Удаление полное — запись в БД и байты в хранилище. */
 export function AssetGallery({
   currentAssetId,
   onSelect,
 }: {
   currentAssetId?: string
-  onSelect: (assetId: string) => void
+  onSelect?: (assetId: string) => void
 }) {
   const { assetUrl } = useStudio()
   const assets = useAssets()
@@ -63,14 +63,16 @@ export function AssetGallery({
                 className="size-full object-cover"
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => onSelect(asset.id)}
-                >
-                  Выбрать
-                </Button>
+                {onSelect ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => onSelect(asset.id)}
+                  >
+                    Выбрать
+                  </Button>
+                ) : null}
                 <div className="flex gap-1">
                   <Button
                     type="button"

@@ -7,7 +7,12 @@ import type {
   HeaderComponentProps,
   InferFields,
 } from './field.ts'
-import type { DocumentValidate, ErasedValidate } from './validate.ts'
+import type {
+  DocumentValidate,
+  ErasedValidate,
+  Issue,
+  Severity,
+} from './validate.ts'
 
 // Документ — карта полей плюс мета; тип документа задаёт ключ в `documents`.
 // Превью и форма разведены на данные (схема) и компонент (студия).
@@ -42,7 +47,15 @@ export type PreviewDocument<Draft = unknown> = {
   draft: Draft
 }
 
-/** Пропсы превью: `D` — данные превью, `Draft` — черновик, `Node` — узел рендера; иконка/заголовок/описание уже вычислены. */
+/** Состояние документа для превью: есть ли неопубликованный черновик (правки относительно published) и замечания валидации. Студия отдаёт его превью пропом `state` и хуком useDocumentPreviewState, чтобы кастомные превью могли отразить черновик/ошибки/предупреждения. */
+export type DocumentPreviewState = {
+  hasDraft: boolean
+  issues: readonly Issue[]
+  worst: Severity | null
+  hasError: boolean
+}
+
+/** Пропсы превью: `D` — данные превью, `Draft` — черновик, `Node` — узел рендера; иконка/заголовок/описание уже вычислены, `state` — состояние документа (черновик и замечания). */
 export type PreviewComponentProps<
   D = unknown,
   Draft = unknown,
@@ -53,6 +66,7 @@ export type PreviewComponentProps<
   title: Node
   description: Node
   preview: D
+  state: DocumentPreviewState
 }
 
 /** Компонент превью документа. Возврат намеренно широкий — схема без React. */

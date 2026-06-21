@@ -5,6 +5,7 @@ import { useDocument } from '../data/hooks.ts'
 import { jsonEqual } from '../data/json-equal.ts'
 import { getAtPath } from '../data/path.ts'
 import { asComponent, type HeaderProps } from '../data/react-bridge.tsx'
+import { statusColor, type FieldStatus } from '../data/status-color.ts'
 import { useFieldIssues } from '../data/validation.tsx'
 import { ArrayField } from './array.tsx'
 import {
@@ -23,41 +24,41 @@ import {
   type FieldComponentProps,
 } from './registry.tsx'
 
-type FieldStatus = 'error' | 'warning' | 'changed'
-
-/** Цвет полоски по статусу: ошибка — красный, предупреждение — жёлтый, изменение — светло-синий. */
-const statusColor: Record<FieldStatus, string> = {
-  error: 'var(--destructive)',
-  warning: '#eab308',
-  changed: '#38bdf8',
-}
-
-/** Статус поля для боковой полоски (приоритет ошибка → предупреждение → изменение). null — поле чистое и совпадает с опубликованным. */
-function useFieldStatus(path: readonly string[]): FieldStatus | null {
+/** Статус поля по двум независимым осям: есть ли неопубликованные правки (черновик) и худшее замечание валидации (ошибка/предупреждение). Это разные состояния, поэтому возвращаем оба, а не приоритетом. */
+function useFieldStatus(path: readonly string[]) {
   const { id } = useDocumentContext()
   const doc = useDocument(id)
   const issues = useFieldIssues(path)
-  if (issues.some((issue) => issue.severity === 'error')) return 'error'
-  if (issues.some((issue) => issue.severity === 'warning')) return 'warning'
+  const issue: Exclude<FieldStatus, 'changed'> | null = issues.some(
+    (issue) => issue.severity === 'error',
+  )
+    ? 'error'
+    : issues.some((issue) => issue.severity === 'warning')
+      ? 'warning'
+      : null
   const published = doc.data?.published
   // Документ ещё не публиковали — весь черновик считается изменённым.
-  if (published == null) return 'changed'
-  return jsonEqual(getAtPath(doc.data?.draft, path), getAtPath(published, path))
-    ? null
-    : 'changed'
+  const changed =
+    published == null ||
+    !jsonEqual(getAtPath(doc.data?.draft, path), getAtPath(published, path))
+  return { changed, issue }
 }
 
-/** Вертикальная полоска статуса слева у поля: диагональные полосы «строительной ленты» (без анимации), цвет — по статусу. */
+/** Вертикальные полоски статуса слева у поля: слева — черновик (изменение), справа через мини-отступ — ошибка/предупреждение. Оба слота фиксированы и всегда занимают своё место, поэтому полоски не съезжают, когда одно из состояний пропадает. */
 function FieldStatusStrip({ path }: { path: readonly string[] }) {
-  const status = useFieldStatus(path)
-  if (!status) return null
-  const color = statusColor[status]
+  const { changed, issue } = useFieldStatus(path)
+  if (!changed && !issue) return null
   return (
-    <span
-      aria-hidden
-      className="absolute inset-y-0 left-0 w-0.5 rounded-full"
-      style={{ background: color }}
-    />
+    <span aria-hidden className="absolute inset-y-0 left-0 flex gap-1">
+      <span
+        className="w-0.25 rounded-full"
+        style={{ background: changed ? statusColor.changed : undefined }}
+      />
+      <span
+        className="w-0.25 rounded-full"
+        style={{ background: issue ? statusColor[issue] : undefined }}
+      />
+    </span>
   )
 }
 

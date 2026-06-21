@@ -1,5 +1,6 @@
 import type {
   DefaultPreviewData,
+  DocumentPreviewState,
   ReferenceTarget,
   ReferenceValue,
 } from '@jalyk/schema'
@@ -27,11 +28,13 @@ import { useStudio } from '../data/context.tsx'
 import { useField } from '../data/field.ts'
 import { useDocuments } from '../data/hooks.ts'
 import { getAtPath } from '../data/path.ts'
+import { PreviewStateProvider } from '../data/preview-state.tsx'
 import {
   asComponent,
   asIcon,
   type PreviewProps,
 } from '../data/react-bridge.tsx'
+import { validateDraft } from '../data/validation.tsx'
 import { DefaultPreview } from '../views/DefaultPreview.tsx'
 import type { FieldComponentProps } from './registry.tsx'
 
@@ -95,14 +98,25 @@ function RefPreview({
     asComponent<PreviewProps<unknown, DefaultPreviewData>>(
       target?.previewComponent ?? def?.previewComponent,
     ) ?? DefaultPreview
+  // У связанного документа здесь нет published — признак черновика неизвестен; показываем только замечания валидации его черновика.
+  const validation = validateDraft(def?.validate, draft)
+  const state: DocumentPreviewState = {
+    hasDraft: false,
+    issues: validation.issues,
+    worst: validation.worst,
+    hasError: validation.hasError,
+  }
   return (
-    <Preview
-      document={{ id, type, draft }}
-      icon={icon}
-      title={title}
-      description={description}
-      preview={preview}
-    />
+    <PreviewStateProvider value={state}>
+      <Preview
+        document={{ id, type, draft }}
+        icon={icon}
+        title={title}
+        description={description}
+        preview={preview}
+        state={state}
+      />
+    </PreviewStateProvider>
   )
 }
 

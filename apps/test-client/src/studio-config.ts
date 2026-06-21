@@ -6,6 +6,7 @@ import {
   defineImage,
   defineNumber,
   defineObject,
+  defineProjectBadge,
   defineReference,
   defineString,
   index,
@@ -226,7 +227,10 @@ declare module '@jalyk/schema' {
   }
 }
 
-export const config = defineConfig({ documents })
+export const config = defineConfig({
+  documents,
+  project: defineProjectBadge({ name: 'Музыка', icon: Disc3Icon }),
+})
 
 /** Типизированный клиент запросов (find/create/update/delete) из config; объявлен после него во избежание TDZ при циклe импорта с превью. */
 export const studio = createStudio(config)

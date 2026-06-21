@@ -1,7 +1,14 @@
 import type { DocumentOptions } from './document.ts'
 import type { DocumentRegistry, InferFields, Prettify } from './field.ts'
+import type { ProjectConfig, ToolbarItems } from './project.ts'
 
-export type AnyConfig = { documents: Record<string, DocumentOptions> }
+export type AnyConfig = {
+  documents: Record<string, DocumentOptions>
+  /** Мета проекта для бейджа тулбара (имя, иконка, переопределение рендера). */
+  project?: ProjectConfig
+  /** Кастомные элементы слота тулбара. */
+  toolbar?: ToolbarItems
+}
 
 type RegisteredType = keyof DocumentRegistry & string
 
@@ -14,13 +21,13 @@ type RegistryDrift<D> = [RegisteredType] extends [never]
 
 /** Собирает конфиг, сохраняя литералы; второй параметр требуется лишь при рассинхроне DocumentRegistry с documents. */
 export function defineConfig<const D extends Record<string, DocumentOptions>>(
-  config: { documents: D },
+  config: { documents: D; project?: ProjectConfig; toolbar?: ToolbarItems },
   ..._drift: [RegistryDrift<D>] extends [never]
     ? []
     : [
         error: `DocumentRegistry рассинхронизирован с documents: ${RegistryDrift<D>}`,
       ]
-): { documents: D } {
+): { documents: D; project?: ProjectConfig; toolbar?: ToolbarItems } {
   return config
 }
 

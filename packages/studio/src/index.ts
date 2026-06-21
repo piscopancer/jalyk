@@ -3,6 +3,17 @@ export { Studio, type StudioProps, type StudioLayout } from './Studio.tsx'
 // Дефолтные view и блоки — для композиции/частичного переопределения.
 export { MillerView } from './views/MillerView.tsx'
 export { LayerView } from './views/LayerView.tsx'
+export { Toolbar } from './views/Toolbar.tsx'
+export { Avatar, OnlineUsers } from './views/Presence.tsx'
+export { SettingsDialog } from './views/SettingsDialog.tsx'
+export { usePresence, colorFromId, type PresenceUser } from './data/presence.ts'
+export {
+  StudioPrefsProvider,
+  useStudioLayout,
+  useStudioThemePref,
+  type ThemePref,
+} from './data/prefs.tsx'
+export { StudioThemeProvider, useStudioDark } from './data/theme.tsx'
 export { ProjectGate } from './views/ProjectGate.tsx'
 export { ProjectNotFound, type AccessDenial } from './views/ProjectNotFound.tsx'
 export { JALYK_SITE_URL, JALYK_PROJECTS_URL } from './data/site.ts'
@@ -42,6 +53,15 @@ export {
   type FilterPredicate,
 } from './data/list-query.ts'
 export { DefaultPreview } from './views/DefaultPreview.tsx'
+export {
+  DefaultDraftIndicator,
+  DefaultIssueIndicators,
+  DefaultPreviewIndicators,
+} from './views/PreviewIndicators.tsx'
+export {
+  PreviewStateProvider,
+  useDocumentPreviewState,
+} from './data/preview-state.tsx'
 export { DocumentEditor } from './views/DocumentEditor.tsx'
 export { DocumentJsonView } from './views/DocumentJsonView.tsx'
 export { IssueBadge } from './views/IssueBadge.tsx'
