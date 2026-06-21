@@ -11,15 +11,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@jalyk/client": "workspace:^",
     "@jalyk/schema": "workspace:^",
     "@jalyk/studio": "workspace:^",
     "@jalyk/ui": "workspace:^",
+    "@tanstack/react-query": "^5.101.0",
+    "@tanstack/react-router": "^1.170.15",
     "lucide-react": "^1.18.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.1",
+    "@tanstack/router-plugin": "^1.168.18",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",

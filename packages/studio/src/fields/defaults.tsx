@@ -7,10 +7,14 @@ import {
   SelectTrigger,
   SelectValue,
   Textarea,
+  cn,
 } from '@jalyk/ui'
 import { useEffect, useState } from 'react'
 import { useField } from '../data/field.ts'
 import type { FieldComponentProps } from './registry.tsx'
+
+// Стиль инпута, в котором лежит значение неверного типа/варианта (invalid): текст красным, чтобы было видно поломку, но значение остаётся видно и чинится прямо здесь — выбором пункта или перепечаткой.
+const invalidText = 'text-destructive'
 
 // Дефолтные редакторы полей. Текстовые правят локальное состояние и коммитят точечную запись на blur (а не на каждую клавишу — иначе PATCH на символ). Внешние правки (SSE) приходят через value и синхронизируют локальный буфер.
 
@@ -24,26 +28,34 @@ function useCommittedText(path: readonly string[]) {
   return { local, setLocal, commit, handle }
 }
 
-export function StringField({ path, field }: FieldComponentProps) {
+export function StringField({ path, field, invalid }: FieldComponentProps) {
   const { local, setLocal, commit, handle } = useCommittedText(path)
   // Поле-селект из предопределённых значений — выпадающий список shadcn. Radix не допускает пустое значение элемента, поэтому пустую строку отдаём как undefined, тогда показывается placeholder.
   if (field.input?.type === 'select' && field.input.predefined) {
+    const predefined = field.input.predefined
+    const raw = handle.value == null ? undefined : String(handle.value)
+    // Невалидное значение (выпавшее из predefined или не строка) показываем красным отдельным пунктом, чтобы оно было видно и его можно было перевыбрать.
+    const orphan = invalid && raw && !predefined.some((o) => o.value === raw)
+    const options = [
+      ...predefined.map((option) => ({
+        value: option.value,
+        label: option.title ?? option.value,
+      })),
+      ...(orphan ? [{ value: raw, label: raw }] : []),
+    ]
     return (
       <Select
-        value={local || undefined}
+        value={raw || undefined}
         onValueChange={(value) => handle.set(value)}
-        items={field.input.predefined.map((option) => ({
-          value: option.value,
-          label: option.title ?? option.value,
-        }))}
+        items={options}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger className={cn('w-full', invalid && invalidText)}>
           <SelectValue placeholder="Не выбрано" />
         </SelectTrigger>
         <SelectContent>
-          {field.input.predefined.map((option) => (
+          {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>
-              {option.title ?? option.value}
+              {option.label}
             </SelectItem>
           ))}
         </SelectContent>
@@ -54,7 +66,7 @@ export function StringField({ path, field }: FieldComponentProps) {
   if (field.input?.type === 'multiline') {
     return (
       <Textarea
-        className="min-h-24"
+        className={cn('min-h-24', invalid && invalidText)}
         value={local}
         onChange={(e) => setLocal(e.target.value)}
         onBlur={commit}
@@ -63,6 +75,7 @@ export function StringField({ path, field }: FieldComponentProps) {
   }
   return (
     <Input
+      className={cn(invalid && invalidText)}
       value={local}
       onChange={(e) => setLocal(e.target.value)}
       onBlur={commit}
@@ -70,7 +83,7 @@ export function StringField({ path, field }: FieldComponentProps) {
   )
 }
 
-export function NumberField({ path }: FieldComponentProps) {
+export function NumberField({ path, invalid }: FieldComponentProps) {
   const handle = useField<number>(path)
   const [local, setLocal] = useState(handle.value?.toString() ?? '')
   useEffect(() => setLocal(handle.value?.toString() ?? ''), [handle.value])
@@ -83,9 +96,11 @@ export function NumberField({ path }: FieldComponentProps) {
     const next = Number(local)
     if (!Number.isNaN(next) && next !== handle.value) handle.set(next)
   }
+  // При неверном типе значение может быть нечисловым — показываем его текстом красным, чтобы оно было видно и его можно было перепечатать числом (type=number скрыл бы нечисловой ввод).
   return (
     <Input
-      type="number"
+      type={invalid ? 'text' : 'number'}
+      className={cn(invalid && invalidText)}
       value={local}
       onChange={(e) => setLocal(e.target.value)}
       onBlur={commit}
@@ -93,11 +108,12 @@ export function NumberField({ path }: FieldComponentProps) {
   )
 }
 
-export function BooleanField({ path }: FieldComponentProps) {
+export function BooleanField({ path, invalid }: FieldComponentProps) {
   const handle = useField<boolean>(path)
   return (
     <Checkbox
-      checked={handle.value ?? false}
+      className={cn(invalid && 'border-destructive')}
+      checked={handle.value === true}
       onCheckedChange={(checked) => handle.set(checked === true)}
     />
   )

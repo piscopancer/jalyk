@@ -1,4 +1,4 @@
-import type { FieldMap } from '@jalyk/schema'
+import { unknownObjectKeys, type FieldMap } from '@jalyk/schema'
 import {
   Button,
   DropdownMenu,
@@ -35,6 +35,7 @@ import {
   DocumentValidationProvider,
   useDocumentValidation,
 } from '../data/validation.tsx'
+import { UnknownField } from '../fields/AnomalousField.tsx'
 import { FieldInput } from '../fields/FieldInput.tsx'
 import { DocumentJsonView } from './DocumentJsonView.tsx'
 import { CustomForm, type FormProps } from './form.tsx'
@@ -185,9 +186,17 @@ export function DocumentEditor({
             {Form ? (
               <CustomForm fields={definition.fields} component={Form} />
             ) : (
-              Object.entries(definition.fields).map(([key, field]) => (
-                <FieldInput key={key} path={[key]} field={field} />
-              ))
+              <>
+                {Object.entries(definition.fields).map(([key, field]) => (
+                  <FieldInput key={key} path={[key]} field={field} />
+                ))}
+                {unknownObjectKeys(
+                  { kind: 'object', fields: definition.fields },
+                  doc.data?.draft,
+                ).map((key) => (
+                  <UnknownField key={key} objectPath={[]} fieldKey={key} />
+                ))}
+              </>
             )}
           </div>
           <DocumentActions id={id} onDeleted={onDeleted} />

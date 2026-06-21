@@ -10,7 +10,7 @@ export function AlbumPreview({
   document,
   title,
 }: PreviewProps<AlbumDraft, DefaultPreviewData>) {
-  const refs = (document.draft.tracks ?? [])
+  const refs = (document.draft?.tracks ?? [])
     .filter((ref): ref is ReferenceValue<'track'> => ref != null)
     .slice(0, 5)
   const tracks = studio.track.findMany({

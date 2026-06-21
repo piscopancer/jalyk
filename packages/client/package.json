@@ -1,0 +1,20 @@
+{
+  "name": "@jalyk/client",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "author": "piscopancer",
+  "license": "ISC",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@jalyk/schema": "workspace:^"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}

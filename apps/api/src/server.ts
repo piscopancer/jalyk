@@ -16,6 +16,7 @@ import { DocumentsLive } from './http/documents.ts'
 import { EventsHttpLive } from './http/events.ts'
 import { HealthLive } from './http/health.ts'
 import { MeLive } from './http/me.ts'
+import { PublishedLive } from './http/published.ts'
 import { AuthenticationLive } from './http/middleware.ts'
 import { ProjectsLive } from './http/projects.ts'
 
@@ -52,6 +53,7 @@ const ApiLive = HttpApiBuilder.api(Api).pipe(
   Layer.provide(MeLive),
   Layer.provide(ProjectsLive),
   Layer.provide(DocumentsLive),
+  Layer.provide(PublishedLive),
   Layer.provide(AssetsLive),
   Layer.provide(AssetsPublicLive),
   Layer.provide(EventsHttpLive),

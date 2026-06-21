@@ -1,9 +1,16 @@
-import type { AnyField, DefaultHeaderData, FieldKind } from '@jalyk/schema'
+import {
+  fieldFit,
+  type AnyField,
+  type DefaultHeaderData,
+  type FieldKind,
+} from '@jalyk/schema'
 import { cn } from '@jalyk/ui'
 import { useDocumentContext } from '../data/document.tsx'
+import { useField } from '../data/field.ts'
 import { useDocument } from '../data/hooks.ts'
 import { jsonEqual } from '../data/json-equal.ts'
 import { getAtPath } from '../data/path.ts'
+import { BrokenFieldEditor } from './AnomalousField.tsx'
 import { asComponent, type HeaderProps } from '../data/react-bridge.tsx'
 import { statusColor, type FieldStatus } from '../data/status-color.ts'
 import { useFieldIssues } from '../data/validation.tsx'
@@ -73,11 +80,20 @@ const defaults: Partial<Record<FieldKind, FieldComponent>> = {
   array: ArrayField,
 }
 
-/** Голый редактор поля (без подписи): компонент по виду — реестр, иначе дефолт, иначе JSON. Через него ObjectField/ArrayField рисуют вложенное. */
+/** Голый редактор поля (без подписи): компонент по виду — реестр, иначе дефолт, иначе JSON. Через него ObjectField/ArrayField рисуют вложенное. Перед обычным редактором проверяет соответствие значения схеме: при структурном сломе категории подменяет инпут аварийным JSON-редактором, при несовпадении типа/варианта помечает инпут invalid. */
 export function FieldEditor({ path, field }: FieldComponentProps) {
+  const handle = useField(path)
   const override = useFieldComponent(field.kind)
+  const fit = fieldFit(field, handle.value)
+  if (fit === 'structure')
+    // children — тот же FieldEditor, но рисуется внутри буфера (FieldSourceProvider): handle.value пустой → fit === 'ok' → обычный редактор, без рекурсии в аварийный.
+    return (
+      <BrokenFieldEditor path={path} field={field}>
+        <FieldEditor path={path} field={field} />
+      </BrokenFieldEditor>
+    )
   const Component = override ?? defaults[field.kind] ?? FallbackField
-  return <Component path={path} field={field} />
+  return <Component path={path} field={field} invalid={fit === 'type'} />
 }
 
 /** Собирает DefaultHeaderData из `source` (header поля или переопределение), с фолбэком на поля field и последний сегмент пути. */

@@ -56,7 +56,10 @@ function CodeBlock({
     return (
       <pre
         data-slot="code-block"
-        className={cn('overflow-auto font-mono text-xs', className)}
+        className={cn(
+          'thin-scrollbar overflow-auto font-mono text-xs',
+          className,
+        )}
       >
         {code}
       </pre>
@@ -66,7 +69,10 @@ function CodeBlock({
   return (
     <div
       data-slot="code-block"
-      className={cn('overflow-auto font-mono text-xs', className)}
+      className={cn(
+          'thin-scrollbar overflow-auto font-mono text-xs',
+          className,
+        )}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   )

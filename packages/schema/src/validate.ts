@@ -1,4 +1,5 @@
 import { Brand, Either, Schema } from 'effect'
+import { conformancePaths } from './conformance.ts'
 import type { ArrayIndex, FieldMap, FieldPath, PathBuilder } from './field.ts'
 
 // Клиентская валидация документа целиком. Правила объявляются на уровне документа
@@ -142,6 +143,18 @@ export function runValidate(validate: ErasedValidate, draft: unknown): Issue[] {
     validate as (doc: unknown, path: typeof buildPath) => readonly RuleResult[]
   )(draft, buildPath)
   return issues.filter((issue): issue is Issue => Boolean(issue))
+}
+
+/** Встроенные замечания о структурном несоответствии черновика схеме (см. conformancePaths) как error-Issue по путям полей. Это база валидации: сюда не входят пользовательские правила, их добавляет runValidate. Сломанное поле блокирует публикацию и красит значок/полоску, а документ считается сломанным. */
+export function conformanceIssues(fields: FieldMap, draft: unknown): Issue[] {
+  return conformancePaths(fields, draft).map(({ path, fit }) => ({
+    severity: 'error',
+    message:
+      fit === 'structure'
+        ? 'Структура значения не подходит под поле'
+        : 'Неверный тип значения',
+    path: makeFieldPath(path),
+  }))
 }
 
 /** Худшая строгость в списке замечаний: error важнее warning, иначе null. */

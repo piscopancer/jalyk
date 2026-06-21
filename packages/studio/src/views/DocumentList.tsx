@@ -102,11 +102,13 @@ export function DocumentRow({
   const def = config.documents[doc.type]
   const fields = def?.fields ?? {}
 
-  const title =
-    stringFieldValue(
-      doc.draft,
-      previewFieldKey(def?.preview, 'title') ?? firstStringFieldKey(fields),
-    ) ?? doc.id
+  const titleValue = stringFieldValue(
+    doc.draft,
+    previewFieldKey(def?.preview, 'title') ?? firstStringFieldKey(fields),
+  )
+  const title = titleValue ?? (
+    <span className="italic text-muted-foreground">{doc.id}</span>
+  )
   const description = stringFieldValue(
     doc.draft,
     previewFieldKey(def?.preview, 'description'),
@@ -126,7 +128,7 @@ export function DocumentRow({
     asComponent<PreviewProps<unknown, DefaultPreviewData>>(
       def?.previewComponent,
     ) ?? DefaultPreview
-  const validation = validateDraft(def?.validate, doc.draft)
+  const validation = validateDraft(def, doc.draft)
   const hasDraft = doc.published == null || !jsonEqual(doc.draft, doc.published)
   const state: DocumentPreviewState = {
     hasDraft,

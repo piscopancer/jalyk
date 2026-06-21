@@ -12,6 +12,7 @@ const toasterThemes = ['light', 'dark', 'system'] as const
 
 /** CSS-переменные sonner: не входят в тип CSSProperties, потому каст неизбежен. */
 const toasterStyle = {
+  fontFamily: 'var(--font-sans)',
   '--normal-bg': 'var(--popover)',
   '--normal-text': 'var(--popover-foreground)',
   '--normal-border': 'var(--border)',

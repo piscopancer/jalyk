@@ -99,7 +99,7 @@ function RefPreview({
       target?.previewComponent ?? def?.previewComponent,
     ) ?? DefaultPreview
   // У связанного документа здесь нет published — признак черновика неизвестен; показываем только замечания валидации его черновика.
-  const validation = validateDraft(def?.validate, draft)
+  const validation = validateDraft(def, draft)
   const state: DocumentPreviewState = {
     hasDraft: false,
     issues: validation.issues,

@@ -5,6 +5,8 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react'
 export type FieldComponentProps = {
   path: readonly string[]
   field: AnyField
+  /** Значение есть, но не того типа/варианта при совпавшей категории (fit === 'type'): инпут показывает его «красным» и даёт починить выбором/перепечаткой. Структурный слом (категория) сюда не доходит — там рисуется аварийный редактор. */
+  invalid?: boolean
 }
 
 export type FieldComponent = (props: FieldComponentProps) => ReactNode

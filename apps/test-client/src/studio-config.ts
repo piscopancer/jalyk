@@ -19,6 +19,7 @@ import {
   FileTextIcon,
   ImageIcon,
   LanguagesIcon,
+  LinkIcon,
   ListMusicIcon,
   Mic2Icon,
   Music2Icon,
@@ -33,10 +34,16 @@ import { AlbumForm } from './album-form.tsx'
 import { AlbumPreview } from './album-preview.tsx'
 
 /** Языки переводов лирики: value — код языка, title — подпись для select. */
-const languages = [
+export const languages = [
   { value: 'ru', title: 'Русский' },
   { value: 'en', title: 'English' },
-  { value: 'zh', title: '中文' },
+  { value: 'ch', title: '中文' },
+] as const
+
+/** Соцсети для select ссылок исполнителя: value — код, title — подпись. */
+const socialNetworks = [
+  { value: 'vk', title: 'ВК' },
+  { value: 'x', title: 'X' },
 ] as const
 
 /** Поля альбома вынесены отдельно, чтобы форма AlbumForm типизировалась по `typeof albumFields` без цикла «конфиг → форма → тип конфига». */
@@ -85,6 +92,21 @@ const artistDoc = defineDocument({
       title: 'Биография',
       icon: FileTextIcon,
       input: { type: 'multiline' },
+    }),
+    socialLinks: defineArray({
+      title: 'Ссылки на соцсети',
+      icon: LinkIcon,
+      of: defineObject({
+        title: 'Ссылка',
+        fields: {
+          network: defineString({
+            title: 'Соцсеть',
+            icon: UsersIcon,
+            input: { type: 'select', predefined: socialNetworks },
+          }),
+          url: defineString({ title: 'Ссылка', icon: LinkIcon }),
+        },
+      }),
     }),
   },
   validate: (doc, path) => [

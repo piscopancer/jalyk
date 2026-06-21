@@ -181,6 +181,34 @@ export const DocumentsGroup = HttpApiGroup.make('documents')
   )
   .middleware(Authorization)
 
+// --- опубликованный контент ----------------------------------------------
+
+// Чтение опубликованного контента сайтами-потребителями. Аргументы запроса —
+// нетипизированный JSON (where/select/orderBy/take/skip): их статическую форму
+// знает только клиент через @jalyk/schema, сервер исполняет структурно. Защищён
+// тем же Authorization (нужен X-Api-Key со scope read); отдаёт лишь published,
+// черновики недоступны. Результат — массив спроецированных документов (Unknown).
+export const PublishedGroup = HttpApiGroup.make('published')
+  .add(
+    HttpApiEndpoint.post(
+      'query',
+      '/projects/:projectId/published/:type/query',
+    )
+      .setPath(Schema.Struct({ projectId: Schema.String, type: Schema.String }))
+      .setPayload(
+        Schema.Struct({
+          where: Schema.optional(JsonValue),
+          select: Schema.optional(JsonValue),
+          orderBy: Schema.optional(JsonValue),
+          take: Schema.optional(Schema.Number),
+          skip: Schema.optional(Schema.Number),
+        }),
+      )
+      .addSuccess(Schema.Array(JsonValue))
+      .addError(NotFound),
+  )
+  .middleware(Authorization)
+
 // --- ассеты --------------------------------------------------------------
 
 // Ассет на проводе. Байты раздаются отдельно по GET /assets/:id; здесь только
@@ -249,6 +277,7 @@ export class Api extends HttpApi.make('jalyk')
   .add(MeGroup)
   .add(ProjectsGroup)
   .add(DocumentsGroup)
+  .add(PublishedGroup)
   .add(AssetsGroup)
   .add(AssetsPublicGroup)
   .add(EventsGroup) {}

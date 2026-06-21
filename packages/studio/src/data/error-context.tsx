@@ -9,6 +9,7 @@ import {
   DialogTitle,
   toast,
 } from '@jalyk/ui'
+import { ChevronRightIcon, CopyIcon } from 'lucide-react'
 import {
   MutationCache,
   QueryCache,
@@ -158,9 +159,24 @@ function ErrorDialog({
               <DetailRow label="URL" value={error.url} />
               <DetailRow label="Сообщение" value={error.message} />
             </div>
-            <details className="min-w-0 rounded-md border">
-              <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium">
+            <details className="group min-w-0 rounded-md border">
+              <summary className="flex cursor-pointer select-none items-center gap-2 px-3 py-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
+                <ChevronRightIcon className="size-4 text-muted-foreground transition-transform group-open:rotate-90" />
                 Сырые данные ошибки
+                <span className="flex-1" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  title="Скопировать"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    void navigator.clipboard?.writeText(errorToJson(error.raw))
+                    toast('Данные ошибки скопированы')
+                  }}
+                >
+                  <CopyIcon />
+                </Button>
               </summary>
               <CodeBlock
                 code={errorToJson(error.raw)}

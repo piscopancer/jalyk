@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useStudio } from './context.tsx'
 import { useDocumentContext } from './document.tsx'
+import { useFieldSource } from './field-source.tsx'
 import { useDocument, useSetField } from './hooks.ts'
 import { studioKeys } from './keys.ts'
 import { getAtPath, samePath, setAtPath } from './path.ts'
@@ -30,6 +31,7 @@ export function useField<T = unknown>(path: readonly string[]): FieldHandle<T> {
   const qc = useQueryClient()
   const doc = useDocument(id)
   const setField = useSetField(id)
+  const source = useFieldSource()
 
   // Удалённые правки этого же поля: патчим кэш документа по пути из события, чтобы value обновилось без перезапроса. Своя правка тоже вернётся сюда — патч до того же значения безвреден.
   const pathKey = JSON.stringify(path)
@@ -55,6 +57,17 @@ export function useField<T = unknown>(path: readonly string[]): FieldHandle<T> {
       }),
     [subscribeEvents, qc, projectId, id, pathKey, path],
   )
+
+  // Локальный источник (аварийный редактор сломанного поля): значение из буфера, запись в буфер, без обращения к документу.
+  if (source) {
+    return {
+      value: source.get(path) as T | undefined,
+      set: (value: T | null) => source.set(path, value),
+      status: 'idle',
+      error: undefined,
+      isLoading: false,
+    }
+  }
 
   return {
     value: getAtPath(doc.data?.draft, path) as T | undefined,
