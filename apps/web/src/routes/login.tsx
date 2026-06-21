@@ -1,6 +1,12 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Button } from '@jalyk/ui'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@jalyk/ui'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@jalyk/ui'
 import { signIn } from '@/lib/auth-client'
 
 export const Route = createFileRoute('/login')({
@@ -19,7 +25,9 @@ function Login() {
       <Card>
         <CardHeader>
           <CardTitle>Вход в Jalyk</CardTitle>
-          <CardDescription>Войдите через GitHub или Google, чтобы продолжить.</CardDescription>
+          <CardDescription>
+            Войдите через GitHub или Google, чтобы продолжить.
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <Button variant="outline" onClick={() => social('github')}>

@@ -28,5 +28,7 @@ export const DatabaseTest = (url: string) =>
 export const DatabaseSeed = (init: () => Promise<PrismaClient>) =>
   Layer.scoped(
     Database,
-    Effect.acquireRelease(Effect.promise(init), (client) => Effect.promise(() => client.$disconnect())),
+    Effect.acquireRelease(Effect.promise(init), (client) =>
+      Effect.promise(() => client.$disconnect()),
+    ),
   )

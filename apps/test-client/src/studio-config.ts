@@ -10,8 +10,8 @@ import {
   defineString,
   index,
   rules,
-} from "@jalyk/schema"
-import { createStudio } from "@jalyk/studio"
+} from '@jalyk/schema'
+import { createStudio } from '@jalyk/studio'
 import {
   CalendarDaysIcon,
   Disc3Icon,
@@ -27,27 +27,31 @@ import {
   TypeIcon,
   UserIcon,
   UsersIcon,
-} from "lucide-react"
-import { AlbumForm } from "./album-form.tsx"
-import { AlbumPreview } from "./album-preview.tsx"
+} from 'lucide-react'
+import { AlbumForm } from './album-form.tsx'
+import { AlbumPreview } from './album-preview.tsx'
 
 /** Языки переводов лирики: value — код языка, title — подпись для select. */
 const languages = [
-  { value: "ru", title: "Русский" },
-  { value: "en", title: "English" },
-  { value: "zh", title: "中文" },
+  { value: 'ru', title: 'Русский' },
+  { value: 'en', title: 'English' },
+  { value: 'zh', title: '中文' },
 ] as const
 
 /** Поля альбома вынесены отдельно, чтобы форма AlbumForm типизировалась по `typeof albumFields` без цикла «конфиг → форма → тип конфига». */
 const albumFields = {
-  cover: defineImage({ title: "Обложка", icon: ImageIcon }),
-  title: defineString({ title: "Название", icon: TagIcon }),
-  year: defineNumber({ title: "Год", icon: CalendarDaysIcon, min: 0 }),
-  band: defineReference({ title: "Группа", icon: UsersIcon, to: [{ to: "band" }] }),
+  cover: defineImage({ title: 'Обложка', icon: ImageIcon }),
+  title: defineString({ title: 'Название', icon: TagIcon }),
+  year: defineNumber({ title: 'Год', icon: CalendarDaysIcon, min: 0 }),
+  band: defineReference({
+    title: 'Группа',
+    icon: UsersIcon,
+    to: [{ to: 'band' }],
+  }),
   tracks: defineArray({
-    title: "Треки",
+    title: 'Треки',
     icon: ListMusicIcon,
-    of: defineReference({ to: [{ to: "track" }] }),
+    of: defineReference({ to: [{ to: 'track' }] }),
   }),
 }
 
@@ -56,125 +60,125 @@ export type AlbumFields = typeof albumFields
 
 /** Музыкальная схема: группа, исполнитель, альбом, трек. Документы — отдельные переменные, `documents` лишь собирает их; `to` типизирует реестр (ниже). */
 const bandDoc = defineDocument({
-  title: "Группа",
+  title: 'Группа',
   icon: UsersIcon,
-  preview: { title: "name" },
+  preview: { title: 'name' },
   fields: {
-    name: defineString({ title: "Название", icon: TagIcon }),
+    name: defineString({ title: 'Название', icon: TagIcon }),
     artists: defineArray({
-      title: "Исполнители",
+      title: 'Исполнители',
       icon: UsersIcon,
-      of: defineReference({ to: [{ to: "artist" }] }),
+      of: defineReference({ to: [{ to: 'artist' }] }),
     }),
   },
-  validate: (doc, path) => [rules.required(doc.name, { path: path(["name"]) })],
+  validate: (doc, path) => [rules.required(doc.name, { path: path(['name']) })],
 })
 
 const artistDoc = defineDocument({
-  title: "Исполнитель",
+  title: 'Исполнитель',
   icon: Mic2Icon,
-  preview: { title: "fullName" },
+  preview: { title: 'fullName' },
   fields: {
-    fullName: defineString({ title: "Полное имя", icon: UserIcon }),
+    fullName: defineString({ title: 'Полное имя', icon: UserIcon }),
     bio: defineString({
-      title: "Биография",
+      title: 'Биография',
       icon: FileTextIcon,
-      input: { type: "multiline" },
+      input: { type: 'multiline' },
     }),
   },
   validate: (doc, path) => [
-    rules.required(doc.fullName, { path: path(["fullName"]) }),
+    rules.required(doc.fullName, { path: path(['fullName']) }),
   ],
 })
 
 const albumDoc = defineDocument({
-  title: "Альбом",
+  title: 'Альбом',
   icon: Disc3Icon,
-  preview: { title: "title" },
+  preview: { title: 'title' },
   previewComponent: AlbumPreview,
   formComponent: AlbumForm,
   fields: albumFields,
-  list: { search: ["title"], sort: ["title", "year"] },
+  list: { search: ['title'], sort: ['title', 'year'] },
   validate: (doc, path) => [
-    rules.required(doc.title, { path: path(["title"]) }),
-    rules.required(doc.band, { path: path(["band"]) }),
+    rules.required(doc.title, { path: path(['title']) }),
+    rules.required(doc.band, { path: path(['band']) }),
     rules.minItems(doc.tracks, 1, {
-      severity: "warning",
-      message: "В альбоме пока нет треков",
-      path: path(["tracks"]),
+      severity: 'warning',
+      message: 'В альбоме пока нет треков',
+      path: path(['tracks']),
     }),
     (doc.tracks?.length ?? 0) > 0 && !doc.band
       ? {
-          severity: "warning",
-          message: "Есть треки, но не указана группа",
-          path: path(["band"]),
+          severity: 'warning',
+          message: 'Есть треки, но не указана группа',
+          path: path(['band']),
         }
       : null,
   ],
 })
 
 const trackDoc = defineDocument({
-  title: "Трек",
+  title: 'Трек',
   icon: Music2Icon,
-  preview: { title: "title" },
-  list: { search: ["title"], sort: ["title"] },
+  preview: { title: 'title' },
+  list: { search: ['title'], sort: ['title'] },
   fields: {
-    title: defineString({ title: "Название", icon: TagIcon }),
+    title: defineString({ title: 'Название', icon: TagIcon }),
     explicit: defineBoolean({
-      title: "Ненормативный контент",
+      title: 'Ненормативный контент',
       icon: ShieldAlertIcon,
     }),
     albums: defineArray({
-      title: "Альбомы",
+      title: 'Альбомы',
       icon: Disc3Icon,
       of: defineReference({
-        to: [{ to: "album", previewComponent: AlbumPreview }],
+        to: [{ to: 'album', previewComponent: AlbumPreview }],
       }),
     }),
     performers: defineArray({
-      title: "Группы и исполнители",
+      title: 'Группы и исполнители',
       icon: UsersIcon,
-      of: defineReference({ to: [{ to: "band" }, { to: "artist" }] }),
+      of: defineReference({ to: [{ to: 'band' }, { to: 'artist' }] }),
     }),
     originalLyrics: defineObject({
-      title: "Оригинальная лирика",
+      title: 'Оригинальная лирика',
       icon: FileTextIcon,
       fields: {
         language: defineString({
-          title: "Язык оригинала",
+          title: 'Язык оригинала',
           icon: LanguagesIcon,
-          input: { type: "select", predefined: languages },
+          input: { type: 'select', predefined: languages },
         }),
         text: defineString({
-          title: "Текст оригинала",
+          title: 'Текст оригинала',
           icon: TypeIcon,
-          input: { type: "multiline" },
+          input: { type: 'multiline' },
         }),
         authors: defineArray({
-          title: "Авторы текста",
+          title: 'Авторы текста',
           icon: PenLineIcon,
           of: defineString({}),
         }),
       },
     }),
     lyrics: defineArray({
-      title: "Лирика",
+      title: 'Лирика',
       icon: LanguagesIcon,
       of: defineObject({
-        title: "Перевод",
+        title: 'Перевод',
         fields: {
           language: defineString({
-            title: "Язык",
+            title: 'Язык',
             icon: LanguagesIcon,
-            input: { type: "select", predefined: languages },
+            input: { type: 'select', predefined: languages },
           }),
           text: defineString({
-            title: "Текст",
+            title: 'Текст',
             icon: TypeIcon,
-            input: { type: "multiline" },
+            input: { type: 'multiline' },
           }),
           translator: defineString({
-            title: "Автор перевода",
+            title: 'Автор перевода',
             icon: PenLineIcon,
           }),
         },
@@ -182,21 +186,21 @@ const trackDoc = defineDocument({
     }),
   },
   validate: (doc, path) => [
-    rules.required(doc.title, { path: path(["title"]) }),
+    rules.required(doc.title, { path: path(['title']) }),
     rules.required(doc.originalLyrics?.language, {
-      path: path(["originalLyrics", "language"]),
+      path: path(['originalLyrics', 'language']),
     }),
     rules.required(doc.originalLyrics?.text, {
-      path: path(["originalLyrics", "text"]),
+      path: path(['originalLyrics', 'text']),
     }),
     // Спуск в элемент массива по брендированному индексу: перевод с языком, но без текста.
     ...(doc.lyrics ?? []).flatMap((translation, i) =>
       translation.language && !translation.text
         ? [
             {
-              severity: "warning" as const,
-              message: "Перевод без текста",
-              path: path(["lyrics", index(i), "text"]),
+              severity: 'warning' as const,
+              message: 'Перевод без текста',
+              path: path(['lyrics', index(i), 'text']),
             },
           ]
         : [],
@@ -213,7 +217,7 @@ const documents = {
 }
 
 /** Реестр типов документов — даёт `to` автодополнение и проверку; список ручной (авто-вывод из documents даёт цикл). Рассинхрон ловит defineConfig. */
-declare module "@jalyk/schema" {
+declare module '@jalyk/schema' {
   interface DocumentRegistry {
     band: true
     artist: true

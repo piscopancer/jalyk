@@ -2,12 +2,19 @@ import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { Button } from '@jalyk/ui'
 import { buttonVariants } from '@jalyk/ui'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@jalyk/ui'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@jalyk/ui'
 import { invitationQuery } from '@/lib/queries'
 import { acceptInvitation } from '@/server/functions/invitations'
 
 export const Route = createFileRoute('/invite/$token')({
-  loader: ({ context, params }) => context.queryClient.ensureQueryData(invitationQuery(params.token)),
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData(invitationQuery(params.token)),
   component: InvitePage,
 })
 
@@ -18,7 +25,8 @@ function InvitePage() {
   const router = useRouter()
   const accept = useMutation({
     mutationFn: () => acceptInvitation({ data: { token } }),
-    onSuccess: (projectId) => router.navigate({ to: '/projects/$projectId', params: { projectId } }),
+    onSuccess: (projectId) =>
+      router.navigate({ to: '/projects/$projectId', params: { projectId } }),
   })
 
   const expired = invitation && new Date(invitation.expiresAt) < new Date()
@@ -53,7 +61,9 @@ function InvitePage() {
           )}
           {accept.isError && (
             <p className="text-sm text-destructive">
-              {accept.error instanceof Error ? accept.error.message : 'Не удалось принять приглашение'}
+              {accept.error instanceof Error
+                ? accept.error.message
+                : 'Не удалось принять приглашение'}
             </p>
           )}
         </CardContent>

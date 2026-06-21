@@ -1,7 +1,7 @@
-import { Effect } from "effect"
-import { Prisma } from "@jalyk/db"
-import { query } from "./db.ts"
-import { NotFoundError } from "./errors.ts"
+import { Effect } from 'effect'
+import { Prisma } from '@jalyk/db'
+import { query } from './db.ts'
+import { NotFoundError } from './errors.ts'
 
 // Доменные операции над документами. Все они фильтруют по projectId — это
 // продолжение изоляции: даже зная чужой id, через эти функции до данных не
@@ -29,7 +29,7 @@ export const listDocuments = (projectId: string, type: string) =>
   query((db) =>
     db.document.findMany({
       where: { projectId, type },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { updatedAt: 'desc' },
     }),
   )
 
@@ -37,7 +37,7 @@ export const listDocuments = (projectId: string, type: string) =>
 export const countDocumentsByType = (projectId: string) =>
   query((db) =>
     db.document.groupBy({
-      by: ["type"],
+      by: ['type'],
       where: { projectId },
       _count: { _all: true },
     }),
@@ -82,7 +82,7 @@ export const setDocumentField = (
       let target = Prisma.sql`"draft"`
       for (let i = 1; i < path.length; i++) {
         const prefix = path.slice(0, i)
-        const container = /^\d+$/.test(path[i]!) ? "[]" : "{}"
+        const container = /^\d+$/.test(path[i]!) ? '[]' : '{}'
         target = Prisma.sql`jsonb_set(${target}, ${prefix}::text[], coalesce("draft" #> ${prefix}::text[], ${container}::jsonb), true)`
       }
       return db.$queryRaw<{ type: string }[]>(Prisma.sql`
@@ -93,7 +93,7 @@ export const setDocumentField = (
             RETURNING "type"`)
     })
     if (rows.length === 0) {
-      return yield* Effect.fail(new NotFoundError({ what: "document" }))
+      return yield* Effect.fail(new NotFoundError({ what: 'document' }))
     }
     return { path, value, type: rows[0]!.type }
   })
@@ -103,7 +103,7 @@ export const publishDocument = (projectId: string, id: string) =>
   Effect.gen(function* () {
     const doc = yield* getDocument(projectId, id)
     if (!doc) {
-      return yield* Effect.fail(new NotFoundError({ what: "document" }))
+      return yield* Effect.fail(new NotFoundError({ what: 'document' }))
     }
     return yield* query((db) =>
       db.document.update({
@@ -123,7 +123,7 @@ export const resetDraftDocument = (projectId: string, id: string) =>
   Effect.gen(function* () {
     const doc = yield* getDocument(projectId, id)
     if (!doc) {
-      return yield* Effect.fail(new NotFoundError({ what: "document" }))
+      return yield* Effect.fail(new NotFoundError({ what: 'document' }))
     }
     return yield* query((db) =>
       db.document.update({
@@ -140,7 +140,7 @@ export const deleteDocument = (projectId: string, id: string) =>
   Effect.gen(function* () {
     const doc = yield* getDocument(projectId, id)
     if (!doc) {
-      return yield* Effect.fail(new NotFoundError({ what: "document" }))
+      return yield* Effect.fail(new NotFoundError({ what: 'document' }))
     }
     yield* query((db) => db.document.delete({ where: { id } }))
     return { type: doc.type }

@@ -8,7 +8,8 @@ import { query } from './db.ts'
 // в БД лежит только SHA-256-хеш и короткий префикс для отображения в списке.
 const KEY_PREFIX = 'jalyk_'
 
-export const hashApiKey = (raw: string) => createHash('sha256').update(raw).digest('hex')
+export const hashApiKey = (raw: string) =>
+  createHash('sha256').update(raw).digest('hex')
 
 /** Сгенерировать новый ключ: сырое значение (показать один раз), префикс и хеш. */
 export const generateApiKey = () => {
@@ -18,7 +19,9 @@ export const generateApiKey = () => {
 
 /** Найти действующий (не отозванный) ключ по сырому значению. */
 export const findApiKey = (raw: string) =>
-  query((db) => db.apiKey.findFirst({ where: { hash: hashApiKey(raw), revokedAt: null } }))
+  query((db) =>
+    db.apiKey.findFirst({ where: { hash: hashApiKey(raw), revokedAt: null } }),
+  )
 
 /** Поля ключа, безопасные для показа в списке (без хеша). */
 export const apiKeyListSelect = {
@@ -52,4 +55,6 @@ export const issueApiKey = (projectId: string, name: string, scope: Scope) =>
 
 /** Отозвать ключ (мягко — помечаем revokedAt, чтобы сохранить историю). */
 export const revokeApiKey = (keyId: string) =>
-  query((db) => db.apiKey.update({ where: { id: keyId }, data: { revokedAt: new Date() } }))
+  query((db) =>
+    db.apiKey.update({ where: { id: keyId }, data: { revokedAt: new Date() } }),
+  )

@@ -90,7 +90,10 @@ export const SchemaSnapshotInfo = Schema.Struct({
 })
 
 const ProjectIdPath = Schema.Struct({ projectId: Schema.String })
-const DocumentIdPath = Schema.Struct({ projectId: Schema.String, id: Schema.String })
+const DocumentIdPath = Schema.Struct({
+  projectId: Schema.String,
+  id: Schema.String,
+})
 
 // Контентные эндпоинты документов, вложены под /projects/:projectId и защищены
 // тем же middleware Authorization. Изоляция (404 для чужого проекта) и проверка
@@ -99,7 +102,12 @@ export const DocumentsGroup = HttpApiGroup.make('documents')
   .add(
     HttpApiEndpoint.post('create', '/projects/:projectId/documents')
       .setPath(ProjectIdPath)
-      .setPayload(Schema.Struct({ type: Schema.String, draft: Schema.optional(JsonValue) }))
+      .setPayload(
+        Schema.Struct({
+          type: Schema.String,
+          draft: Schema.optional(JsonValue),
+        }),
+      )
       .addSuccess(DocumentInfo)
       .addError(NotFound)
       .addError(Forbidden),
@@ -132,14 +140,20 @@ export const DocumentsGroup = HttpApiGroup.make('documents')
       .addError(Forbidden),
   )
   .add(
-    HttpApiEndpoint.post('publish', '/projects/:projectId/documents/:id/publish')
+    HttpApiEndpoint.post(
+      'publish',
+      '/projects/:projectId/documents/:id/publish',
+    )
       .setPath(DocumentIdPath)
       .addSuccess(DocumentInfo)
       .addError(NotFound)
       .addError(Forbidden),
   )
   .add(
-    HttpApiEndpoint.post('resetDraft', '/projects/:projectId/documents/:id/reset')
+    HttpApiEndpoint.post(
+      'resetDraft',
+      '/projects/:projectId/documents/:id/reset',
+    )
       .setPath(DocumentIdPath)
       .addSuccess(DocumentInfo)
       .addError(NotFound)
@@ -186,7 +200,9 @@ export const AssetsGroup = HttpApiGroup.make('assets')
   .add(
     HttpApiEndpoint.post('upload', '/projects/:projectId/assets')
       .setPath(ProjectIdPath)
-      .setUrlParams(Schema.Struct({ filename: Schema.String, contentType: Schema.String }))
+      .setUrlParams(
+        Schema.Struct({ filename: Schema.String, contentType: Schema.String }),
+      )
       .addSuccess(AssetInfo)
       .addError(NotFound)
       .addError(Forbidden),

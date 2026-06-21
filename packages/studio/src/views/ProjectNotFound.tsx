@@ -1,7 +1,7 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@jalyk/ui'
 import { JALYK_PROJECTS_URL } from '../data/site.ts'
 
-// Причина отказа в доступе к проекту — теги ошибок из @jalyk/contract.
+/** Причина отказа в доступе к проекту — теги ошибок из @jalyk/contract. */
 export type AccessDenial = 'NotFound' | 'Unauthorized' | 'Forbidden'
 
 const messages: Record<AccessDenial, string> = {
@@ -13,9 +13,14 @@ const messages: Record<AccessDenial, string> = {
     'У этого ключа нет прав на проект. Проверьте scope ключа в личном кабинете.',
 }
 
-// Полноэкранная заглушка, когда проект недоступен (см. ProjectGate). Вместо
-// пустой студии — пояснение и переход в ЛК на сайте, где видно список проектов.
-export function ProjectNotFound({ reason, projectId }: { reason: AccessDenial; projectId: string }) {
+/** Полноэкранная заглушка, когда проект недоступен (см. ProjectGate). Вместо пустой студии — пояснение и переход в ЛК на сайте, где видно список проектов. */
+export function ProjectNotFound({
+  reason,
+  projectId,
+}: {
+  reason: AccessDenial
+  projectId: string
+}) {
   return (
     <div className="flex h-full items-center justify-center p-6">
       <Card className="max-w-md">
@@ -27,7 +32,12 @@ export function ProjectNotFound({ reason, projectId }: { reason: AccessDenial; p
           <p className="text-xs text-muted-foreground">
             Идентификатор проекта: <code>{projectId}</code>
           </p>
-          <Button className="self-start" render={<a href={JALYK_PROJECTS_URL} target="_blank" rel="noreferrer" />}>
+          <Button
+            className="self-start"
+            render={
+              <a href={JALYK_PROJECTS_URL} target="_blank" rel="noreferrer" />
+            }
+          >
             Открыть мои проекты
           </Button>
         </CardContent>

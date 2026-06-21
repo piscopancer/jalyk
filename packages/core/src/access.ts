@@ -1,15 +1,15 @@
-import type { Role, Scope } from "@jalyk/db"
-import { Effect } from "effect"
-import { type Database, query } from "./db.ts"
-import { type DbError, NotFoundError } from "./errors.ts"
+import type { Role, Scope } from '@jalyk/db'
+import { Effect } from 'effect'
+import { type Database, query } from './db.ts'
+import { type DbError, NotFoundError } from './errors.ts'
 
 // Принципал — тот, от чьего имени пришёл запрос. Студия-редактор приходит сессией
 // (kind 'user'), клиентское приложение пользователя — api-ключом (kind 'key').
 // Ключ уже привязан к проекту, поэтому несёт projectId и scope.
 export type Principal =
-  | { readonly kind: "user"; readonly userId: string }
+  | { readonly kind: 'user'; readonly userId: string }
   | {
-      readonly kind: "key"
+      readonly kind: 'key'
       readonly keyId: string
       readonly projectId: string
       readonly scope: Scope
@@ -19,14 +19,14 @@ export type Principal =
 // projectId. canWrite сводит роль/скоуп к одному флагу для операций записи.
 export type ProjectAccess =
   | {
-      readonly kind: "user"
+      readonly kind: 'user'
       readonly projectId: string
       readonly userId: string
       readonly role: Role
       readonly canWrite: boolean
     }
   | {
-      readonly kind: "key"
+      readonly kind: 'key'
       readonly projectId: string
       readonly keyId: string
       readonly scope: Scope
@@ -50,28 +50,28 @@ export const getProjectAccess = (
   principal: Principal,
   projectId: string,
 ): Effect.Effect<ProjectAccess, NotFoundError | DbError, Database> => {
-  if (principal.kind === "user") {
+  if (principal.kind === 'user') {
     return getMembership(projectId, principal.userId).pipe(
       Effect.flatMap((member) =>
         member
           ? Effect.succeed({
-              kind: "user" as const,
+              kind: 'user' as const,
               projectId,
               userId: principal.userId,
               role: member.role,
               canWrite: true,
             })
-          : Effect.fail(new NotFoundError({ what: "project" })),
+          : Effect.fail(new NotFoundError({ what: 'project' })),
       ),
     )
   }
   return principal.projectId === projectId
     ? Effect.succeed({
-        kind: "key" as const,
+        kind: 'key' as const,
         projectId,
         keyId: principal.keyId,
         scope: principal.scope,
-        canWrite: principal.scope === "write",
+        canWrite: principal.scope === 'write',
       })
-    : Effect.fail(new NotFoundError({ what: "project" }))
+    : Effect.fail(new NotFoundError({ what: 'project' }))
 }

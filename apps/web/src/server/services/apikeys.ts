@@ -11,8 +11,15 @@ export const list = (projectId: string, actorId: string) =>
  * Выпустить ключ — только владелец. Сырое значение возвращается один раз;
  * в БД остаётся лишь хеш и префикс.
  */
-export const issue = (projectId: string, actorId: string, name: string, scope: Scope) =>
-  requireOwner(projectId, actorId).pipe(Effect.zipRight(issueApiKey(projectId, name, scope)))
+export const issue = (
+  projectId: string,
+  actorId: string,
+  name: string,
+  scope: Scope,
+) =>
+  requireOwner(projectId, actorId).pipe(
+    Effect.zipRight(issueApiKey(projectId, name, scope)),
+  )
 
 /** Отозвать ключ (мягко) — только владелец. */
 export const revoke = (projectId: string, actorId: string, keyId: string) =>

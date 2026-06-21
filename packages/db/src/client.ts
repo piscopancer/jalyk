@@ -23,7 +23,10 @@ export const createClient = (connectionString: string) =>
  * процесса база возвращается в исходное состояние («сброс при рестарте»).
  * `ddl` берётся из `@jalyk/db/schema.sql?raw`.
  */
-export const createSeedClient = async (connectionString: string, ddl: string) => {
+export const createSeedClient = async (
+  connectionString: string,
+  ddl: string,
+) => {
   const client = createClient(connectionString)
   // Чистим всё содержимое базы и накатываем схему заново.
   await client.$executeRawUnsafe('DROP SCHEMA IF EXISTS public CASCADE')

@@ -17,5 +17,7 @@ export const access = (projectId: string) =>
 // Доступ с правом записи: к 404-изоляции добавляет 403 для read-only принципала.
 export const writeAccess = (projectId: string) =>
   access(projectId).pipe(
-    Effect.flatMap((a: ProjectAccess) => (a.canWrite ? Effect.succeed(a) : new Forbidden())),
+    Effect.flatMap((a: ProjectAccess) =>
+      a.canWrite ? Effect.succeed(a) : new Forbidden(),
+    ),
   )

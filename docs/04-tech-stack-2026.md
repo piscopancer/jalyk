@@ -54,25 +54,25 @@ pnpm + Turborepo остаются. Сборка пакетов — tsdown (на�
 
 ## Сводка
 
-| Слой | Сейчас | Рекомендация 2026 |
-|---|---|---|
-| Модель | центральный сервер (недоделан) | центральная платформа: сайт + API-сервер + npm-пакеты |
-| Сайт управления | нет | TanStack Start (аккаунты, проекты, роли, ключи, статистика) |
-| API-сервер | Express + tRPC 11 в одном процессе со всем | отдельное приложение, Effect HttpApi |
-| Типизированный клиент | tRPC (заглушка) | HttpApiClient из того же описания API; `@jalyk/client` без React-зависимости |
-| БД | Postgres + Prisma | Postgres + Drizzle |
-| Хранение контента | EAV-таблица Field | документ как JSONB, изоляция по project_id в одной точке |
-| Схема контента | только в коде студии | + сериализованный снапшот в БД для серверной валидации |
-| Auth людей | better-auth, OAuth, секреты в коде | better-auth: email/пароль + OAuth, секреты в env, bearer для студии |
-| Auth приложений | нет (token не используется) | API-ключи проекта (read/write), хешированные |
-| Статистика/квоты | нет | счётчики запросов по проектам с первого дня |
-| Реалтайм | WS + EventEmitter, обрыв каждые 5 с | SSE + Effect Stream, фильтрация по правам |
-| Файлы | S3 без метаданных в БД | S3 + таблица ассетов + presigned upload + CDN |
-| Студия: роутинг | react-router 7 (конфликт с хозяином) | TanStack Router (memory) |
-| Студия: UI | Base UI beta + Tailwind 4 | Base UI 1.x + shadcn-подход + Tailwind 4 (prefix) |
-| Rich text | Tiptap 3 | Tiptap 3 |
-| Валидация | zod-shape только в браузере | Effect Schema на сервере + декларативный DSL в схеме |
-| Сборка | tsup, turbo | tsdown/tsup, turbo, changesets, Vitest |
-| Деплой | нет | Docker: web и api раздельно; managed Postgres; бэкапы и мониторинг в MVP |
+| Слой                  | Сейчас                                     | Рекомендация 2026                                                            |
+| --------------------- | ------------------------------------------ | ---------------------------------------------------------------------------- |
+| Модель                | центральный сервер (недоделан)             | центральная платформа: сайт + API-сервер + npm-пакеты                        |
+| Сайт управления       | нет                                        | TanStack Start (аккаунты, проекты, роли, ключи, статистика)                  |
+| API-сервер            | Express + tRPC 11 в одном процессе со всем | отдельное приложение, Effect HttpApi                                         |
+| Типизированный клиент | tRPC (заглушка)                            | HttpApiClient из того же описания API; `@jalyk/client` без React-зависимости |
+| БД                    | Postgres + Prisma                          | Postgres + Drizzle                                                           |
+| Хранение контента     | EAV-таблица Field                          | документ как JSONB, изоляция по project_id в одной точке                     |
+| Схема контента        | только в коде студии                       | + сериализованный снапшот в БД для серверной валидации                       |
+| Auth людей            | better-auth, OAuth, секреты в коде         | better-auth: email/пароль + OAuth, секреты в env, bearer для студии          |
+| Auth приложений       | нет (token не используется)                | API-ключи проекта (read/write), хешированные                                 |
+| Статистика/квоты      | нет                                        | счётчики запросов по проектам с первого дня                                  |
+| Реалтайм              | WS + EventEmitter, обрыв каждые 5 с        | SSE + Effect Stream, фильтрация по правам                                    |
+| Файлы                 | S3 без метаданных в БД                     | S3 + таблица ассетов + presigned upload + CDN                                |
+| Студия: роутинг       | react-router 7 (конфликт с хозяином)       | TanStack Router (memory)                                                     |
+| Студия: UI            | Base UI beta + Tailwind 4                  | Base UI 1.x + shadcn-подход + Tailwind 4 (prefix)                            |
+| Rich text             | Tiptap 3                                   | Tiptap 3                                                                     |
+| Валидация             | zod-shape только в браузере                | Effect Schema на сервере + декларативный DSL в схеме                         |
+| Сборка                | tsup, turbo                                | tsdown/tsup, turbo, changesets, Vitest                                       |
+| Деплой                | нет                                        | Docker: web и api раздельно; managed Postgres; бэкапы и мониторинг в MVP     |
 
 Источники: [Effect](https://github.com/effect-ts/effect), [HttpApi docs](https://effect-ts.github.io/effect/platform/HttpApi.ts.html), [бэкенд на Effect](https://www.typeonce.dev/article/how-to-implement-a-backend-with-effect), [TanStack Start v1.0](https://byteiota.com/tanstack-start-v1-0-type-safe-react-framework-2026/), [TanStack-экосистема 2026](https://www.codewithseb.com/blog/tanstack-ecosystem-complete-guide-2026), [shadcn/ui + Base UI](https://ui.shadcn.com/docs/changelog/2026-01-base-ui), [сравнение примитивов 2026](https://www.pkgpulse.com/guides/shadcn-ui-vs-base-ui-vs-radix-components-2026), [Drizzle vs Prisma 2026](https://www.bytebase.com/blog/drizzle-vs-prisma/), [Sanity как образец модели](https://www.sanity.io/pricing).

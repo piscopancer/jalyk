@@ -1,5 +1,10 @@
 import type { Role, Scope } from '@jalyk/db'
-import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from '@tanstack/react-query'
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button } from '@jalyk/ui'
@@ -8,7 +13,10 @@ import { Input } from '@jalyk/ui'
 import { NativeSelect } from '@jalyk/ui'
 import { apiKeysQuery, projectQuery, qk } from '@/lib/queries'
 import { createApiKey, revokeApiKey } from '@/server/functions/apikeys'
-import { createInvitation, revokeInvitation } from '@/server/functions/invitations'
+import {
+  createInvitation,
+  revokeInvitation,
+} from '@/server/functions/invitations'
 import { removeMember, setMemberRole } from '@/server/functions/members'
 import { deleteProject, renameProject } from '@/server/functions/projects'
 
@@ -16,14 +24,16 @@ export const Route = createFileRoute('/projects/$projectId')({
   beforeLoad: ({ context }) => {
     if (!context.session) throw redirect({ to: '/login' })
   },
-  loader: ({ context, params }) => context.queryClient.ensureQueryData(projectQuery(params.projectId)),
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData(projectQuery(params.projectId)),
   component: ProjectPage,
 })
 
 /** Хук инвалидации текущего проекта — переиспользуется всеми мутациями страницы. */
 function useInvalidateProject(projectId: string) {
   const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries({ queryKey: qk.project(projectId) })
+  return () =>
+    queryClient.invalidateQueries({ queryKey: qk.project(projectId) })
 }
 
 function ProjectPage() {
@@ -31,7 +41,9 @@ function ProjectPage() {
   const { session } = Route.useRouteContext()
   const { data: project } = useSuspenseQuery(projectQuery(projectId))
   const myId = session!.user.id
-  const isOwner = project.members.some((m) => m.userId === myId && m.role === 'owner')
+  const isOwner = project.members.some(
+    (m) => m.userId === myId && m.role === 'owner',
+  )
 
   return (
     <div className="flex flex-col gap-8">
@@ -39,9 +51,19 @@ function ProjectPage() {
 
       {isOwner && <RenameCard projectId={project.id} name={project.name} />}
 
-      <MembersCard projectId={project.id} members={project.members} myId={myId} canManage={isOwner} />
+      <MembersCard
+        projectId={project.id}
+        members={project.members}
+        myId={myId}
+        canManage={isOwner}
+      />
 
-      {isOwner && <InvitationsCard projectId={project.id} invitations={project.invitations} />}
+      {isOwner && (
+        <InvitationsCard
+          projectId={project.id}
+          invitations={project.invitations}
+        />
+      )}
 
       {isOwner && <ApiKeysCard projectId={project.id} />}
 
@@ -54,7 +76,8 @@ function RenameCard({ projectId, name }: { projectId: string; name: string }) {
   const [value, setValue] = useState(name)
   const invalidate = useInvalidateProject(projectId)
   const rename = useMutation({
-    mutationFn: (next: string) => renameProject({ data: { projectId, name: next } }),
+    mutationFn: (next: string) =>
+      renameProject({ data: { projectId, name: next } }),
     onSuccess: invalidate,
   })
   return (
@@ -71,13 +94,18 @@ function RenameCard({ projectId, name }: { projectId: string; name: string }) {
           }}
         >
           <Input value={value} onChange={(e) => setValue(e.target.value)} />
-          <Button type="submit" disabled={rename.isPending || !value.trim() || value === name}>
+          <Button
+            type="submit"
+            disabled={rename.isPending || !value.trim() || value === name}
+          >
             {rename.isPending ? 'Сохранение…' : 'Сохранить'}
           </Button>
         </form>
         {rename.isError && (
           <p className="mt-2 text-sm text-destructive">
-            {rename.error instanceof Error ? rename.error.message : 'Не удалось переименовать'}
+            {rename.error instanceof Error
+              ? rename.error.message
+              : 'Не удалось переименовать'}
           </p>
         )}
       </CardContent>
@@ -85,7 +113,12 @@ function RenameCard({ projectId, name }: { projectId: string; name: string }) {
   )
 }
 
-type Member = { id: string; userId: string; role: Role; user: { name: string; email: string; image: string | null } }
+type Member = {
+  id: string
+  userId: string
+  role: Role
+  user: { name: string; email: string; image: string | null }
+}
 
 function MembersCard({
   projectId,
@@ -101,11 +134,14 @@ function MembersCard({
   const invalidate = useInvalidateProject(projectId)
   const changeRole = useMutation({
     mutationFn: (vars: { memberId: string; role: Role }) =>
-      setMemberRole({ data: { projectId, memberId: vars.memberId, role: vars.role } }),
+      setMemberRole({
+        data: { projectId, memberId: vars.memberId, role: vars.role },
+      }),
     onSuccess: invalidate,
   })
   const remove = useMutation({
-    mutationFn: (memberId: string) => removeMember({ data: { projectId, memberId } }),
+    mutationFn: (memberId: string) =>
+      removeMember({ data: { projectId, memberId } }),
     onSuccess: invalidate,
   })
 
@@ -116,12 +152,20 @@ function MembersCard({
       </CardHeader>
       <CardContent className="flex flex-col divide-y">
         {members.map((m) => (
-          <div key={m.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+          <div
+            key={m.id}
+            className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+          >
             <div className="min-w-0">
               <div className="truncate text-sm font-medium">
-                {m.user.name} {m.userId === myId && <span className="text-muted-foreground">(вы)</span>}
+                {m.user.name}{' '}
+                {m.userId === myId && (
+                  <span className="text-muted-foreground">(вы)</span>
+                )}
               </div>
-              <div className="truncate text-xs text-muted-foreground">{m.user.email}</div>
+              <div className="truncate text-xs text-muted-foreground">
+                {m.user.email}
+              </div>
             </div>
             {m.role === 'owner' ? (
               <span className="text-xs text-muted-foreground">владелец</span>
@@ -130,7 +174,12 @@ function MembersCard({
                 <NativeSelect
                   value={m.role}
                   disabled={changeRole.isPending}
-                  onChange={(e) => changeRole.mutate({ memberId: m.id, role: e.target.value as Role })}
+                  onChange={(e) =>
+                    changeRole.mutate({
+                      memberId: m.id,
+                      role: e.target.value as Role,
+                    })
+                  }
                 >
                   <option value="editor">редактор</option>
                   <option value="owner">владелец</option>
@@ -156,7 +205,13 @@ function MembersCard({
 
 type Invitation = { id: string; token: string; role: Role; expiresAt: Date }
 
-function InvitationsCard({ projectId, invitations }: { projectId: string; invitations: Invitation[] }) {
+function InvitationsCard({
+  projectId,
+  invitations,
+}: {
+  projectId: string
+  invitations: Invitation[]
+}) {
   const [role, setRole] = useState<Role>('editor')
   const invalidate = useInvalidateProject(projectId)
   const create = useMutation({
@@ -164,11 +219,14 @@ function InvitationsCard({ projectId, invitations }: { projectId: string; invita
     onSuccess: invalidate,
   })
   const revoke = useMutation({
-    mutationFn: (invitationId: string) => revokeInvitation({ data: { projectId, invitationId } }),
+    mutationFn: (invitationId: string) =>
+      revokeInvitation({ data: { projectId, invitationId } }),
     onSuccess: invalidate,
   })
   const inviteUrl = (token: string) =>
-    typeof window === 'undefined' ? token : `${window.location.origin}/invite/${token}`
+    typeof window === 'undefined'
+      ? token
+      : `${window.location.origin}/invite/${token}`
 
   return (
     <Card>
@@ -177,25 +235,38 @@ function InvitationsCard({ projectId, invitations }: { projectId: string; invita
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex gap-2">
-          <NativeSelect value={role} onChange={(e) => setRole(e.target.value as Role)}>
+          <NativeSelect
+            value={role}
+            onChange={(e) => setRole(e.target.value as Role)}
+          >
             <option value="editor">редактор</option>
             <option value="owner">владелец</option>
           </NativeSelect>
-          <Button disabled={create.isPending} onClick={() => create.mutate(role)}>
+          <Button
+            disabled={create.isPending}
+            onClick={() => create.mutate(role)}
+          >
             Создать ссылку-приглашение
           </Button>
         </div>
 
         {invitations.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Активных приглашений нет.</p>
+          <p className="text-sm text-muted-foreground">
+            Активных приглашений нет.
+          </p>
         ) : (
           <div className="flex flex-col divide-y">
             {invitations.map((inv) => (
-              <div key={inv.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+              <div
+                key={inv.id}
+                className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+              >
                 <div className="min-w-0">
                   <button
                     className="truncate text-sm text-primary hover:underline"
-                    onClick={() => navigator.clipboard?.writeText(inviteUrl(inv.token))}
+                    onClick={() =>
+                      navigator.clipboard?.writeText(inviteUrl(inv.token))
+                    }
                     title="Скопировать ссылку"
                   >
                     {inviteUrl(inv.token)}
@@ -222,11 +293,13 @@ function InvitationsCard({ projectId, invitations }: { projectId: string; invita
   )
 }
 
-const scopeLabel = (scope: Scope) => (scope === 'write' ? 'Чтение и запись' : 'Чтение')
+const scopeLabel = (scope: Scope) =>
+  scope === 'write' ? 'Чтение и запись' : 'Чтение'
 
 function ApiKeysCard({ projectId }: { projectId: string }) {
   const queryClient = useQueryClient()
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: qk.apiKeys(projectId) })
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: qk.apiKeys(projectId) })
   const { data: keys } = useQuery(apiKeysQuery(projectId))
 
   const [name, setName] = useState('')
@@ -267,7 +340,10 @@ function ApiKeysCard({ projectId }: { projectId: string }) {
             onChange={(e) => setName(e.target.value)}
             placeholder="Название ключа"
           />
-          <NativeSelect value={scope} onChange={(e) => setScope(e.target.value as Scope)}>
+          <NativeSelect
+            value={scope}
+            onChange={(e) => setScope(e.target.value as Scope)}
+          >
             <option value="read">Чтение</option>
             <option value="write">Чтение и запись</option>
           </NativeSelect>
@@ -278,19 +354,30 @@ function ApiKeysCard({ projectId }: { projectId: string }) {
 
         {create.isError && (
           <p className="text-sm text-destructive">
-            {create.error instanceof Error ? create.error.message : 'Не удалось создать ключ'}
+            {create.error instanceof Error
+              ? create.error.message
+              : 'Не удалось создать ключ'}
           </p>
         )}
 
         {issued && (
           <div className="flex flex-col gap-2 rounded-md border border-primary/40 bg-primary/5 p-3">
-            <p className="text-sm font-medium">Ключ создан — скопируйте его сейчас</p>
+            <p className="text-sm font-medium">
+              Ключ создан — скопируйте его сейчас
+            </p>
             <p className="text-xs text-muted-foreground">
-              Это значение показывается один раз. После закрытия восстановить его будет нельзя.
+              Это значение показывается один раз. После закрытия восстановить
+              его будет нельзя.
             </p>
             <div className="flex items-center gap-2">
-              <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-1 text-xs">{issued}</code>
-              <Button size="sm" variant="ghost" onClick={() => navigator.clipboard?.writeText(issued)}>
+              <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-1 text-xs">
+                {issued}
+              </code>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => navigator.clipboard?.writeText(issued)}
+              >
                 Скопировать
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setIssued(null)}>
@@ -301,17 +388,23 @@ function ApiKeysCard({ projectId }: { projectId: string }) {
         )}
 
         {!keys || keys.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Действующих ключей нет.</p>
+          <p className="text-sm text-muted-foreground">
+            Действующих ключей нет.
+          </p>
         ) : (
           <div className="flex flex-col divide-y">
             {keys.map((k) => (
-              <div key={k.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+              <div
+                key={k.id}
+                className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+              >
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium">{k.name}</div>
                   <div className="truncate text-xs text-muted-foreground">
                     {k.prefix}… · {scopeLabel(k.scope)} · создан{' '}
                     {new Date(k.createdAt).toLocaleDateString('ru')}
-                    {k.lastUsedAt && ` · использован ${new Date(k.lastUsedAt).toLocaleDateString('ru')}`}
+                    {k.lastUsedAt &&
+                      ` · использован ${new Date(k.lastUsedAt).toLocaleDateString('ru')}`}
                   </div>
                 </div>
                 <Button
@@ -319,7 +412,12 @@ function ApiKeysCard({ projectId }: { projectId: string }) {
                   size="sm"
                   disabled={revoke.isPending}
                   onClick={() => {
-                    if (!confirm('Отозвать ключ? Приложения с ним потеряют доступ.')) return
+                    if (
+                      !confirm(
+                        'Отозвать ключ? Приложения с ним потеряют доступ.',
+                      )
+                    )
+                      return
                     revoke.mutate(k.id)
                   }}
                 >

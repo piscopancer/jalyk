@@ -5,12 +5,19 @@ import { asIcon } from '../data/react-bridge.tsx'
 import { useDocumentCounts } from '../data/hooks.ts'
 import { DocumentList } from './DocumentList.tsx'
 
-// Колонка типов документов (левая). Берёт типы из конфига, рядом — счётчик
-// документов из useDocumentCounts. Выбор типа поднимается наверх через onSelect.
-export function TypesColumn({ selected, onSelect }: { selected?: string; onSelect: (type: string) => void }) {
+/** Колонка типов документов (левая). Берёт типы из конфига, рядом — счётчик документов из useDocumentCounts. Выбор типа поднимается наверх через onSelect. */
+export function TypesColumn({
+  selected,
+  onSelect,
+}: {
+  selected?: string
+  onSelect: (type: string) => void
+}) {
   const { config } = useStudio()
   const counts = useDocumentCounts()
-  const countByType = new Map((counts.data ?? []).map((row) => [row.type, row.count]))
+  const countByType = new Map(
+    (counts.data ?? []).map((row) => [row.type, row.count]),
+  )
 
   return (
     <ul className="flex w-56 shrink-0 flex-col overflow-y-auto border-r">
@@ -26,10 +33,16 @@ export function TypesColumn({ selected, onSelect }: { selected?: string; onSelec
               onClick={() => onSelect(type)}
             >
               <span className="flex items-center gap-2">
-                {Icon ? <Icon className="size-4 text-muted-foreground" /> : <FileTextIcon className="size-4 text-muted-foreground" />}
+                {Icon ? (
+                  <Icon className="size-4 text-muted-foreground" />
+                ) : (
+                  <FileTextIcon className="size-4 text-muted-foreground" />
+                )}
                 {definition.title ?? type}
               </span>
-              <span className="text-xs text-muted-foreground">{countByType.get(type) ?? 0}</span>
+              <span className="text-xs text-muted-foreground">
+                {countByType.get(type) ?? 0}
+              </span>
             </button>
           </li>
         )
@@ -38,8 +51,15 @@ export function TypesColumn({ selected, onSelect }: { selected?: string; onSelec
   )
 }
 
-// Колонка документов выбранного типа (средняя): панель поиска/фильтра/сортировки
-// плюс список. Тонкая обёртка над переиспользуемым DocumentList с панелью.
-export function DocumentsColumn({ type, selected, onSelect }: { type: string; selected?: string; onSelect: (id: string) => void }) {
+/** Колонка документов выбранного типа (средняя): панель поиска/фильтра/сортировки плюс список. Тонкая обёртка над переиспользуемым DocumentList с панелью. */
+export function DocumentsColumn({
+  type,
+  selected,
+  onSelect,
+}: {
+  type: string
+  selected?: string
+  onSelect: (id: string) => void
+}) {
   return <DocumentList type={type} selected={selected} onSelect={onSelect} />
 }

@@ -1,7 +1,11 @@
 import { HttpApiBuilder, HttpMiddleware, HttpServer } from '@effect/platform'
 import { NodeHttpServer, NodeRuntime } from '@effect/platform-node'
 import { Api } from '@jalyk/contract'
-import { DatabaseLive, LocalAssetStorageLive, YandexAssetStorageLive } from '@jalyk/core'
+import {
+  DatabaseLive,
+  LocalAssetStorageLive,
+  YandexAssetStorageLive,
+} from '@jalyk/core'
 import { Effect, Layer } from 'effect'
 import { createServer } from 'node:http'
 import { port, storageDriver } from './config.ts'
@@ -26,12 +30,21 @@ const CorsLive = HttpApiBuilder.middlewareCors({
   allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   // b3 / traceparent / tracestate — заголовки распространения трейса, которые
   // Effect HttpClient добавляет к запросам; без них preflight отклоняет вызов.
-  allowedHeaders: ['content-type', 'x-api-key', 'authorization', 'b3', 'traceparent', 'tracestate'],
+  allowedHeaders: [
+    'content-type',
+    'x-api-key',
+    'authorization',
+    'b3',
+    'traceparent',
+    'tracestate',
+  ],
 })
 
 // Хранилище ассетов выбирается по конфигу: local (файлы) или yandex (заглушка).
 const StorageLive = Layer.unwrapEffect(
-  Effect.map(storageDriver, (driver) => (driver === 'yandex' ? YandexAssetStorageLive : LocalAssetStorageLive)),
+  Effect.map(storageDriver, (driver) =>
+    driver === 'yandex' ? YandexAssetStorageLive : LocalAssetStorageLive,
+  ),
 )
 
 const ApiLive = HttpApiBuilder.api(Api).pipe(
@@ -60,7 +73,12 @@ const program = Effect.gen(function* () {
     HttpServer.withLogAddress,
     // host задаём явно: без него Node на Windows биндится на `::` (IPv6-only,
     // т.к. dual-stack по умолчанию выключен), и localhost:3001 (IPv4) недоступен.
-    Layer.provide(NodeHttpServer.layer(createServer, { port: resolvedPort, host: '0.0.0.0' })),
+    Layer.provide(
+      NodeHttpServer.layer(createServer, {
+        port: resolvedPort,
+        host: '0.0.0.0',
+      }),
+    ),
   )
   yield* Layer.launch(ServerLive)
 })

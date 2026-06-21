@@ -1,7 +1,13 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
-import { Outlet, createRootRouteWithContext, HeadContent, Scripts, Link } from '@tanstack/react-router'
+import {
+  Outlet,
+  createRootRouteWithContext,
+  HeadContent,
+  Scripts,
+  Link,
+} from '@tanstack/react-router'
 import { getSession } from '@/server/functions/auth'
 import { AccountMenu } from '@/components/account-menu'
 import styles from '@/styles.css?url'
@@ -11,21 +17,23 @@ import styles from '@/styles.css?url'
 // для режима «system».
 const themeScript = `(function(){try{document.documentElement.classList.toggle('dark',window.matchMedia('(prefers-color-scheme: dark)').matches)}catch(e){}})()`
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Jalyk' },
-    ],
-    links: [{ rel: 'stylesheet', href: styles }],
-  }),
-  beforeLoad: async () => {
-    const session = await getSession()
-    return { session }
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
+  {
+    head: () => ({
+      meta: [
+        { charSet: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { title: 'Jalyk' },
+      ],
+      links: [{ rel: 'stylesheet', href: styles }],
+    }),
+    beforeLoad: async () => {
+      const session = await getSession()
+      return { session }
+    },
+    component: RootComponent,
   },
-  component: RootComponent,
-})
+)
 
 function RootComponent() {
   return (
@@ -39,7 +47,8 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   // Реакция на смену системной темы, пока вкладка открыта.
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const apply = () => document.documentElement.classList.toggle('dark', mq.matches)
+    const apply = () =>
+      document.documentElement.classList.toggle('dark', mq.matches)
     apply()
     mq.addEventListener('change', apply)
     return () => mq.removeEventListener('change', apply)
@@ -58,10 +67,16 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
               Jalyk
             </Link>
             <nav className="flex items-center gap-4 text-sm">
-              <Link to="/projects" className="text-muted-foreground hover:text-foreground">
+              <Link
+                to="/projects"
+                className="text-muted-foreground hover:text-foreground"
+              >
                 Проекты
               </Link>
-              <Link to="/plan" className="text-muted-foreground hover:text-foreground">
+              <Link
+                to="/plan"
+                className="text-muted-foreground hover:text-foreground"
+              >
                 План
               </Link>
               <AccountMenu />

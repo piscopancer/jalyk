@@ -6,6 +6,7 @@ export const port = Config.integer('PORT').pipe(Config.withDefault(3001))
 
 // Драйвер хранилища ассетов: local — файлы в папке uploads (тест/дев),
 // yandex — прод-заглушка. Дефолт local.
-export const storageDriver = Config.literal('local', 'yandex')('JALYK_STORAGE').pipe(
-  Config.withDefault('local' as const),
-)
+export const storageDriver = Config.literal(
+  'local',
+  'yandex',
+)('JALYK_STORAGE').pipe(Config.withDefault('local' as const))

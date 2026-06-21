@@ -15,7 +15,9 @@ export const createApiKey = createServerFn({ method: 'POST' })
   .validator((d: { projectId: string; name: string; scope: Scope }) => d)
   .handler(async ({ data }) => {
     const uid = await currentUserId()
-    return runtime.runPromise(ApiKeys.issue(data.projectId, uid, data.name, data.scope))
+    return runtime.runPromise(
+      ApiKeys.issue(data.projectId, uid, data.name, data.scope),
+    )
   })
 
 export const revokeApiKey = createServerFn({ method: 'POST' })

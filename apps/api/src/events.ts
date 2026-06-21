@@ -17,11 +17,19 @@ export interface ProjectEventEnvelope {
   readonly event: ProjectEvent
 }
 
-export class Events extends Context.Tag('Events')<Events, PubSub.PubSub<ProjectEventEnvelope>>() {}
+export class Events extends Context.Tag('Events')<
+  Events,
+  PubSub.PubSub<ProjectEventEnvelope>
+>() {}
 
-export const EventsLive = Layer.effect(Events, PubSub.unbounded<ProjectEventEnvelope>())
+export const EventsLive = Layer.effect(
+  Events,
+  PubSub.unbounded<ProjectEventEnvelope>(),
+)
 
 /** Опубликовать событие проекта в шину. Не падает: PubSub.publish без подписчиков
  * просто отбрасывает сообщение и возвращает boolean, ошибок не даёт. */
 export const publishEvent = (projectId: string, event: ProjectEvent) =>
-  Effect.flatMap(Events, (pubsub) => PubSub.publish(pubsub, { projectId, event }))
+  Effect.flatMap(Events, (pubsub) =>
+    PubSub.publish(pubsub, { projectId, event }),
+  )

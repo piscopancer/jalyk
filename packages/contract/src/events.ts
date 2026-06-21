@@ -11,14 +11,24 @@ export type ProjectEvent =
       readonly path: readonly string[]
       readonly value: unknown
     }
-  | { readonly kind: 'create'; readonly docId: string; readonly type: string; readonly draft: unknown }
+  | {
+      readonly kind: 'create'
+      readonly docId: string
+      readonly type: string
+      readonly draft: unknown
+    }
   | {
       readonly kind: 'publish'
       readonly docId: string
       readonly type: string
       readonly publishedAt: string
     }
-  | { readonly kind: 'reset'; readonly docId: string; readonly type: string; readonly draft: unknown }
+  | {
+      readonly kind: 'reset'
+      readonly docId: string
+      readonly type: string
+      readonly draft: unknown
+    }
   | { readonly kind: 'delete'; readonly docId: string; readonly type: string }
 
 /** Вид события — совпадает с полем event: в SSE-кадре. */

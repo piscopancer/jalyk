@@ -4,10 +4,12 @@ import { useFieldIssues } from '../data/validation.tsx'
 import { IssueBadge } from '../views/IssueBadge.tsx'
 import { FieldMenu } from './FieldMenu.tsx'
 
-// Заголовок поля по умолчанию: подпись с иконкой и меню-троеточием плюс описание
-// под ней. Рисует предопределённые данные (DefaultHeaderData); если разработчик
-// задал полю свой headerComponent, студия берёт его вместо этого (см. FieldInput).
-export function DefaultHeader({ path, field, header }: HeaderProps<DefaultHeaderData>) {
+/** Заголовок поля по умолчанию: подпись с иконкой и меню-троеточием плюс описание под ней. Рисует предопределённые данные (DefaultHeaderData); если разработчик задал полю свой headerComponent, студия берёт его вместо этого (см. FieldInput). */
+export function DefaultHeader({
+  path,
+  field,
+  header,
+}: HeaderProps<DefaultHeaderData>) {
   const Icon = asIcon(header.icon)
   const issues = useFieldIssues(path)
   return (
@@ -20,7 +22,11 @@ export function DefaultHeader({ path, field, header }: HeaderProps<DefaultHeader
         </span>
         <FieldMenu path={path} field={field} />
       </div>
-      {header.description ? <span className="text-xs text-muted-foreground">{header.description}</span> : null}
+      {header.description ? (
+        <span className="text-xs text-muted-foreground">
+          {header.description}
+        </span>
+      ) : null}
     </div>
   )
 }

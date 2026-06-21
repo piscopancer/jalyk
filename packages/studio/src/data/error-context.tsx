@@ -1,12 +1,32 @@
-import { Button, CodeBlock, cn, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, toast } from '@jalyk/ui'
-import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createContext, useContext, useMemo, useRef, useState, type ReactNode } from 'react'
+import {
+  Button,
+  CodeBlock,
+  cn,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  toast,
+} from '@jalyk/ui'
+import {
+  MutationCache,
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { errorToJson, normalizeError, type StudioError } from './errors.ts'
 import { useStudioDark } from './theme.tsx'
 
-// Чтобы не показывать тост для конкретного запроса/мутации, помечаем его
-// meta: { silentError: true } (например, проба доступа в ProjectGate — у неё
-// свой полноэкранный экран).
+/** Чтобы не показывать тост для конкретного запроса/мутации, помечаем его meta: { silentError: true } (например, проба доступа в ProjectGate — у неё свой полноэкранный экран). */
 type StudioMeta = { silentError?: boolean }
 
 type ErrorContextValue = {
@@ -21,34 +41,35 @@ const ErrorContext = createContext<ErrorContextValue | null>(null)
 /** Доступ к репортингу ошибок студии (тост + диалог). */
 export function useStudioErrors(): ErrorContextValue {
   const ctx = useContext(ErrorContext)
-  if (!ctx) throw new Error('useStudioErrors должен вызываться внутри <StudioErrorProvider>')
+  if (!ctx)
+    throw new Error(
+      'useStudioErrors должен вызываться внутри <StudioErrorProvider>',
+    )
   return ctx
 }
 
-// Провайдер ошибок: владеет QueryClient'ом студии, перехватывает любые отказы
-// запросов и мутаций (QueryCache/MutationCache onError), показывает тост и держит
-// единый диалог с полной информацией. Заменяет собой прежний QueryClientProvider.
+/** Провайдер ошибок: владеет QueryClient'ом студии, перехватывает любые отказы запросов и мутаций (QueryCache/MutationCache onError), показывает тост и держит единый диалог с полной информацией. Заменяет собой прежний QueryClientProvider. */
 export function StudioErrorProvider({ children }: { children: ReactNode }) {
   const [detail, setDetail] = useState<StudioError | null>(null)
 
-  // openDetails стабилен (setState), держим в ref, чтобы тост из кэша мог открыть
-  // диалог, не пересоздавая QueryClient.
+  // openDetails стабилен (setState), держим в ref, чтобы тост из кэша мог открыть диалог, не пересоздавая QueryClient.
   const openDetailsRef = useRef((error: StudioError) => setDetail(error))
 
-  // Тост на ошибку: висит до закрытия (duration Infinity), кнопка «Подробнее»
-  // открывает диалог. id по тегу — чтобы одинаковые ошибки не плодили дубли.
+  // Тост на ошибку: висит до закрытия (duration Infinity), кнопка «Подробнее» открывает диалог. id по тегу — чтобы одинаковые ошибки не плодили дубли.
   const report = useRef((error: unknown) => {
     const normalized = normalizeError(error)
     toast.error(normalized.title, {
       id: `studio-error-${normalized.tag}`,
       description: normalized.message || normalized.description,
       duration: Infinity,
-      action: { label: 'Подробнее', onClick: () => openDetailsRef.current(normalized) },
+      action: {
+        label: 'Подробнее',
+        onClick: () => openDetailsRef.current(normalized),
+      },
     })
   }).current
 
-  // QueryClient с перехватом ошибок в кэшах. Создаётся один раз: report/openDetails
-  // стабильны (ref'ы), поэтому замыкание не устаревает.
+  // QueryClient с перехватом ошибок в кэшах. Создаётся один раз: report/openDetails стабильны (ref'ы), поэтому замыкание не устаревает.
   const queryClient = useMemo(
     () =>
       new QueryClient({
@@ -81,10 +102,14 @@ export function StudioErrorProvider({ children }: { children: ReactNode }) {
   )
 }
 
-// Строка техдетали «ключ / значение» — две ячейки сетки (см. контейнер в
-// ErrorDialog), чтобы значения выравнивались по общей колонке. Скрывается, если
-// значение пустое.
-function DetailRow({ label, value }: { label: string; value: string | number | undefined }) {
+/** Строка техдетали «ключ / значение» — две ячейки сетки (см. контейнер в ErrorDialog), чтобы значения выравнивались по общей колонке. Скрывается, если значение пустое. */
+function DetailRow({
+  label,
+  value,
+}: {
+  label: string
+  value: string | number | undefined
+}) {
   if (value === undefined || value === '') return null
   return (
     <>
@@ -94,23 +119,38 @@ function DetailRow({ label, value }: { label: string; value: string | number | u
   )
 }
 
-// Диалог с полной информацией об ошибке: описание и подсказка, техдетали
-// (тег/статус/метод/url) и разворачиваемый сырой JSON исходной ошибки.
-function ErrorDialog({ error, onClose }: { error: StudioError | null; onClose: () => void }) {
+/** Диалог с полной информацией об ошибке: описание и подсказка, техдетали (тег/статус/метод/url) и разворачиваемый сырой JSON исходной ошибки. */
+function ErrorDialog({
+  error,
+  onClose,
+}: {
+  error: StudioError | null
+  onClose: () => void
+}) {
   const dark = useStudioDark()
   return (
-    <Dialog open={error !== null} onOpenChange={(open) => (open ? null : onClose())}>
+    <Dialog
+      open={error !== null}
+      onOpenChange={(open) => (open ? null : onClose())}
+    >
       {/* Диалог уходит в портал на body — мимо `.dark` корня студии. Класс темы
           вешаем прямо на контент (тёмные токены), а text-foreground задаёт сам
           цвет текста: иначе он наследуется от body (тёмный из :root) и пропадает. */}
-      <DialogContent className={cn('max-h-[85vh] overflow-y-auto text-foreground sm:max-w-2xl', dark && 'dark')}>
+      <DialogContent
+        className={cn(
+          'max-h-[85vh] overflow-y-auto text-foreground sm:max-w-2xl',
+          dark && 'dark',
+        )}
+      >
         {error && (
           <>
             <DialogHeader>
               <DialogTitle>{error.title}</DialogTitle>
               <DialogDescription>{error.description}</DialogDescription>
             </DialogHeader>
-            {error.hint && <p className="text-sm text-muted-foreground">{error.hint}</p>}
+            {error.hint && (
+              <p className="text-sm text-muted-foreground">{error.hint}</p>
+            )}
             <div className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 rounded-md border p-3 text-sm">
               <DetailRow label="Тип" value={error.tag} />
               <DetailRow label="Статус" value={error.status} />

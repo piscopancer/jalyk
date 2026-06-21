@@ -8,34 +8,74 @@ import type { FieldValue, InferFields, Prettify } from './field.ts'
 
 // Карта полей документа типа T. Берётся из конкретного конфига, поэтому типы
 // полей точные (defineConfig сохраняет литералы), а не widened DocumentOptions.
-export type FieldsOf<C extends AnyConfig, T extends DocumentType<C>> = C['documents'][T]['fields']
+export type FieldsOf<
+  C extends AnyConfig,
+  T extends DocumentType<C>,
+> = C['documents'][T]['fields']
 
 // Целевые типы ссылки поля F: для одиночной ссылки — её `to`, для массива ссылок —
 // `to` элемента; иначе never (поле не ссылка).
-type RefTargets<F> = F extends { kind: 'reference'; to: infer To extends readonly { to: string }[] } ? To[number]['to'] : never
-type ArrayRefTargets<F> = F extends { kind: 'array'; of: infer Of extends { kind: 'reference'; to: readonly { to: string }[] } }
+type RefTargets<F> = F extends {
+  kind: 'reference'
+  to: infer To extends readonly { to: string }[]
+}
+  ? To[number]['to']
+  : never
+type ArrayRefTargets<F> = F extends {
+  kind: 'array'
+  of: infer Of extends { kind: 'reference'; to: readonly { to: string }[] }
+}
   ? Of['to'][number]['to']
   : never
 
 // --- where -------------------------------------------------------------------
 
-type StringFilter = string | { equals?: string; in?: readonly string[]; contains?: string; startsWith?: string; not?: string }
-type NumberFilter = number | { equals?: number; in?: readonly number[]; lt?: number; lte?: number; gt?: number; gte?: number; not?: number }
+type StringFilter =
+  | string
+  | {
+      equals?: string
+      in?: readonly string[]
+      contains?: string
+      startsWith?: string
+      not?: string
+    }
+type NumberFilter =
+  | number
+  | {
+      equals?: number
+      in?: readonly number[]
+      lt?: number
+      lte?: number
+      gt?: number
+      gte?: number
+      not?: number
+    }
 type BooleanFilter = boolean | { equals?: boolean; not?: boolean }
 
 // Фильтр по значению скаляра — оператор по типу значения поля.
-type ScalarFilter<V> = [V] extends [string] ? StringFilter : [V] extends [number] ? NumberFilter : [V] extends [boolean] ? BooleanFilter : never
+type ScalarFilter<V> = [V] extends [string]
+  ? StringFilter
+  : [V] extends [number]
+    ? NumberFilter
+    : [V] extends [boolean]
+      ? BooleanFilter
+      : never
 
 // Фильтр одного поля: ссылка фильтруется по id (_ref), скаляр — по значению.
-type FieldWhere<C extends AnyConfig, F> = RefTargets<F> extends never
-  ? ArrayRefTargets<F> extends never
-    ? ScalarFilter<FieldValue<F>>
-    : never
-  : string | { equals?: string; in?: readonly string[] }
+type FieldWhere<C extends AnyConfig, F> =
+  RefTargets<F> extends never
+    ? ArrayRefTargets<F> extends never
+      ? ScalarFilter<FieldValue<F>>
+      : never
+    : string | { equals?: string; in?: readonly string[] }
 
 /** Фильтр документов типа T: по его полям-скалярам, ссылкам (по id), собственному id и логическим узлам AND/OR/NOT (древо). */
 export type Where<C extends AnyConfig, T extends DocumentType<C>> = Prettify<
-  { [K in keyof FieldsOf<C, T> as FieldWhere<C, FieldsOf<C, T>[K]> extends never ? never : K]?: FieldWhere<C, FieldsOf<C, T>[K]> } & {
+  {
+    [K in keyof FieldsOf<C, T> as FieldWhere<C, FieldsOf<C, T>[K]> extends never
+      ? never
+      : K]?: FieldWhere<C, FieldsOf<C, T>[K]>
+  } & {
     id?: StringFilter
     AND?: readonly Where<C, T>[]
     OR?: readonly Where<C, T>[]
@@ -47,11 +87,12 @@ export type Where<C extends AnyConfig, T extends DocumentType<C>> = Prettify<
 
 // Выбор одного поля: скаляр — только `true`; ссылка (одиночная или массив) — `true`
 // (оставить ReferenceValue) либо вложенный select целевого типа (дереференс-джоин).
-type FieldSelect<C extends AnyConfig, F> = ArrayRefTargets<F> extends never
-  ? RefTargets<F> extends never
-    ? true
-    : true | Select<C, RefTargets<F>>
-  : true | Select<C, ArrayRefTargets<F>>
+type FieldSelect<C extends AnyConfig, F> =
+  ArrayRefTargets<F> extends never
+    ? RefTargets<F> extends never
+      ? true
+      : true | Select<C, RefTargets<F>>
+    : true | Select<C, ArrayRefTargets<F>>
 
 /** Проекция полей документа типа T. `id`/`_type` выбираются явно, как в Prisma. */
 export type Select<C extends AnyConfig, T extends DocumentType<C>> = {
@@ -76,23 +117,36 @@ type FieldResult<C extends AnyConfig, F, Sel> = Sel extends true
  * (полиморфная ссылка) — тогда проекция распределяется по членам. Джоины
  * дереференсятся через FieldResult рекурсивно на любую глубину.
  */
-export type Project<C extends AnyConfig, T extends DocumentType<C>, S> = T extends DocumentType<C>
-  ? Prettify<
-      (S extends { id: true } ? { id: string } : unknown) &
-        (S extends { _type: true } ? { _type: T } : unknown) & {
-          [K in keyof S & keyof FieldsOf<C, T>]: FieldResult<C, FieldsOf<C, T>[K], S[K]>
-        }
-    >
-  : never
+export type Project<C extends AnyConfig, T extends DocumentType<C>, S> =
+  T extends DocumentType<C>
+    ? Prettify<
+        (S extends { id: true } ? { id: string } : unknown) &
+          (S extends { _type: true } ? { _type: T } : unknown) & {
+            [K in keyof S & keyof FieldsOf<C, T>]: FieldResult<
+              C,
+              FieldsOf<C, T>[K],
+              S[K]
+            >
+          }
+      >
+    : never
 
 // --- результат и аргументы запроса ------------------------------------------
 
 /** Полный документ типа T: id плюс значения полей (ссылки остаются ReferenceValue). */
-export type DocumentRecord<C extends AnyConfig, T extends DocumentType<C>> = Prettify<{ id: string } & InferFields<FieldsOf<C, T>>>
+export type DocumentRecord<
+  C extends AnyConfig,
+  T extends DocumentType<C>,
+> = Prettify<{ id: string } & InferFields<FieldsOf<C, T>>>
 
 /** Порядок сортировки по полю-скаляру. */
 export type OrderBy<C extends AnyConfig, T extends DocumentType<C>> = {
-  [K in keyof FieldsOf<C, T> as FieldValue<FieldsOf<C, T>[K]> extends string | number | boolean ? K : never]?: 'asc' | 'desc'
+  [K in keyof FieldsOf<C, T> as FieldValue<FieldsOf<C, T>[K]> extends
+    | string
+    | number
+    | boolean
+    ? K
+    : never]?: 'asc' | 'desc'
 }
 
 /** Аргументы findMany. Без select результат — полный документ, с select — проекция. */
@@ -111,9 +165,11 @@ export type FindUniqueArgs<C extends AnyConfig, T extends DocumentType<C>> = {
 }
 
 // Результат запроса по аргументам: select определяет, проекция это или полный документ.
-export type QueryResult<C extends AnyConfig, T extends DocumentType<C>, A> = A extends { select: infer S }
-  ? Project<C, T, S>
-  : DocumentRecord<C, T>
+export type QueryResult<
+  C extends AnyConfig,
+  T extends DocumentType<C>,
+  A,
+> = A extends { select: infer S } ? Project<C, T, S> : DocumentRecord<C, T>
 
 // --- where: рантайм-предикат (чистый, без IO) --------------------------------
 
@@ -122,15 +178,46 @@ export type QueryResult<C extends AnyConfig, T extends DocumentType<C>, A> = A e
 function matchesFilter(value: unknown, filter: unknown): boolean {
   if (filter === null || typeof filter !== 'object') return value === filter
   const f = filter
-  if ('equals' in f && f.equals !== undefined && value !== f.equals) return false
+  if ('equals' in f && f.equals !== undefined && value !== f.equals)
+    return false
   if ('not' in f && f.not !== undefined && value === f.not) return false
   if ('in' in f && Array.isArray(f.in) && !f.in.includes(value)) return false
-  if ('contains' in f && typeof f.contains === 'string' && !(typeof value === 'string' && value.includes(f.contains))) return false
-  if ('startsWith' in f && typeof f.startsWith === 'string' && !(typeof value === 'string' && value.startsWith(f.startsWith))) return false
-  if ('lt' in f && typeof f.lt === 'number' && !(typeof value === 'number' && value < f.lt)) return false
-  if ('lte' in f && typeof f.lte === 'number' && !(typeof value === 'number' && value <= f.lte)) return false
-  if ('gt' in f && typeof f.gt === 'number' && !(typeof value === 'number' && value > f.gt)) return false
-  if ('gte' in f && typeof f.gte === 'number' && !(typeof value === 'number' && value >= f.gte)) return false
+  if (
+    'contains' in f &&
+    typeof f.contains === 'string' &&
+    !(typeof value === 'string' && value.includes(f.contains))
+  )
+    return false
+  if (
+    'startsWith' in f &&
+    typeof f.startsWith === 'string' &&
+    !(typeof value === 'string' && value.startsWith(f.startsWith))
+  )
+    return false
+  if (
+    'lt' in f &&
+    typeof f.lt === 'number' &&
+    !(typeof value === 'number' && value < f.lt)
+  )
+    return false
+  if (
+    'lte' in f &&
+    typeof f.lte === 'number' &&
+    !(typeof value === 'number' && value <= f.lte)
+  )
+    return false
+  if (
+    'gt' in f &&
+    typeof f.gt === 'number' &&
+    !(typeof value === 'number' && value > f.gt)
+  )
+    return false
+  if (
+    'gte' in f &&
+    typeof f.gte === 'number' &&
+    !(typeof value === 'number' && value >= f.gte)
+  )
+    return false
   return true
 }
 
@@ -139,26 +226,53 @@ function matchesFilter(value: unknown, filter: unknown): boolean {
  * фильтруются по их `_ref`. Узлы AND/OR/NOT задают логическое древо (рекурсия),
  * остальные ключи — условия по полям. Возвращает true, если документ проходит.
  */
-export function matchesWhere(record: { id: string; draft: unknown }, where: Record<string, unknown>): boolean {
-  const draft = record.draft !== null && typeof record.draft === 'object' ? (record.draft as Record<string, unknown>) : {}
+export function matchesWhere(
+  record: { id: string; draft: unknown },
+  where: Record<string, unknown>,
+): boolean {
+  const draft =
+    record.draft !== null && typeof record.draft === 'object'
+      ? (record.draft as Record<string, unknown>)
+      : {}
   for (const [key, filter] of Object.entries(where)) {
     if (filter === undefined) continue
     // Логические узлы древа: AND/OR — массивы подусловий, NOT — одно подусловие.
     if (key === 'AND') {
-      if (Array.isArray(filter) && !filter.every((sub) => matchesWhere(record, sub as Record<string, unknown>))) return false
+      if (
+        Array.isArray(filter) &&
+        !filter.every((sub) =>
+          matchesWhere(record, sub as Record<string, unknown>),
+        )
+      )
+        return false
       continue
     }
     if (key === 'OR') {
-      if (Array.isArray(filter) && filter.length > 0 && !filter.some((sub) => matchesWhere(record, sub as Record<string, unknown>))) return false
+      if (
+        Array.isArray(filter) &&
+        filter.length > 0 &&
+        !filter.some((sub) =>
+          matchesWhere(record, sub as Record<string, unknown>),
+        )
+      )
+        return false
       continue
     }
     if (key === 'NOT') {
-      if (filter !== null && typeof filter === 'object' && matchesWhere(record, filter as Record<string, unknown>)) return false
+      if (
+        filter !== null &&
+        typeof filter === 'object' &&
+        matchesWhere(record, filter as Record<string, unknown>)
+      )
+        return false
       continue
     }
     const raw = key === 'id' ? record.id : draft[key]
     // Ссылочное поле: фильтруем по _ref, если значение — объект-ссылка.
-    const value = raw !== null && typeof raw === 'object' && '_ref' in raw ? (raw as { _ref: unknown })._ref : raw
+    const value =
+      raw !== null && typeof raw === 'object' && '_ref' in raw
+        ? (raw as { _ref: unknown })._ref
+        : raw
     if (!matchesFilter(value, filter)) return false
   }
   return true

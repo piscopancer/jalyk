@@ -3,10 +3,12 @@ import * as Projects from '../services/projects'
 import { runtime } from '../runtime'
 import { currentUserId } from '../current-user.server'
 
-export const listProjects = createServerFn({ method: 'GET' }).handler(async () => {
-  const uid = await currentUserId()
-  return runtime.runPromise(Projects.listForUser(uid))
-})
+export const listProjects = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    const uid = await currentUserId()
+    return runtime.runPromise(Projects.listForUser(uid))
+  },
+)
 
 export const getProject = createServerFn({ method: 'GET' })
   .validator((d: { projectId: string }) => d)

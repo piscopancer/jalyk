@@ -57,7 +57,12 @@ export function AccountMenu() {
         aria-expanded={open}
       >
         {user.image ? (
-          <img src={user.image} alt={user.name ?? user.email ?? 'avatar'} className="size-full object-cover" referrerPolicy="no-referrer" />
+          <img
+            src={user.image}
+            alt={user.name ?? user.email ?? 'avatar'}
+            className="size-full object-cover"
+            referrerPolicy="no-referrer"
+          />
         ) : (
           initials(user.name, user.email)
         )}
@@ -71,8 +76,14 @@ export function AccountMenu() {
         role="menu"
       >
         <div className="border-b px-3 py-2">
-          <div className="truncate text-sm font-medium">{user.name ?? 'Без имени'}</div>
-          {user.email ? <div className="truncate text-xs text-muted-foreground">{user.email}</div> : null}
+          <div className="truncate text-sm font-medium">
+            {user.name ?? 'Без имени'}
+          </div>
+          {user.email ? (
+            <div className="truncate text-xs text-muted-foreground">
+              {user.email}
+            </div>
+          ) : null}
         </div>
         <button
           type="button"

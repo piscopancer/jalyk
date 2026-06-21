@@ -8,14 +8,18 @@ export const createInvitation = createServerFn({ method: 'POST' })
   .validator((d: { projectId: string; role: Role }) => d)
   .handler(async ({ data }) => {
     const uid = await currentUserId()
-    return runtime.runPromise(Invitations.create(data.projectId, uid, data.role))
+    return runtime.runPromise(
+      Invitations.create(data.projectId, uid, data.role),
+    )
   })
 
 export const revokeInvitation = createServerFn({ method: 'POST' })
   .validator((d: { projectId: string; invitationId: string }) => d)
   .handler(async ({ data }) => {
     const uid = await currentUserId()
-    return runtime.runPromise(Invitations.revoke(data.projectId, uid, data.invitationId))
+    return runtime.runPromise(
+      Invitations.revoke(data.projectId, uid, data.invitationId),
+    )
   })
 
 export const peekInvitation = createServerFn({ method: 'GET' })

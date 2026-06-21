@@ -21,19 +21,28 @@ export class CurrentUser extends Context.Tag('CurrentUser')<
 
 // Требует аутентифицированного пользователя. В обработчиках под ним доступен
 // тег CurrentUser; без действительной сессии ответ 401.
-export class Authentication extends HttpApiMiddleware.Tag<Authentication>()('Authentication', {
-  failure: Unauthorized,
-  provides: CurrentUser,
-}) {}
+export class Authentication extends HttpApiMiddleware.Tag<Authentication>()(
+  'Authentication',
+  {
+    failure: Unauthorized,
+    provides: CurrentUser,
+  },
+) {}
 
 /** Принципал текущего запроса, разрешённый из заголовков (сессия или api-ключ). */
-export class CurrentPrincipal extends Context.Tag('CurrentPrincipal')<CurrentPrincipal, Principal>() {}
+export class CurrentPrincipal extends Context.Tag('CurrentPrincipal')<
+  CurrentPrincipal,
+  Principal
+>() {}
 
 // Единый middleware доступа на контентные операции. Два режима: api-ключ в
 // заголовке X-Api-Key (приоритет) или сессия в Authorization: Bearer. Любой
 // невалидный/отсутствующий принципал → 401; привязку к проекту проверяет уже
 // getProjectAccess в обработчике.
-export class Authorization extends HttpApiMiddleware.Tag<Authorization>()('Authorization', {
-  failure: Unauthorized,
-  provides: CurrentPrincipal,
-}) {}
+export class Authorization extends HttpApiMiddleware.Tag<Authorization>()(
+  'Authorization',
+  {
+    failure: Unauthorized,
+    provides: CurrentPrincipal,
+  },
+) {}

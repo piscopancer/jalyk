@@ -1,5 +1,15 @@
-import { HttpApiBuilder, HttpServerRequest, HttpServerResponse } from '@effect/platform'
-import { AssetStorage, createAsset, deleteAsset, getAssetById, listAssets } from '@jalyk/core'
+import {
+  HttpApiBuilder,
+  HttpServerRequest,
+  HttpServerResponse,
+} from '@effect/platform'
+import {
+  AssetStorage,
+  createAsset,
+  deleteAsset,
+  getAssetById,
+  listAssets,
+} from '@jalyk/core'
 import { Api, NotFound } from '@jalyk/contract'
 import { Effect } from 'effect'
 import { randomUUID } from 'node:crypto'
@@ -7,7 +17,13 @@ import { access, writeAccess } from './access.ts'
 
 // Метаданные ассета на провод (поля AssetInfo из контракта). Общая для upload и
 // list проекция доменной записи.
-const toInfo = (asset: { id: string; projectId: string; filename: string; contentType: string; size: number }) => ({
+const toInfo = (asset: {
+  id: string
+  projectId: string
+  filename: string
+  contentType: string
+  size: number
+}) => ({
   id: asset.id,
   projectId: asset.projectId,
   filename: asset.filename,
@@ -47,7 +63,11 @@ export const AssetsLive = HttpApiBuilder.group(Api, 'assets', (handlers) =>
     // делает клиент. Только чтение — достаточно access без права записи.
     .handle('list', ({ path }) =>
       access(path.projectId).pipe(
-        Effect.andThen(listAssets(path.projectId).pipe(Effect.catchTag('DbError', (e) => Effect.die(e)))),
+        Effect.andThen(
+          listAssets(path.projectId).pipe(
+            Effect.catchTag('DbError', (e) => Effect.die(e)),
+          ),
+        ),
         Effect.map((assets) => assets.map(toInfo)),
       ),
     )
@@ -74,17 +94,22 @@ export const AssetsLive = HttpApiBuilder.group(Api, 'assets', (handlers) =>
 
 // Публичная раздача байтов ассета по id (без авторизации — см. контракт).
 // handleRaw отдаёт сырой ответ; contentType берём из записи, байты — из хранилища.
-export const AssetsPublicLive = HttpApiBuilder.group(Api, 'assetsPublic', (handlers) =>
-  handlers.handleRaw('serve', ({ path }) =>
-    Effect.gen(function* () {
-      const asset = yield* getAssetById(path.id).pipe(Effect.catchTag('DbError', (e) => Effect.die(e)))
-      if (!asset) return yield* new NotFound()
-      const storage = yield* AssetStorage
-      const bytes = yield* storage.read(asset.key).pipe(Effect.orDie)
-      return HttpServerResponse.uint8Array(bytes, {
-        contentType: asset.contentType,
-        headers: { 'cache-control': 'public, max-age=31536000, immutable' },
-      })
-    }),
-  ),
+export const AssetsPublicLive = HttpApiBuilder.group(
+  Api,
+  'assetsPublic',
+  (handlers) =>
+    handlers.handleRaw('serve', ({ path }) =>
+      Effect.gen(function* () {
+        const asset = yield* getAssetById(path.id).pipe(
+          Effect.catchTag('DbError', (e) => Effect.die(e)),
+        )
+        if (!asset) return yield* new NotFound()
+        const storage = yield* AssetStorage
+        const bytes = yield* storage.read(asset.key).pipe(Effect.orDie)
+        return HttpServerResponse.uint8Array(bytes, {
+          contentType: asset.contentType,
+          headers: { 'cache-control': 'public, max-age=31536000, immutable' },
+        })
+      }),
+    ),
 )

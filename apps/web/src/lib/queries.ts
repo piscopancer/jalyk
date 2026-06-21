@@ -14,15 +14,26 @@ export const qk = {
   apiKeys: (projectId: string) => ['projects', projectId, 'api-keys'] as const,
 }
 
-export const projectsQuery = () => queryOptions({ queryKey: qk.projects, queryFn: () => listProjects() })
+export const projectsQuery = () =>
+  queryOptions({ queryKey: qk.projects, queryFn: () => listProjects() })
 
 export const projectQuery = (projectId: string) =>
-  queryOptions({ queryKey: qk.project(projectId), queryFn: () => getProject({ data: { projectId } }) })
+  queryOptions({
+    queryKey: qk.project(projectId),
+    queryFn: () => getProject({ data: { projectId } }),
+  })
 
-export const planQuery = () => queryOptions({ queryKey: qk.plan, queryFn: () => getPlanStatus() })
+export const planQuery = () =>
+  queryOptions({ queryKey: qk.plan, queryFn: () => getPlanStatus() })
 
 export const invitationQuery = (token: string) =>
-  queryOptions({ queryKey: qk.invitation(token), queryFn: () => peekInvitation({ data: { token } }) })
+  queryOptions({
+    queryKey: qk.invitation(token),
+    queryFn: () => peekInvitation({ data: { token } }),
+  })
 
 export const apiKeysQuery = (projectId: string) =>
-  queryOptions({ queryKey: qk.apiKeys(projectId), queryFn: () => listApiKeys({ data: { projectId } }) })
+  queryOptions({
+    queryKey: qk.apiKeys(projectId),
+    queryFn: () => listApiKeys({ data: { projectId } }),
+  })

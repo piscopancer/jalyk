@@ -19,7 +19,9 @@ export const listForUser = (userId: string) =>
 export const requireMember = (projectId: string, userId: string) =>
   getMembership(projectId, userId).pipe(
     Effect.flatMap((m) =>
-      m ? Effect.succeed(m) : Effect.fail(new NotFoundError({ what: 'project' })),
+      m
+        ? Effect.succeed(m)
+        : Effect.fail(new NotFoundError({ what: 'project' })),
     ),
   )
 
@@ -27,7 +29,9 @@ export const requireMember = (projectId: string, userId: string) =>
 export const requireOwner = (projectId: string, userId: string) =>
   requireMember(projectId, userId).pipe(
     Effect.flatMap((m) =>
-      m.role === 'owner' ? Effect.succeed(m) : Effect.fail(new ForbiddenError({ reason: 'owner-only' })),
+      m.role === 'owner'
+        ? Effect.succeed(m)
+        : Effect.fail(new ForbiddenError({ reason: 'owner-only' })),
     ),
   )
 
@@ -40,7 +44,10 @@ export const getWithMembers = (projectId: string, userId: string) =>
           where: { id: projectId },
           include: {
             members: { include: { user: true }, orderBy: { createdAt: 'asc' } },
-            invitations: { where: { acceptedAt: null }, orderBy: { createdAt: 'desc' } },
+            invitations: {
+              where: { acceptedAt: null },
+              orderBy: { createdAt: 'desc' },
+            },
           },
         }),
       ),
@@ -53,8 +60,13 @@ export const create = (userId: string, name: string) =>
     const plan = yield* planOf(userId)
     const max = PLAN_LIMITS[plan].projects
     if (max !== null) {
-      const count = yield* query((db) => db.member.count({ where: { userId, role: 'owner' } }))
-      if (count >= max) return yield* Effect.fail(new PlanLimitError({ limit: 'projects', max }))
+      const count = yield* query((db) =>
+        db.member.count({ where: { userId, role: 'owner' } }),
+      )
+      if (count >= max)
+        return yield* Effect.fail(
+          new PlanLimitError({ limit: 'projects', max }),
+        )
     }
     return yield* query((db) =>
       db.project.create({
@@ -70,11 +82,17 @@ export const create = (userId: string, name: string) =>
 /** Переименование — только владелец. */
 export const rename = (projectId: string, userId: string, name: string) =>
   requireOwner(projectId, userId).pipe(
-    Effect.zipRight(query((db) => db.project.update({ where: { id: projectId }, data: { name } }))),
+    Effect.zipRight(
+      query((db) =>
+        db.project.update({ where: { id: projectId }, data: { name } }),
+      ),
+    ),
   )
 
 /** Удаление проекта — только владелец. */
 export const remove = (projectId: string, userId: string) =>
   requireOwner(projectId, userId).pipe(
-    Effect.zipRight(query((db) => db.project.delete({ where: { id: projectId } }))),
+    Effect.zipRight(
+      query((db) => db.project.delete({ where: { id: projectId } })),
+    ),
   )

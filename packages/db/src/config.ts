@@ -13,12 +13,20 @@ const DEFAULT_URL = 'postgresql://jalyk:jalyk@localhost:5432/jalyk'
 const DEFAULT_SEED_URL = 'postgresql://jalyk:jalyk@localhost:5432/jalyk_seed'
 
 const envProvider = ConfigProvider.fromMap(
-  new Map(Object.entries(typeof process !== 'undefined' ? (process.env as Record<string, string>) : {})),
+  new Map(
+    Object.entries(
+      typeof process !== 'undefined'
+        ? (process.env as Record<string, string>)
+        : {},
+    ),
+  ),
 )
 
 const program = Effect.gen(function* () {
   const explicitUrl = yield* Config.option(Config.string('DATABASE_URL'))
-  const explicitSeedUrl = yield* Config.option(Config.string('SEED_DATABASE_URL'))
+  const explicitSeedUrl = yield* Config.option(
+    Config.string('SEED_DATABASE_URL'),
+  )
 
   return {
     databaseUrl: Option.getOrElse(explicitUrl, () => DEFAULT_URL),
@@ -28,7 +36,9 @@ const program = Effect.gen(function* () {
   }
 })
 
-const resolved = Effect.runSync(program.pipe(Effect.withConfigProvider(envProvider)))
+const resolved = Effect.runSync(
+  program.pipe(Effect.withConfigProvider(envProvider)),
+)
 
 /** Строка подключения к рабочей БД. */
 export const databaseUrl = resolved.databaseUrl

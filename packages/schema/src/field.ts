@@ -30,7 +30,15 @@ export type FieldMeta = {
   name?: string
 }
 
-export type FieldKind = 'string' | 'number' | 'boolean' | 'richText' | 'image' | 'reference' | 'object' | 'array'
+export type FieldKind =
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'richText'
+  | 'image'
+  | 'reference'
+  | 'object'
+  | 'array'
 
 // --- Заголовок поля ----------------------------------------------------------
 // Заголовок поля (подпись с иконкой и меню-троеточием) разведён на данные и
@@ -40,7 +48,11 @@ export type FieldKind = 'string' | 'number' | 'boolean' | 'richText' | 'image' |
 // которому нужны предопределённые поля (DefaultHeaderData).
 
 /** Предопределённые данные заголовка — то, что умеет рисовать DefaultHeader. */
-export type DefaultHeaderData = { title: string; description?: string; icon?: FieldIcon }
+export type DefaultHeaderData = {
+  title: string
+  description?: string
+  icon?: FieldIcon
+}
 
 /** Данные заголовка по умолчанию: title обязателен, как требует DefaultHeader. */
 export function defaultHeader<const D extends DefaultHeaderData>(data: D): D {
@@ -53,10 +65,16 @@ export function defineHeader<const D>(data: D): D {
 }
 
 /** Пропсы компонента заголовка: путь и описание поля плюс данные заголовка. */
-export type HeaderComponentProps<D = unknown> = { path: readonly string[]; field: AnyField; header: D }
+export type HeaderComponentProps<D = unknown> = {
+  path: readonly string[]
+  field: AnyField
+  header: D
+}
 
 /** Компонент заголовка поля. Схема не зависит от React — возврат намеренно широкий. */
-export type HeaderComponent<D = unknown> = (props: HeaderComponentProps<D>) => unknown
+export type HeaderComponent<D = unknown> = (
+  props: HeaderComponentProps<D>,
+) => unknown
 
 /**
  * Рантайм-тип компонента, дорисовываемого студией (заголовок поля, превью
@@ -81,7 +99,11 @@ export type HeaderOptions<H> = {
 // --- Значения сложных типов --------------------------------------------------
 
 /** Значение rich-text — документ Tiptap в JSON. */
-export type RichTextValue = { type?: string; content?: RichTextValue[]; [key: string]: unknown }
+export type RichTextValue = {
+  type?: string
+  content?: RichTextValue[]
+  [key: string]: unknown
+}
 
 /** Значение поля-картинки — ссылка на загруженный ассет. */
 export type ImageValue = { assetId: string }
@@ -91,7 +113,10 @@ export type ImageValue = { assetId: string }
  * в `_toType`, а не `_type`, чтобы `_type` остался свободен под дискриминатор члена
  * разнотипного массива — тогда ссылку можно класть и в такой массив.
  */
-export type ReferenceValue<K extends string = string> = { _ref: string; _toType: K }
+export type ReferenceValue<K extends string = string> = {
+  _ref: string
+  _toType: K
+}
 
 // --- Структурный супертип поля ----------------------------------------------
 // Все фабрики возвращают объекты, присваиваемые AnyField. Используется как
@@ -111,7 +136,10 @@ export type AnyField = FieldMeta & {
   to?: readonly ReferenceTarget[]
   min?: number
   max?: number
-  input?: { type?: string; predefined?: readonly { value: string; title?: string; icon?: FieldIcon }[] }
+  input?: {
+    type?: string
+    predefined?: readonly { value: string; title?: string; icon?: FieldIcon }[]
+  }
   // Заголовок поля: данные и (опционально) свой компонент рендера, см. HeaderOptions.
   header?: unknown
   headerComponent?: ErasedComponent
@@ -125,7 +153,9 @@ export type FieldMap = Record<string, AnyField>
 export type FieldValue<F> = F extends { __value?: infer V } ? V : never
 
 /** Тип значения по карте полей: все поля опциональны (черновик частичный, обязательность — правило документа validate). */
-export type InferFields<F extends FieldMap> = Prettify<{ [K in keyof F]?: FieldValue<F[K]> }>
+export type InferFields<F extends FieldMap> = Prettify<{
+  [K in keyof F]?: FieldValue<F[K]>
+}>
 
 // --- Строгий путь к полю (для validate) --------------------------------------
 // Путь — кортеж сегментов: имена полей строгие (union ключей карты), позиция
@@ -141,7 +171,9 @@ export type FieldPath = readonly string[] & Brand.Brand<'FieldPath'>
 // Спуск внутрь поля: закончить здесь ([]) либо глубже — объект в свои поля, массив через ArrayIndex в элемент.
 type IntoField<Fld> =
   | []
-  | (Fld extends { kind: 'object'; fields: infer Sub extends FieldMap } ? FieldPathTuples<Sub> : never)
+  | (Fld extends { kind: 'object'; fields: infer Sub extends FieldMap }
+      ? FieldPathTuples<Sub>
+      : never)
   | (Fld extends { kind: 'array'; of: infer Of }
       ? Of extends readonly AnyField[]
         ? [ArrayIndex, ...IntoField<Of[number]>]
@@ -149,14 +181,24 @@ type IntoField<Fld> =
       : never)
 
 /** Все валидные кортежи путей по карте полей: имена полей строгие, элемент массива — ArrayIndex. */
-export type FieldPathTuples<Fm extends FieldMap> = { [K in keyof Fm & string]: [K, ...IntoField<Fm[K]>] }[keyof Fm & string]
+export type FieldPathTuples<Fm extends FieldMap> = {
+  [K in keyof Fm & string]: [K, ...IntoField<Fm[K]>]
+}[keyof Fm & string]
 
 /** Билдер строгого пути, привязанный к карте полей документа: проверяет кортеж и возвращает FieldPath. */
-export type PathBuilder<F extends FieldMap> = <const P extends FieldPathTuples<F>>(segments: P) => FieldPath
+export type PathBuilder<F extends FieldMap> = <
+  const P extends FieldPathTuples<F>,
+>(
+  segments: P,
+) => FieldPath
 
 // --- Фабрики полей -----------------------------------------------------------
 
-type Predefined = readonly { value: string; title?: string; icon?: FieldIcon }[]
+type Predefined = readonly {
+  value: string
+  title?: string
+  icon?: FieldIcon
+}[]
 
 type StringOptions = FieldMeta & {
   placeholder?: string
@@ -171,14 +213,18 @@ type StringOptions = FieldMeta & {
  * Строковое поле. Для `input: { type: 'select', predefined }` тип значения
  * сужается до объединения предопределённых значений, иначе это `string`.
  */
-export function defineString<const O extends StringOptions, H = DefaultHeaderData>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
-  return { kind: 'string', ...options } as { kind: 'string' } & O & HeaderOptions<H> & {
-    __value?: O extends { input: { type: 'select'; predefined: infer P } }
-      ? P extends readonly { value: infer V }[]
-        ? V & string
+export function defineString<
+  const O extends StringOptions,
+  H = DefaultHeaderData,
+>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+  return { kind: 'string', ...options } as { kind: 'string' } & O &
+    HeaderOptions<H> & {
+      __value?: O extends { input: { type: 'select'; predefined: infer P } }
+        ? P extends readonly { value: infer V }[]
+          ? V & string
+          : string
         : string
-      : string
-  }
+    }
 }
 
 type NumberOptions = FieldMeta & {
@@ -188,30 +234,48 @@ type NumberOptions = FieldMeta & {
 }
 
 /** Числовое поле с границами `min`/`max` и пользовательскими проверками. */
-export function defineNumber<const O extends NumberOptions, H = DefaultHeaderData>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
-  return { kind: 'number', ...options } as { kind: 'number' } & O & HeaderOptions<H> & { __value?: number }
+export function defineNumber<
+  const O extends NumberOptions,
+  H = DefaultHeaderData,
+>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+  return { kind: 'number', ...options } as { kind: 'number' } & O &
+    HeaderOptions<H> & { __value?: number }
 }
 
 /** Булево поле. */
-export function defineBoolean<const O extends FieldMeta & { default?: boolean }, H = DefaultHeaderData>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
-  return { kind: 'boolean', ...options } as { kind: 'boolean' } & O & HeaderOptions<H> & { __value?: boolean }
+export function defineBoolean<
+  const O extends FieldMeta & { default?: boolean },
+  H = DefaultHeaderData,
+>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+  return { kind: 'boolean', ...options } as { kind: 'boolean' } & O &
+    HeaderOptions<H> & { __value?: boolean }
 }
 
 /** Rich-text поле (редактор Tiptap). */
-export function defineRichText<const O extends FieldMeta & { default?: RichTextValue }, H = DefaultHeaderData>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
-  return { kind: 'richText', ...options } as { kind: 'richText' } & O & HeaderOptions<H> & { __value?: RichTextValue }
+export function defineRichText<
+  const O extends FieldMeta & { default?: RichTextValue },
+  H = DefaultHeaderData,
+>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+  return { kind: 'richText', ...options } as { kind: 'richText' } & O &
+    HeaderOptions<H> & { __value?: RichTextValue }
 }
 
 /** Поле-картинка — выбор/загрузка ассета. */
-export function defineImage<const O extends FieldMeta & { default?: ImageValue }, H = DefaultHeaderData>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
-  return { kind: 'image', ...options } as { kind: 'image' } & O & HeaderOptions<H> & { __value?: ImageValue }
+export function defineImage<
+  const O extends FieldMeta & { default?: ImageValue },
+  H = DefaultHeaderData,
+>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+  return { kind: 'image', ...options } as { kind: 'image' } & O &
+    HeaderOptions<H> & { __value?: ImageValue }
 }
 
 /** Реестр типов документов; клиент расширяет через `declare module` (приём Register из TanStack). Авто-вывод из documents даёт цикл — список ручной. */
 export interface DocumentRegistry {}
 
 /** Ключи зарегистрированных типов документов; пустой реестр → любая строка. */
-export type DocumentTypeKey = [keyof DocumentRegistry] extends [never] ? string : keyof DocumentRegistry & string
+export type DocumentTypeKey = [keyof DocumentRegistry] extends [never]
+  ? string
+  : keyof DocumentRegistry & string
 
 /**
  * Цель ссылки: тип документа `to` (ключ реестра) и переопределение его превью —
@@ -233,8 +297,14 @@ type ReferenceOptions = FieldMeta & {
 }
 
 /** Поле-ссылка на документ; `to[].to` ограничено реестром DocumentRegistry (автодополнение и проверка в месте вызова), дереференс — на уровне find-запроса. */
-export function defineReference<const O extends Omit<ReferenceOptions, 'to'> & { to: readonly ReferenceTarget[] }, H = DefaultHeaderData>(options: O & HeaderOptions<H>) {
-  return { kind: 'reference', ...options } as { kind: 'reference' } & O & HeaderOptions<H> & { __value?: ReferenceValue<O['to'][number]['to']> }
+export function defineReference<
+  const O extends Omit<ReferenceOptions, 'to'> & {
+    to: readonly ReferenceTarget[]
+  },
+  H = DefaultHeaderData,
+>(options: O & HeaderOptions<H>) {
+  return { kind: 'reference', ...options } as { kind: 'reference' } & O &
+    HeaderOptions<H> & { __value?: ReferenceValue<O['to'][number]['to']> }
 }
 
 type ObjectOptions = FieldMeta & {
@@ -243,8 +313,12 @@ type ObjectOptions = FieldMeta & {
 }
 
 /** Вложенный объект со своей картой полей. */
-export function defineObject<const O extends ObjectOptions, H = DefaultHeaderData>(options: O & HeaderOptions<H>) {
-  return { kind: 'object', ...options } as { kind: 'object' } & O & HeaderOptions<H> & { __value?: InferFields<O['fields']> }
+export function defineObject<
+  const O extends ObjectOptions,
+  H = DefaultHeaderData,
+>(options: O & HeaderOptions<H>) {
+  return { kind: 'object', ...options } as { kind: 'object' } & O &
+    HeaderOptions<H> & { __value?: InferFields<O['fields']> }
 }
 
 /**
@@ -253,7 +327,10 @@ export function defineObject<const O extends ObjectOptions, H = DefaultHeaderDat
  * если не задано, его `kind`). По `_type` студия выбирает редактор элемента.
  */
 export type ArrayItemValue<M extends AnyField> = Prettify<
-  { _key: string; _type: M extends { name: infer N extends string } ? N : M['kind'] } & FieldValue<M>
+  {
+    _key: string
+    _type: M extends { name: infer N extends string } ? N : M['kind']
+  } & FieldValue<M>
 >
 
 type ArrayOptions = FieldMeta & {
@@ -267,12 +344,16 @@ type ArrayOptions = FieldMeta & {
 }
 
 /** Массив элементов — однородный (of — одно поле) или разнотипный (of — список полей). */
-export function defineArray<const O extends ArrayOptions, H = DefaultHeaderData>(options: O & HeaderOptions<H>) {
-  return { kind: 'array', ...options } as { kind: 'array' } & O & HeaderOptions<H> & {
-    __value?: O['of'] extends readonly AnyField[]
-      ? ArrayItemValue<O['of'][number]>[]
-      : O['of'] extends AnyField
-        ? FieldValue<O['of']>[]
-        : never
-  }
+export function defineArray<
+  const O extends ArrayOptions,
+  H = DefaultHeaderData,
+>(options: O & HeaderOptions<H>) {
+  return { kind: 'array', ...options } as { kind: 'array' } & O &
+    HeaderOptions<H> & {
+      __value?: O['of'] extends readonly AnyField[]
+        ? ArrayItemValue<O['of'][number]>[]
+        : O['of'] extends AnyField
+          ? FieldValue<O['of']>[]
+          : never
+    }
 }

@@ -3,8 +3,21 @@
 
 import { defineConfig, type InferDocument } from './config.ts'
 import { defineDocument } from './document.ts'
-import { defineArray, defineImage, defineNumber, defineReference, defineRichText, defineString } from './field.ts'
-import type { DocumentRecord, FindManyArgs, Project, QueryResult, Where } from './query.ts'
+import {
+  defineArray,
+  defineImage,
+  defineNumber,
+  defineReference,
+  defineRichText,
+  defineString,
+} from './field.ts'
+import type {
+  DocumentRecord,
+  FindManyArgs,
+  Project,
+  QueryResult,
+  Where,
+} from './query.ts'
 import { rules } from './validate.ts'
 
 const config = defineConfig({
@@ -16,7 +29,9 @@ const config = defineConfig({
         name: defineString({ title: 'Имя' }),
         bio: defineRichText({}),
       },
-      validate: (doc, path) => [rules.required(doc.name, { path: path(['name']) })],
+      validate: (doc, path) => [
+        rules.required(doc.name, { path: path(['name']) }),
+      ],
     }),
     post: defineDocument({
       title: 'Пост',
@@ -24,7 +39,10 @@ const config = defineConfig({
         title: defineString({}),
         cover: defineImage({}),
         status: defineString({
-          input: { type: 'select', predefined: [{ value: 'draft' }, { value: 'published' }] },
+          input: {
+            type: 'select',
+            predefined: [{ value: 'draft' }, { value: 'published' }],
+          },
         }),
         views: defineNumber({ min: 0 }),
         author: defineReference({ to: [{ to: 'author' }] }),
@@ -33,7 +51,11 @@ const config = defineConfig({
       validate: (doc, path) => [
         rules.required(doc.title, { path: path(['title']) }),
         rules.required(doc.author, { path: path(['author']) }),
-        rules.minItems(doc.tags, 1, { severity: 'warning', message: 'Без тегов пост труднее найти', path: path(['tags']) }),
+        rules.minItems(doc.tags, 1, {
+          severity: 'warning',
+          message: 'Без тегов пост труднее найти',
+          path: path(['tags']),
+        }),
       ],
     }),
   },
@@ -53,7 +75,13 @@ const post: Post = {
 // Необязательные поля можно опускать.
 void post.cover
 // @ts-expect-error — status сужен до объединения литералов, 'foo' недопустим.
-const bad: Post = { _id: 'x', _type: 'post', title: 't', status: 'foo', author: { _ref: 'a', _toType: 'author' } }
+const bad: Post = {
+  _id: 'x',
+  _type: 'post',
+  title: 't',
+  status: 'foo',
+  author: { _ref: 'a', _toType: 'author' },
+}
 
 void post
 void bad
@@ -63,7 +91,12 @@ void bad
 type C = typeof config
 
 // where: скаляр по значению/оператору, ссылка по id.
-const where: Where<C, 'post'> = { title: { contains: 'a' }, status: 'draft', author: 'a1', id: { in: ['1', '2'] } }
+const where: Where<C, 'post'> = {
+  title: { contains: 'a' },
+  status: 'draft',
+  author: 'a1',
+  id: { in: ['1', '2'] },
+}
 void where
 // @ts-expect-error — views число, contains строковый оператор недопустим.
 const badWhere: Where<C, 'post'> = { views: { contains: 'x' } }
@@ -79,7 +112,11 @@ const full: QueryResult<C, 'post', FindManyArgs<C, 'post'>> = {
 void full
 
 // select со скаляром и джоином по ссылке author → проекция author с полем name.
-type PostPick = Project<C, 'post', { id: true; title: true; author: { name: true } }>
+type PostPick = Project<
+  C,
+  'post',
+  { id: true; title: true; author: { name: true } }
+>
 const pick: PostPick = { id: 'p1', title: 't', author: { name: 'Имя' } }
 void pick
 // @ts-expect-error — author спроецирован до { name }, bio не выбрано.
@@ -88,5 +125,10 @@ void pick.author?.bio
 void pick.views
 
 // DocumentRecord сохраняет ссылку как ReferenceValue.
-const record: DocumentRecord<C, 'post'> = { id: 'p1', title: 't', status: 'draft', author: { _ref: 'a', _toType: 'author' } }
+const record: DocumentRecord<C, 'post'> = {
+  id: 'p1',
+  title: 't',
+  status: 'draft',
+  author: { _ref: 'a', _toType: 'author' },
+}
 void record.author?._ref

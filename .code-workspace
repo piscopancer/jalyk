@@ -1,10 +1,10 @@
 {
   "folders": [
     {
-      "path": "apps/client"
+      "path": "apps/client",
     },
     {
-      "path": "packages/ui"
-    }
-  ]
+      "path": "packages/ui",
+    },
+  ],
 }

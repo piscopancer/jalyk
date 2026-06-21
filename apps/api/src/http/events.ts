@@ -22,11 +22,15 @@ export const EventsHttpLive = HttpApiBuilder.group(Api, 'events', (handlers) =>
       // data: — JSON события; клиент разбирает и фильтрует по docId/type/path.
       const deltas = Stream.fromPubSub(pubsub).pipe(
         Stream.filter((e) => e.projectId === path.projectId),
-        Stream.map((e) => `event: ${e.event.kind}\ndata: ${JSON.stringify(e.event)}\n\n`),
+        Stream.map(
+          (e) => `event: ${e.event.kind}\ndata: ${JSON.stringify(e.event)}\n\n`,
+        ),
       )
 
       // Комментарий-keepalive каждые 25 секунд держит соединение и проксей живым.
-      const keepalive = Stream.tick(Duration.seconds(25)).pipe(Stream.map(() => ': keepalive\n\n'))
+      const keepalive = Stream.tick(Duration.seconds(25)).pipe(
+        Stream.map(() => ': keepalive\n\n'),
+      )
 
       // Сразу отдаём комментарий-открытие, чтобы заголовки 200 ушли клиенту до
       // первого события (иначе EventSource ждёт байтов).

@@ -21,16 +21,28 @@ export const SEED_IDS = {
 // вручную: так модуль безопасен и в браузере (там process нет — карта пустая,
 // профиль = None), и не тянет неявных зависимостей дефолтного провайдера.
 const envProvider = ConfigProvider.fromMap(
-  new Map(Object.entries(typeof process !== 'undefined' ? (process.env as Record<string, string>) : {})),
+  new Map(
+    Object.entries(
+      typeof process !== 'undefined'
+        ? (process.env as Record<string, string>)
+        : {},
+    ),
+  ),
 )
 
-const readProfile = Config.option(Config.literal('empty', 'many', 'demo')('SEED_PROFILE')).pipe(
-  Effect.withConfigProvider(envProvider),
-)
+const readProfile = Config.option(
+  Config.literal('empty', 'many', 'demo')('SEED_PROFILE'),
+).pipe(Effect.withConfigProvider(envProvider))
 
 /** Активный профиль сида или null (обычный прод-режим). */
-export const seedProfile: SeedProfile | null = Option.getOrNull(Effect.runSync(readProfile))
+export const seedProfile: SeedProfile | null = Option.getOrNull(
+  Effect.runSync(readProfile),
+)
 
 /** id пользователя, под которым считаем себя залогиненными в данном профиле. */
 export const seedSessionUserId: string | null =
-  seedProfile === 'demo' ? SEED_IDS.bebrail : seedProfile === 'many' ? 'seed-user-1' : null
+  seedProfile === 'demo'
+    ? SEED_IDS.bebrail
+    : seedProfile === 'many'
+      ? 'seed-user-1'
+      : null

@@ -1,6 +1,12 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@jalyk/ui'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@jalyk/ui'
 import { planQuery } from '@/lib/queries'
 
 export const Route = createFileRoute('/plan')({
@@ -16,13 +22,17 @@ function fmt(v: number | null) {
 }
 
 function PlanPage() {
-  const { data: { plan, limits } } = useSuspenseQuery(planQuery())
+  const {
+    data: { plan, limits },
+  } = useSuspenseQuery(planQuery())
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">План и подписка</h1>
       <Card>
         <CardHeader>
-          <CardTitle>{plan === 'paid' ? 'Платный' : 'Бесплатный'} план</CardTitle>
+          <CardTitle>
+            {plan === 'paid' ? 'Платный' : 'Бесплатный'} план
+          </CardTitle>
           <CardDescription>
             {plan === 'paid'
               ? 'Подписка активна.'

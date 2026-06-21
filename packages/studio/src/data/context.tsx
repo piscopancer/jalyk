@@ -1,14 +1,25 @@
 import type { ProjectEvent } from '@jalyk/contract'
 import type { AnyConfig } from '@jalyk/schema'
 import { Cause, Effect, Either, Exit } from 'effect'
-import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react'
-import { makeClient, makeRuntime, type StudioApiClient, type StudioRuntime } from './runtime.ts'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from 'react'
+import {
+  makeClient,
+  makeRuntime,
+  type StudioApiClient,
+  type StudioRuntime,
+} from './runtime.ts'
 
-// Слушатель событий проекта (см. SSE-поток ниже). Возвращаемая subscribe функция
-// снимает подписку.
+/** Слушатель событий проекта (см. SSE-поток ниже). Возвращаемая subscribe функция снимает подписку. */
 export type EventListener = (event: ProjectEvent) => void
 
-// Метаданные загруженного ассета (ответ POST /projects/:id/assets).
+/** Метаданные загруженного ассета (ответ POST /projects/:id/assets). */
 export type UploadedAsset = {
   id: string
   projectId: string
@@ -17,9 +28,7 @@ export type UploadedAsset = {
   size: number
 }
 
-// Контекст студии: построенный клиент, рантайм и projectId, два моста к react-query
-// (run — с throw'ом ошибки, runEither — с явным Either) и подписка на SSE-поток
-// событий проекта.
+/** Контекст студии: построенный клиент, рантайм и projectId, два моста к react-query (run — с throw'ом ошибки, runEither — с явным Either) и подписка на SSE-поток событий проекта. */
 export type StudioContextValue = {
   projectId: string
   apiUrl: string
@@ -43,7 +52,9 @@ const StudioContext = createContext<StudioContextValue | null>(null)
 export function useStudio(): StudioContextValue {
   const ctx = useContext(StudioContext)
   if (!ctx) {
-    throw new Error('useStudio должен вызываться внутри <StudioProvider> (или <Studio>)')
+    throw new Error(
+      'useStudio должен вызываться внутри <StudioProvider> (или <Studio>)',
+    )
   }
   return ctx
 }
@@ -58,8 +69,7 @@ export type StudioProviderProps = {
   children: ReactNode
 }
 
-// Разбирает один SSE-кадр: строки data: склеиваются, остальное (event:, комментарии
-// `:` — open/keepalive) игнорируется, т.к. вид события дублируется в JSON (kind).
+/** Разбирает один SSE-кадр: строки data: склеиваются, остальное (event:, комментарии `:` — open/keepalive) игнорируется, т.к. вид события дублируется в JSON (kind). */
 function parseFrame(frame: string): ProjectEvent | null {
   const data = frame
     .split('\n')
@@ -74,20 +84,24 @@ function parseFrame(frame: string): ProjectEvent | null {
   }
 }
 
-// Поднимает рантайм, клиент, собственный QueryClient студии (не делим с хостом) и
-// единственное SSE-соединение на проект. Клиент строится синхронно: его сборка не
-// делает запросов, нужен лишь готовый слой HttpClient.
-export function StudioProvider({ projectId, apiKey, apiUrl, config, children }: StudioProviderProps) {
+/** Поднимает рантайм, клиент, собственный QueryClient студии (не делим с хостом) и единственное SSE-соединение на проект. Клиент строится синхронно: его сборка не делает запросов, нужен лишь готовый слой HttpClient. */
+export function StudioProvider({
+  projectId,
+  apiKey,
+  apiUrl,
+  config,
+  children,
+}: StudioProviderProps) {
   const runtime = useMemo(() => makeRuntime(), [])
-  const client = useMemo(() => runtime.runSync(makeClient({ apiUrl, apiKey })), [runtime, apiUrl, apiKey])
+  const client = useMemo(
+    () => runtime.runSync(makeClient({ apiUrl, apiKey })),
+    [runtime, apiUrl, apiKey],
+  )
 
-  // Реестр слушателей. Одно соединение раздаёт события всем подписчикам (field-
-  // редакторам, спискам) — фильтрацию по docId/type/path делает каждый сам.
+  // Реестр слушателей. Одно соединение раздаёт события всем подписчикам (field- редакторам, спискам) — фильтрацию по docId/type/path делает каждый сам.
   const listeners = useRef(new Set<EventListener>())
 
-  // SSE через fetch, а не EventSource: EventSource не умеет слать заголовки, а
-  // авторизация идёт через X-Api-Key. Читаем тело потока ридером, режем на кадры
-  // по пустой строке, при обрыве переподключаемся с паузой.
+  // SSE через fetch, а не EventSource: EventSource не умеет слать заголовки, а авторизация идёт через X-Api-Key. Читаем тело потока ридером, режем на кадры по пустой строке, при обрыве переподключаемся с паузой.
   useEffect(() => {
     const controller = new AbortController()
     let stopped = false
@@ -140,8 +154,7 @@ export function StudioProvider({ projectId, apiKey, apiUrl, config, children }: 
       config,
       client,
       runtime,
-      // Бросаем не FiberFailure, а исходное значение ошибки (squash причины) —
-      // чтобы react-query и слой ошибок студии получали чистую tagged-ошибку.
+      // Бросаем не FiberFailure, а исходное значение ошибки (squash причины) — чтобы react-query и слой ошибок студии получали чистую tagged-ошибку.
       run: async (effect) => {
         const exit = await runtime.runPromiseExit(effect)
         if (Exit.isSuccess(exit)) return exit.value
@@ -152,19 +165,25 @@ export function StudioProvider({ projectId, apiKey, apiUrl, config, children }: 
         listeners.current.add(listener)
         return () => listeners.current.delete(listener)
       },
-      // Загрузка через fetch (а не типизированный клиент): тело — сырые байты
-      // файла, авторизация через X-Api-Key, имя и тип в query.
+      // Загрузка через fetch (а не типизированный клиент): тело — сырые байты файла, авторизация через X-Api-Key, имя и тип в query.
       uploadAsset: async (file) => {
         const params = new URLSearchParams({
           filename: file.name,
           contentType: file.type || 'application/octet-stream',
         })
-        const res = await fetch(`${apiUrl}/projects/${projectId}/assets?${params}`, {
-          method: 'POST',
-          headers: { 'x-api-key': apiKey, 'content-type': file.type || 'application/octet-stream' },
-          body: file,
-        })
-        if (!res.ok) throw new Error(`Загрузка ассета не удалась: ${res.status}`)
+        const res = await fetch(
+          `${apiUrl}/projects/${projectId}/assets?${params}`,
+          {
+            method: 'POST',
+            headers: {
+              'x-api-key': apiKey,
+              'content-type': file.type || 'application/octet-stream',
+            },
+            body: file,
+          },
+        )
+        if (!res.ok)
+          throw new Error(`Загрузка ассета не удалась: ${res.status}`)
         return (await res.json()) as UploadedAsset
       },
       assetUrl: (assetId) => `${apiUrl}/assets/${assetId}`,
@@ -172,5 +191,7 @@ export function StudioProvider({ projectId, apiKey, apiUrl, config, children }: 
     [projectId, apiUrl, apiKey, config, client, runtime],
   )
 
-  return <StudioContext.Provider value={value}>{children}</StudioContext.Provider>
+  return (
+    <StudioContext.Provider value={value}>{children}</StudioContext.Provider>
+  )
 }

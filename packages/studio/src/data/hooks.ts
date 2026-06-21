@@ -2,17 +2,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useStudio } from './context.tsx'
 import { studioKeys } from './keys.ts'
 
-// Хуки данных студии. Чтение — useQuery по ключам из keys.ts; запись — useMutation
-// с инвалидацией затронутых ключей. queryFn/mutationFn запускают эффект клиента
-// через run из контекста (ошибка → состояние ошибки react-query, тип ошибки
-// сохраняется в канале эффекта).
+// Хуки данных студии. Чтение — useQuery по ключам из keys.ts; запись — useMutation с инвалидацией затронутых ключей. queryFn/mutationFn запускают эффект клиента через run из контекста (ошибка → состояние ошибки react-query, тип ошибки сохраняется в канале эффекта).
 
 /** Список документов одного типа (новые сверху). */
 export function useDocuments(type: string) {
   const { projectId, client, run } = useStudio()
   return useQuery({
     queryKey: studioKeys.documents(projectId, type),
-    queryFn: () => run(client.documents.list({ path: { projectId }, urlParams: { type } })),
+    queryFn: () =>
+      run(client.documents.list({ path: { projectId }, urlParams: { type } })),
   })
 }
 
@@ -40,22 +38,33 @@ export function useCreateDocument() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: { type: string; draft?: unknown }) =>
-      run(client.documents.create({ path: { projectId }, payload: { type: input.type, draft: input.draft } })),
+      run(
+        client.documents.create({
+          path: { projectId },
+          payload: { type: input.type, draft: input.draft },
+        }),
+      ),
     onSuccess: (doc) => {
-      qc.invalidateQueries({ queryKey: studioKeys.documents(projectId, doc.type) })
+      qc.invalidateQueries({
+        queryKey: studioKeys.documents(projectId, doc.type),
+      })
       qc.invalidateQueries({ queryKey: studioKeys.counts(projectId) })
     },
   })
 }
 
-/** Точечная запись поля-по-пути. Низкоуровневая мутация; поверх неё строится
- * useField (см. field-хуки). Кэш документа инвалидируется по его id. */
+/** Точечная запись поля-по-пути. Низкоуровневая мутация; поверх неё строится useField (см. field-хуки). Кэш документа инвалидируется по его id. */
 export function useSetField(id: string) {
   const { projectId, client, run } = useStudio()
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: { path: readonly string[]; value: unknown }) =>
-      run(client.documents.setField({ path: { projectId, id }, payload: { path: input.path, value: input.value } })),
+      run(
+        client.documents.setField({
+          path: { projectId, id },
+          payload: { path: input.path, value: input.value },
+        }),
+      ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: studioKeys.document(projectId, id) })
     },
@@ -67,10 +76,13 @@ export function usePublishDocument(id: string) {
   const { projectId, client, run } = useStudio()
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: () => run(client.documents.publish({ path: { projectId, id } })),
+    mutationFn: () =>
+      run(client.documents.publish({ path: { projectId, id } })),
     onSuccess: (doc) => {
       qc.invalidateQueries({ queryKey: studioKeys.document(projectId, id) })
-      qc.invalidateQueries({ queryKey: studioKeys.documents(projectId, doc.type) })
+      qc.invalidateQueries({
+        queryKey: studioKeys.documents(projectId, doc.type),
+      })
     },
   })
 }
@@ -80,10 +92,13 @@ export function useResetDraft(id: string) {
   const { projectId, client, run } = useStudio()
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: () => run(client.documents.resetDraft({ path: { projectId, id } })),
+    mutationFn: () =>
+      run(client.documents.resetDraft({ path: { projectId, id } })),
     onSuccess: (doc) => {
       qc.invalidateQueries({ queryKey: studioKeys.document(projectId, id) })
-      qc.invalidateQueries({ queryKey: studioKeys.documents(projectId, doc.type) })
+      qc.invalidateQueries({
+        queryKey: studioKeys.documents(projectId, doc.type),
+      })
     },
   })
 }
@@ -115,7 +130,8 @@ export function useUploadAsset() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (file: File) => uploadAsset(file),
-    onSuccess: () => qc.invalidateQueries({ queryKey: studioKeys.assets(projectId) }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: studioKeys.assets(projectId) }),
   })
 }
 
@@ -133,8 +149,10 @@ export function useDeleteAsset() {
   const { projectId, client, run } = useStudio()
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => run(client.assets.delete({ path: { projectId, id } })),
-    onSuccess: () => qc.invalidateQueries({ queryKey: studioKeys.assets(projectId) }),
+    mutationFn: (id: string) =>
+      run(client.assets.delete({ path: { projectId, id } })),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: studioKeys.assets(projectId) }),
   })
 }
 
@@ -144,7 +162,12 @@ export function usePutSchemaSnapshot() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (snapshot: unknown) =>
-      run(client.documents.putSchema({ path: { projectId }, payload: { snapshot } })),
+      run(
+        client.documents.putSchema({
+          path: { projectId },
+          payload: { snapshot },
+        }),
+      ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: studioKeys.schema(projectId) })
     },

@@ -10,4 +10,6 @@ export const planOf = (userId: string) =>
 
 /** План + его лимиты — то, что показывает страница «План». */
 export const statusOf = (userId: string) =>
-  planOf(userId).pipe(Effect.map((plan) => ({ plan, limits: PLAN_LIMITS[plan] })))
+  planOf(userId).pipe(
+    Effect.map((plan) => ({ plan, limits: PLAN_LIMITS[plan] })),
+  )

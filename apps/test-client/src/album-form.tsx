@@ -1,7 +1,7 @@
-import type { FormProps } from "@jalyk/studio"
-import { Button } from "@jalyk/ui"
-import { studio } from "./studio-config.ts"
-import type { AlbumFields } from "./studio-config.ts"
+import type { FormProps } from '@jalyk/studio'
+import { Button } from '@jalyk/ui'
+import { studio } from './studio-config.ts'
+import type { AlbumFields } from './studio-config.ts'
 
 /** Кастомная форма альбома: обложка слева, справа название/год/группа и кнопка поиска в Google, ниже треки. Field типизирован полями альбома. */
 export function AlbumForm({ Field, fields }: FormProps<AlbumFields>) {
@@ -25,9 +25,9 @@ export function AlbumForm({ Field, fields }: FormProps<AlbumFields>) {
               disabled={!bandName}
               onClick={() =>
                 window.open(
-                  `https://www.google.com/search?q=${encodeURIComponent(bandName ?? "")}`,
-                  "_blank",
-                  "noopener,noreferrer",
+                  `https://www.google.com/search?q=${encodeURIComponent(bandName ?? '')}`,
+                  '_blank',
+                  'noopener,noreferrer',
                 )
               }
             >

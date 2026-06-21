@@ -14,18 +14,23 @@ export const createAsset = (
 ) => query((db) => db.asset.create({ data: { projectId, ...data } }))
 
 /** Ассет по id без фильтра проекта — для публичной раздачи байтов. */
-export const getAssetById = (id: string) => query((db) => db.asset.findUnique({ where: { id } }))
+export const getAssetById = (id: string) =>
+  query((db) => db.asset.findUnique({ where: { id } }))
 
 /** Все ассеты проекта, новые сверху (изоляция по projectId). */
 export const listAssets = (projectId: string) =>
-  query((db) => db.asset.findMany({ where: { projectId }, orderBy: { createdAt: 'desc' } }))
+  query((db) =>
+    db.asset.findMany({ where: { projectId }, orderBy: { createdAt: 'desc' } }),
+  )
 
 /** Удалить ассет проекта. Возвращает удалённую запись (нужен key, чтобы стереть
  * байты из хранилища). NotFoundError, если чужой/нет — сперва читаем с фильтром
  * по projectId (изоляция), затем удаляем по id. */
 export const deleteAsset = (projectId: string, id: string) =>
   Effect.gen(function* () {
-    const asset = yield* query((db) => db.asset.findFirst({ where: { id, projectId } }))
+    const asset = yield* query((db) =>
+      db.asset.findFirst({ where: { id, projectId } }),
+    )
     if (!asset) {
       return yield* Effect.fail(new NotFoundError({ what: 'asset' }))
     }

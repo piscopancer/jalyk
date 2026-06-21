@@ -11,7 +11,10 @@ import { StorageError } from './errors.ts'
 export class AssetStorage extends Context.Tag('AssetStorage')<
   AssetStorage,
   {
-    readonly write: (key: string, bytes: Uint8Array) => Effect.Effect<void, StorageError>
+    readonly write: (
+      key: string,
+      bytes: Uint8Array,
+    ) => Effect.Effect<void, StorageError>
     readonly read: (key: string) => Effect.Effect<Uint8Array, StorageError>
     readonly remove: (key: string) => Effect.Effect<void, StorageError>
   }
@@ -19,7 +22,9 @@ export class AssetStorage extends Context.Tag('AssetStorage')<
 
 // Папка для тестового хранилища. Путь относительный резолвится от cwd процесса
 // api (apps/api), что в деве кладёт файлы в apps/api/uploads.
-const uploadsDir = Config.string('JALYK_UPLOADS_DIR').pipe(Config.withDefault('uploads'))
+const uploadsDir = Config.string('JALYK_UPLOADS_DIR').pipe(
+  Config.withDefault('uploads'),
+)
 
 /** Тестовая реализация: ассеты как файлы в локальной папке. Ключ — относительный
  * путь вида `projectId/uuid`; родительские каталоги создаются при записи. */
@@ -60,8 +65,11 @@ export const LocalAssetStorageLive = Layer.effect(
 export const YandexAssetStorageLive = Layer.succeed(
   AssetStorage,
   AssetStorage.of({
-    write: () => Effect.fail(new StorageError({ cause: 'yandex storage не реализован' })),
-    read: () => Effect.fail(new StorageError({ cause: 'yandex storage не реализован' })),
-    remove: () => Effect.fail(new StorageError({ cause: 'yandex storage не реализован' })),
+    write: () =>
+      Effect.fail(new StorageError({ cause: 'yandex storage не реализован' })),
+    read: () =>
+      Effect.fail(new StorageError({ cause: 'yandex storage не реализован' })),
+    remove: () =>
+      Effect.fail(new StorageError({ cause: 'yandex storage не реализован' })),
   }),
 )

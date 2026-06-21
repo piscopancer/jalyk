@@ -30,4 +30,5 @@ export const AppSeed = Layer.mergeAll(
 export const runtime = ManagedRuntime.make(seedProfile ? AppSeed : AppLive)
 
 /** Фабрика рантайма для тестов — на отдельной БД. */
-export const makeTestRuntime = (dbUrl: string) => ManagedRuntime.make(AppTest(dbUrl))
+export const makeTestRuntime = (dbUrl: string) =>
+  ManagedRuntime.make(AppTest(dbUrl))

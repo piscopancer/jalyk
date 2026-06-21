@@ -38,17 +38,27 @@ function fieldSnapshot(field: AnyField): FieldSnapshot {
   if (field.input?.type) {
     snap.input = { type: field.input.type }
     if (field.input.predefined) {
-      snap.input.predefined = field.input.predefined.map((p) => ({ value: p.value, title: p.title }))
+      snap.input.predefined = field.input.predefined.map((p) => ({
+        value: p.value,
+        title: p.title,
+      }))
     }
   }
   if (field.to) snap.to = field.to.map((target) => target.to)
   if (field.fields) snap.fields = fieldsSnapshot(field.fields)
-  if (field.of) snap.of = Array.isArray(field.of) ? field.of.map(fieldSnapshot) : fieldSnapshot(field.of as AnyField)
+  if (field.of)
+    snap.of = Array.isArray(field.of)
+      ? field.of.map(fieldSnapshot)
+      : fieldSnapshot(field.of as AnyField)
   return snap
 }
 
-function fieldsSnapshot(fields: Record<string, AnyField>): Record<string, FieldSnapshot> {
-  return Object.fromEntries(Object.entries(fields).map(([key, field]) => [key, fieldSnapshot(field)]))
+function fieldsSnapshot(
+  fields: Record<string, AnyField>,
+): Record<string, FieldSnapshot> {
+  return Object.fromEntries(
+    Object.entries(fields).map(([key, field]) => [key, fieldSnapshot(field)]),
+  )
 }
 
 /** Строит JSON-безопасный снапшот всей конфигурации. */

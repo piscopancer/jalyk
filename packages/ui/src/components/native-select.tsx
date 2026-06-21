@@ -1,7 +1,10 @@
 import type { ComponentProps } from 'react'
 import { cn } from '../lib/cn.ts'
 
-export function NativeSelect({ className, ...props }: ComponentProps<'select'>) {
+export function NativeSelect({
+  className,
+  ...props
+}: ComponentProps<'select'>) {
   return (
     <select
       className={cn(

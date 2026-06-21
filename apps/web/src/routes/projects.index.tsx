@@ -1,4 +1,8 @@
-import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button } from '@jalyk/ui'
@@ -47,16 +51,24 @@ function Projects() {
       </form>
       {create.isError && (
         <p className="text-sm text-destructive">
-          {create.error instanceof Error ? create.error.message : 'Не удалось создать проект'}
+          {create.error instanceof Error
+            ? create.error.message
+            : 'Не удалось создать проект'}
         </p>
       )}
 
       {projects.length === 0 ? (
-        <p className="text-muted-foreground">Пока нет проектов. Создайте первый.</p>
+        <p className="text-muted-foreground">
+          Пока нет проектов. Создайте первый.
+        </p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {projects.map((p) => (
-            <Link key={p.id} to="/projects/$projectId" params={{ projectId: p.id }}>
+            <Link
+              key={p.id}
+              to="/projects/$projectId"
+              params={{ projectId: p.id }}
+            >
               <Card className="transition-colors hover:bg-accent">
                 <CardHeader>
                   <CardTitle>{p.name}</CardTitle>
