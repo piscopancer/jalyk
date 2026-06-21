@@ -7,7 +7,6 @@ import type { AnyField, FieldKind } from './field.ts'
 
 export type FieldSnapshot = {
   kind: FieldKind
-  required?: boolean
   title?: string
   description?: string
   name?: string
@@ -31,7 +30,6 @@ export type SchemaSnapshot = Record<string, DocumentSnapshot>
 
 function fieldSnapshot(field: AnyField): FieldSnapshot {
   const snap: FieldSnapshot = { kind: field.kind }
-  if (field.required) snap.required = true
   if (field.title !== undefined) snap.title = field.title
   if (field.description !== undefined) snap.description = field.description
   if (field.name !== undefined) snap.name = field.name
@@ -43,7 +41,7 @@ function fieldSnapshot(field: AnyField): FieldSnapshot {
       snap.input.predefined = field.input.predefined.map((p) => ({ value: p.value, title: p.title }))
     }
   }
-  if (field.to) snap.to = [...field.to]
+  if (field.to) snap.to = field.to.map((target) => target.to)
   if (field.fields) snap.fields = fieldsSnapshot(field.fields)
   if (field.of) snap.of = Array.isArray(field.of) ? field.of.map(fieldSnapshot) : fieldSnapshot(field.of as AnyField)
   return snap

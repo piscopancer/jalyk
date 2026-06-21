@@ -8,23 +8,25 @@ import {
   defineObject,
   defineReference,
   defineString,
+  index,
+  rules,
 } from "@jalyk/schema"
 import { createStudio } from "@jalyk/studio"
 import {
-  CalendarDays,
-  Disc3,
-  FileText,
-  Image as ImageIcon,
-  Languages,
-  ListMusic,
-  Mic2,
-  Music2,
-  PenLine,
-  ShieldAlert,
-  Tag,
-  Type,
-  User,
-  Users,
+  CalendarDaysIcon,
+  Disc3Icon,
+  FileTextIcon,
+  ImageIcon,
+  LanguagesIcon,
+  ListMusicIcon,
+  Mic2Icon,
+  Music2Icon,
+  PenLineIcon,
+  ShieldAlertIcon,
+  TagIcon,
+  TypeIcon,
+  UserIcon,
+  UsersIcon,
 } from "lucide-react"
 import { AlbumForm } from "./album-form.tsx"
 import { AlbumPreview } from "./album-preview.tsx"
@@ -39,13 +41,13 @@ const languages = [
 /** Поля альбома вынесены отдельно, чтобы форма AlbumForm типизировалась по `typeof albumFields` без цикла «конфиг → форма → тип конфига». */
 const albumFields = {
   cover: defineImage({ title: "Обложка", icon: ImageIcon }),
-  title: defineString({ title: "Название", icon: Tag, required: true }),
-  year: defineNumber({ title: "Год", icon: CalendarDays, min: 0 }),
-  band: defineReference({ title: "Группа", icon: Users, to: ["band"] }),
+  title: defineString({ title: "Название", icon: TagIcon }),
+  year: defineNumber({ title: "Год", icon: CalendarDaysIcon, min: 0 }),
+  band: defineReference({ title: "Группа", icon: UsersIcon, to: [{ to: "band" }] }),
   tracks: defineArray({
     title: "Треки",
-    icon: ListMusic,
-    of: defineReference({ to: ["track"] }),
+    icon: ListMusicIcon,
+    of: defineReference({ to: [{ to: "track" }] }),
   }),
 }
 
@@ -55,107 +57,151 @@ export type AlbumFields = typeof albumFields
 /** Музыкальная схема: группа, исполнитель, альбом, трек. Документы — отдельные переменные, `documents` лишь собирает их; `to` типизирует реестр (ниже). */
 const bandDoc = defineDocument({
   title: "Группа",
-  icon: Users,
+  icon: UsersIcon,
   preview: { title: "name" },
   fields: {
-    name: defineString({ title: "Название", icon: Tag, required: true }),
+    name: defineString({ title: "Название", icon: TagIcon }),
     artists: defineArray({
       title: "Исполнители",
-      icon: Users,
-      of: defineReference({ to: ["artist"] }),
+      icon: UsersIcon,
+      of: defineReference({ to: [{ to: "artist" }] }),
     }),
   },
+  validate: (doc, path) => [rules.required(doc.name, { path: path(["name"]) })],
 })
 
 const artistDoc = defineDocument({
   title: "Исполнитель",
-  icon: Mic2,
+  icon: Mic2Icon,
   preview: { title: "fullName" },
   fields: {
-    fullName: defineString({ title: "Полное имя", icon: User, required: true }),
+    fullName: defineString({ title: "Полное имя", icon: UserIcon }),
     bio: defineString({
       title: "Биография",
-      icon: FileText,
+      icon: FileTextIcon,
       input: { type: "multiline" },
     }),
   },
+  validate: (doc, path) => [
+    rules.required(doc.fullName, { path: path(["fullName"]) }),
+  ],
 })
 
 const albumDoc = defineDocument({
   title: "Альбом",
-  icon: Disc3,
+  icon: Disc3Icon,
   preview: { title: "title" },
   previewComponent: AlbumPreview,
   formComponent: AlbumForm,
   fields: albumFields,
+  list: { search: ["title"], sort: ["title", "year"] },
+  validate: (doc, path) => [
+    rules.required(doc.title, { path: path(["title"]) }),
+    rules.required(doc.band, { path: path(["band"]) }),
+    rules.minItems(doc.tracks, 1, {
+      severity: "warning",
+      message: "В альбоме пока нет треков",
+      path: path(["tracks"]),
+    }),
+    (doc.tracks?.length ?? 0) > 0 && !doc.band
+      ? {
+          severity: "warning",
+          message: "Есть треки, но не указана группа",
+          path: path(["band"]),
+        }
+      : null,
+  ],
 })
 
 const trackDoc = defineDocument({
   title: "Трек",
-  icon: Music2,
+  icon: Music2Icon,
   preview: { title: "title" },
+  list: { search: ["title"], sort: ["title"] },
   fields: {
-    title: defineString({ title: "Название", icon: Tag, required: true }),
+    title: defineString({ title: "Название", icon: TagIcon }),
     explicit: defineBoolean({
       title: "Ненормативный контент",
-      icon: ShieldAlert,
+      icon: ShieldAlertIcon,
     }),
     albums: defineArray({
       title: "Альбомы",
-      icon: Disc3,
-      of: defineReference({ to: ["album"] }),
+      icon: Disc3Icon,
+      of: defineReference({
+        to: [{ to: "album", previewComponent: AlbumPreview }],
+      }),
     }),
     performers: defineArray({
       title: "Группы и исполнители",
-      icon: Users,
-      of: defineReference({ to: ["band", "artist"] }),
+      icon: UsersIcon,
+      of: defineReference({ to: [{ to: "band" }, { to: "artist" }] }),
     }),
     originalLyrics: defineObject({
       title: "Оригинальная лирика",
-      icon: FileText,
+      icon: FileTextIcon,
       fields: {
         language: defineString({
           title: "Язык оригинала",
-          icon: Languages,
-          required: true,
+          icon: LanguagesIcon,
           input: { type: "select", predefined: languages },
         }),
         text: defineString({
           title: "Текст оригинала",
-          icon: Type,
-          required: true,
+          icon: TypeIcon,
           input: { type: "multiline" },
         }),
         authors: defineArray({
           title: "Авторы текста",
-          icon: PenLine,
+          icon: PenLineIcon,
           of: defineString({}),
         }),
       },
     }),
     lyrics: defineArray({
       title: "Лирика",
-      icon: Languages,
+      icon: LanguagesIcon,
       of: defineObject({
         title: "Перевод",
         fields: {
           language: defineString({
             title: "Язык",
-            icon: Languages,
-            required: true,
+            icon: LanguagesIcon,
             input: { type: "select", predefined: languages },
           }),
           text: defineString({
             title: "Текст",
-            icon: Type,
-            required: true,
+            icon: TypeIcon,
             input: { type: "multiline" },
           }),
-          translator: defineString({ title: "Автор перевода", icon: PenLine }),
+          translator: defineString({
+            title: "Автор перевода",
+            icon: PenLineIcon,
+          }),
         },
       }),
     }),
   },
+  validate: (doc, path) => [
+    rules.required(doc.title, { path: path(["title"]) }),
+    rules.required(doc.originalLyrics?.language, {
+      path: path(["originalLyrics", "language"]),
+    }),
+    rules.required(doc.originalLyrics?.text, {
+      path: path(["originalLyrics", "text"]),
+    }),
+    // Спуск в элемент массива по брендированному индексу: перевод с языком, но без текста.
+    ...(doc.lyrics ?? []).flatMap((translation, i) =>
+      translation.language && !translation.text
+        ? [
+            {
+              severity: "warning" as const,
+              message: "Перевод без текста",
+              path: path(["lyrics", index(i), "text"]),
+            },
+          ]
+        : [],
+    ),
+  ],
 })
 
 /** Сборка документов; ключи задают типы документов проекта. */

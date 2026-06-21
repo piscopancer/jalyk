@@ -5,6 +5,7 @@ import { defineConfig, type InferDocument } from './config.ts'
 import { defineDocument } from './document.ts'
 import { defineArray, defineImage, defineNumber, defineReference, defineRichText, defineString } from './field.ts'
 import type { DocumentRecord, FindManyArgs, Project, QueryResult, Where } from './query.ts'
+import { rules } from './validate.ts'
 
 const config = defineConfig({
   documents: {
@@ -12,23 +13,28 @@ const config = defineConfig({
       title: 'Автор',
       preview: { title: 'name' },
       fields: {
-        name: defineString({ title: 'Имя', required: true }),
+        name: defineString({ title: 'Имя' }),
         bio: defineRichText({}),
       },
+      validate: (doc, path) => [rules.required(doc.name, { path: path(['name']) })],
     }),
     post: defineDocument({
       title: 'Пост',
       fields: {
-        title: defineString({ required: true }),
+        title: defineString({}),
         cover: defineImage({}),
         status: defineString({
-          required: true,
           input: { type: 'select', predefined: [{ value: 'draft' }, { value: 'published' }] },
         }),
         views: defineNumber({ min: 0 }),
-        author: defineReference({ to: ['author'], required: true }),
+        author: defineReference({ to: [{ to: 'author' }] }),
         tags: defineArray({ of: defineString({}) }),
       },
+      validate: (doc, path) => [
+        rules.required(doc.title, { path: path(['title']) }),
+        rules.required(doc.author, { path: path(['author']) }),
+        rules.minItems(doc.tags, 1, { severity: 'warning', message: 'Без тегов пост труднее найти', path: path(['tags']) }),
+      ],
     }),
   },
 })

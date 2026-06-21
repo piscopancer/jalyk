@@ -10,6 +10,7 @@ import {
   listDocuments,
   publishDocument,
   putSchemaSnapshot,
+  resetDraftDocument,
   setDocumentField,
 } from '@jalyk/core'
 import type { Document } from '@jalyk/db'
@@ -99,6 +100,20 @@ export const DocumentsLive = HttpApiBuilder.group(Api, 'documents', (handlers) =
             docId: doc.id,
             type: doc.type,
             publishedAt: (doc.publishedAt ?? new Date()).toISOString(),
+          }),
+        ),
+        Effect.map(toInfo),
+      ),
+    )
+    .handle('resetDraft', ({ path }) =>
+      writeAccess(path.projectId).pipe(
+        Effect.andThen(() => mapDocErrors(resetDraftDocument(path.projectId, path.id))),
+        Effect.tap((doc) =>
+          publishEvent(path.projectId, {
+            kind: 'reset',
+            docId: doc.id,
+            type: doc.type,
+            draft: doc.draft,
           }),
         ),
         Effect.map(toInfo),

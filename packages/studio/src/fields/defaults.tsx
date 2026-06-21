@@ -24,7 +24,14 @@ export function StringField({ path, field }: FieldComponentProps) {
   // тогда показывается placeholder.
   if (field.input?.type === 'select' && field.input.predefined) {
     return (
-      <Select value={local || undefined} onValueChange={(value) => handle.set(value)}>
+      <Select
+        value={local || undefined}
+        onValueChange={(value) => handle.set(value)}
+        items={field.input.predefined.map((option) => ({
+          value: option.value,
+          label: option.title ?? option.value,
+        }))}
+      >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Не выбрано" />
         </SelectTrigger>

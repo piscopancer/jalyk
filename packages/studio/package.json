@@ -28,7 +28,10 @@
     "@jalyk/schema": "workspace:^",
     "@jalyk/ui": "workspace:^",
     "@tanstack/react-query": "^5.101.0",
+    "date-fns": "^4.4.0",
     "effect": "^3.21.3",
+    "jotai": "^2.20.1",
+    "jotai-immer": "^0.4.3",
     "lucide-react": "^1.18.0"
   },
   "peerDependencies": {

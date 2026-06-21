@@ -1,4 +1,5 @@
 import type { DefaultHeaderData, ErasedComponent, FieldIcon, FieldMap, FieldValue, HeaderComponentProps, InferFields } from './field.ts'
+import type { DocumentValidate, ErasedValidate } from './validate.ts'
 
 // Документ — карта полей плюс мета; тип документа задаёт ключ в `documents`.
 // Превью и форма разведены на данные (схема) и компонент (студия).
@@ -18,6 +19,12 @@ export function defaultPreview<const D extends DefaultPreviewData>(data: D): D {
 /** Произвольные данные превью под свой previewComponent. Сохраняет литералы. */
 export function definePreview<const D>(data: D): D {
   return data
+}
+
+/** Настройки списка документов типа: по каким полям искать (подстрока) и какие добавить в сортировку (помимо дат). Ключи — поля документа. */
+export type DocumentListOptions<F extends FieldMap> = {
+  search?: readonly (keyof F & string)[]
+  sort?: readonly (keyof F & string)[]
 }
 
 /** Документ для превью: id, тип и черновик (`Draft` — значения полей, ссылки без дереференса). */
@@ -79,16 +86,29 @@ export type FormComponentProps<F extends FieldMap, Node> = {
 /** Компонент кастомной формы; если задан, студия рисует его вместо дефолтного перебора полей. */
 export type FormComponent<F extends FieldMap, Node> = (props: FormComponentProps<F, Node>) => Node
 
-/** Полные опции документа (с компонентами) для рантайма; компоненты стёрты в ErasedComponent, чтобы не было циклов. */
+/** Полные опции документа (с компонентами) для рантайма; компоненты и валидатор стёрты, чтобы не было циклов. */
 export type DocumentOptions = DocumentMeta & {
   fields: FieldMap
   previewComponent?: ErasedComponent
   formComponent?: ErasedComponent
+  validate?: ErasedValidate
+  // Настройки списка (декларативные имена полей), см. DocumentListOptions.
+  list?: { search?: readonly string[]; sort?: readonly string[] }
 }
 
 /** Описывает документ; `const`-дженерик захватывает только `fields`, а форма/превью типизируются через выведенный F — это снимает цикл «конфиг → форма → тип конфига». */
 export function defineDocument<const F extends FieldMap, P = DefaultPreviewData, PNode = unknown, FNode = unknown>(
-  options: DocumentMeta & { fields: F } & PreviewOptions<InferFields<F>, P, PNode> & { formComponent?: FormComponent<F, FNode> },
-): DocumentMeta & { fields: F } & PreviewOptions<InferFields<F>, P, PNode> & { formComponent?: FormComponent<F, FNode> } {
+  options: DocumentMeta & { fields: F } & PreviewOptions<InferFields<F>, P, PNode> & {
+    formComponent?: FormComponent<F, FNode>
+    /** Правила валидации документа: видят весь черновик (поля опциональны) и строгий билдер path, возвращают замечания rules.*. */
+    validate?: DocumentValidate<InferFields<F>, F>
+    /** Настройки списка документов этого типа (поиск, сортировка), типизированные ключами полей. */
+    list?: DocumentListOptions<F>
+  },
+): DocumentMeta & { fields: F } & PreviewOptions<InferFields<F>, P, PNode> & {
+  formComponent?: FormComponent<F, FNode>
+  validate?: DocumentValidate<InferFields<F>, F>
+  list?: DocumentListOptions<F>
+} {
   return options
 }

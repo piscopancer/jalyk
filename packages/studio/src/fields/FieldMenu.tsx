@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
   toast,
 } from '@jalyk/ui'
-import { ClipboardPaste, Copy, FileJson2, MoreHorizontal, RotateCcw } from 'lucide-react'
+import { ClipboardPasteIcon, CopyIcon, FileJson2Icon, MoreHorizontalIcon, RotateCcwIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useFieldClipboard } from '../data/clipboard.tsx'
 import { useField } from '../data/field.ts'
@@ -35,31 +35,29 @@ export function FieldMenu({ path, field }: FieldComponentProps) {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="size-6 text-muted-foreground" aria-label="Действия с полем">
-            <MoreHorizontal />
-          </Button>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="size-6 text-muted-foreground" aria-label="Действия с полем" />}>
+          <MoreHorizontalIcon />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-52">
-          <DropdownMenuItem onSelect={() => handle.set(field.default)}>
-            <DropdownMenuItemRow icon={<RotateCcw />}>Сбросить до дефолта</DropdownMenuItemRow>
+          <DropdownMenuItem onClick={() => handle.set(field.default)}>
+            <DropdownMenuItemRow icon={<RotateCcwIcon />}>Сбросить до дефолта</DropdownMenuItemRow>
           </DropdownMenuItem>
           <DropdownMenuItem
-            onSelect={() => {
+            onClick={() => {
               clipboard.copy(field.kind, handle.value)
               toast('Скопировано значение')
             }}
           >
-            <DropdownMenuItemRow icon={<Copy />}>Скопировать значение</DropdownMenuItemRow>
+            <DropdownMenuItemRow icon={<CopyIcon />}>Скопировать значение</DropdownMenuItemRow>
           </DropdownMenuItem>
           {canPaste ? (
-            <DropdownMenuItem onSelect={() => handle.set(clipboard.entry!.value)}>
-              <DropdownMenuItemRow icon={<ClipboardPaste />}>Вставить</DropdownMenuItemRow>
+            <DropdownMenuItem onClick={() => handle.set(clipboard.entry!.value)}>
+              <DropdownMenuItemRow icon={<ClipboardPasteIcon />}>Вставить</DropdownMenuItemRow>
             </DropdownMenuItem>
           ) : null}
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => setDetailOpen(true)}>
-            <DropdownMenuItemRow icon={<FileJson2 />}>Детальный просмотр</DropdownMenuItemRow>
+          <DropdownMenuItem onClick={() => setDetailOpen(true)}>
+            <DropdownMenuItemRow icon={<FileJson2Icon />}>Детальный просмотр</DropdownMenuItemRow>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

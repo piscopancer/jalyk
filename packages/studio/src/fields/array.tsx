@@ -1,6 +1,6 @@
 import type { AnyField } from '@jalyk/schema'
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@jalyk/ui'
-import { Plus, Trash2 } from 'lucide-react'
+import { PlusIcon, Trash2Icon } from 'lucide-react'
 import { useField } from '../data/field.ts'
 import { FieldEditor } from './FieldInput.tsx'
 import type { FieldComponentProps } from './registry.tsx'
@@ -86,7 +86,7 @@ export function ArrayField({ path, field }: FieldComponentProps) {
               className="shrink-0 text-muted-foreground"
               onClick={() => removeAt(index)}
             >
-              <Trash2 />
+              <Trash2Icon />
             </Button>
           </div>
         )
@@ -100,18 +100,16 @@ export function ArrayField({ path, field }: FieldComponentProps) {
           disabled={!members[0]}
           onClick={() => members[0] && add(members[0])}
         >
-          <Plus /> Добавить
+          <PlusIcon /> Добавить
         </Button>
       ) : (
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button type="button" variant="outline" size="sm" className="self-start">
-              <Plus /> Добавить
-            </Button>
+          <DropdownMenuTrigger render={<Button type="button" variant="outline" size="sm" className="self-start" />}>
+            <PlusIcon /> Добавить
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             {members.map((member) => (
-              <DropdownMenuItem key={memberName(member)} onSelect={() => add(member)}>
+              <DropdownMenuItem key={memberName(member)} onClick={() => add(member)}>
                 {member.title ?? memberName(member)}
               </DropdownMenuItem>
             ))}

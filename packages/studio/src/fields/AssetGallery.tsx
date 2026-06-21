@@ -88,10 +88,8 @@ export function AssetGallery({ currentAssetId, onSelect }: { currentAssetId?: st
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
-                Отмена
-              </Button>
+            <DialogClose render={<Button type="button" variant="outline" />}>
+              Отмена
             </DialogClose>
             <Button
               type="button"

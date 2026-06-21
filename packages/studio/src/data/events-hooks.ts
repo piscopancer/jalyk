@@ -24,5 +24,11 @@ export function useLiveInvalidation(): void {
       qc.invalidateQueries({ queryKey: studioKeys.documents(projectId, event.type) })
       qc.invalidateQueries({ queryKey: studioKeys.counts(projectId) })
     }
+    // Сброс черновика заменяет весь draft — точечный патч по пути не годится,
+    // перезапрашиваем сам документ и его список (updatedAt сменился).
+    if (event.kind === 'reset') {
+      qc.invalidateQueries({ queryKey: studioKeys.document(projectId, event.docId) })
+      qc.invalidateQueries({ queryKey: studioKeys.documents(projectId, event.type) })
+    }
   })
 }

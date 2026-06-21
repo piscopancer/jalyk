@@ -54,10 +54,8 @@ export function ImageField({ path }: FieldComponentProps) {
           {upload.isPending ? 'Загрузка…' : assetId ? 'Заменить' : 'Загрузить'}
         </Button>
         <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
-          <DialogTrigger asChild>
-            <Button type="button" size="sm" variant="outline">
-              Смотреть все
-            </Button>
+          <DialogTrigger render={<Button type="button" size="sm" variant="outline" />}>
+            Смотреть все
           </DialogTrigger>
           <DialogContent className="max-w-[90vw] sm:max-w-3xl">
             <DialogHeader>

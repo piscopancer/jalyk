@@ -1,4 +1,5 @@
 export { cn } from './lib/cn.ts'
+export { PortalContainerProvider, usePortalContainer } from './lib/portal-container.tsx'
 export { Button, buttonVariants } from './components/button.tsx'
 export { Card, CardHeader, CardTitle, CardAction, CardDescription, CardContent, CardFooter } from './components/card.tsx'
 export { Input } from './components/input.tsx'
@@ -49,7 +50,6 @@ export {
   Popover,
   PopoverTrigger,
   PopoverContent,
-  PopoverAnchor,
   PopoverHeader,
   PopoverTitle,
   PopoverDescription,
@@ -65,6 +65,16 @@ export {
   CommandShortcut,
   CommandSeparator,
 } from './components/command.tsx'
+export {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from './components/sheet.tsx'
 export { Checkbox } from './components/checkbox.tsx'
 export { CodeBlock } from './components/code-block.tsx'
 export { Textarea } from './components/textarea.tsx'

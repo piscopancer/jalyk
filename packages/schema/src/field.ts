@@ -4,16 +4,11 @@
 // литералов через `const`-дженерик) плюс служебные поля: `kind` для рантайма и
 // фантомное `__value`, несущее тип значения поля для последующего вывода.
 
+import type { Brand } from 'effect'
+import type { DefaultPreviewData } from './document.ts'
+
 /** Утилита: «расплющивает» пересечения типов в один читаемый объект. */
 export type Prettify<T> = { [K in keyof T]: T[K] } & {}
-
-/**
- * Клиентская функция-проверка значения. Возвращает строку с текстом ошибки,
- * если значение невалидно, либо ничего (undefined/null/false/void), если всё в
- * порядке. Внутрь можно положить что угодно, в том числе разбор схемой Effect:
- * `(v) => Either.isLeft(Schema.decodeUnknownEither(S)(v)) ? 'Неверно' : undefined`.
- */
-export type Check<T> = (value: T) => string | undefined | null | false | void
 
 /**
  * Иконка поля/документа. Схема не зависит от React, поэтому тип намеренно
@@ -27,8 +22,6 @@ export type FieldMeta = {
   title?: string
   description?: string
   icon?: FieldIcon
-  /** Обязательность — клиентская проверка перед отправкой изменения на сервер. */
-  required?: boolean
   /**
    * Имя члена разнотипного массива — пишется в служебное `_type` элемента, чтобы
    * студия знала, каким редактором его рисовать. Для однородных полей не нужно;
@@ -115,11 +108,10 @@ export type AnyField = FieldMeta & {
   // Тип элемента массива: одно описание (однородный массив) либо список описаний-
   // членов (разнотипный массив).
   of?: AnyField | readonly AnyField[]
-  to?: readonly string[]
+  to?: readonly ReferenceTarget[]
   min?: number
   max?: number
   input?: { type?: string; predefined?: readonly { value: string; title?: string; icon?: FieldIcon }[] }
-  check?: Check<any> | Check<any>[]
   // Заголовок поля: данные и (опционально) свой компонент рендера, см. HeaderOptions.
   header?: unknown
   headerComponent?: ErasedComponent
@@ -132,17 +124,35 @@ export type FieldMap = Record<string, AnyField>
 /** Достаёт тип значения из фантомного `__value`. */
 export type FieldValue<F> = F extends { __value?: infer V } ? V : never
 
-/** Ключи обязательных полей карты. */
-type RequiredFieldKeys<F extends FieldMap> = { [K in keyof F]: F[K] extends { required: true } ? K : never }[keyof F]
-type OptionalFieldKeys<F extends FieldMap> = Exclude<keyof F, RequiredFieldKeys<F>>
+/** Тип значения по карте полей: все поля опциональны (черновик частичный, обязательность — правило документа validate). */
+export type InferFields<F extends FieldMap> = Prettify<{ [K in keyof F]?: FieldValue<F[K]> }>
 
-/**
- * Тип значения по карте полей: обязательные поля присутствуют всегда,
- * необязательные становятся опциональными свойствами.
- */
-export type InferFields<F extends FieldMap> = Prettify<
-  { [K in RequiredFieldKeys<F>]: FieldValue<F[K]> } & { [K in OptionalFieldKeys<F>]?: FieldValue<F[K]> }
->
+// --- Строгий путь к полю (для validate) --------------------------------------
+// Путь — кортеж сегментов: имена полей строгие (union ключей карты), позиция
+// элемента массива — брендированный ArrayIndex (Effect Brand). Билдер path(...)
+// возвращает брендированный FieldPath, поэтому сырой массив строк не пройдёт.
+
+/** Индекс элемента массива в пути; обычный number, помеченный брендом для подсказки и защиты. */
+export type ArrayIndex = number & Brand.Brand<'ArrayIndex'>
+
+/** Путь к полю: кортеж сегментов; принимается только из билдера path(...) (бренд не подделать сырым массивом). */
+export type FieldPath = readonly string[] & Brand.Brand<'FieldPath'>
+
+// Спуск внутрь поля: закончить здесь ([]) либо глубже — объект в свои поля, массив через ArrayIndex в элемент.
+type IntoField<Fld> =
+  | []
+  | (Fld extends { kind: 'object'; fields: infer Sub extends FieldMap } ? FieldPathTuples<Sub> : never)
+  | (Fld extends { kind: 'array'; of: infer Of }
+      ? Of extends readonly AnyField[]
+        ? [ArrayIndex, ...IntoField<Of[number]>]
+        : [ArrayIndex, ...IntoField<Of>]
+      : never)
+
+/** Все валидные кортежи путей по карте полей: имена полей строгие, элемент массива — ArrayIndex. */
+export type FieldPathTuples<Fm extends FieldMap> = { [K in keyof Fm & string]: [K, ...IntoField<Fm[K]>] }[keyof Fm & string]
+
+/** Билдер строгого пути, привязанный к карте полей документа: проверяет кортеж и возвращает FieldPath. */
+export type PathBuilder<F extends FieldMap> = <const P extends FieldPathTuples<F>>(segments: P) => FieldPath
 
 // --- Фабрики полей -----------------------------------------------------------
 
@@ -155,7 +165,6 @@ type StringOptions = FieldMeta & {
     | { type?: 'normal' }
     | { type: 'multiline' }
     | { type: 'select'; predefined: Predefined }
-  check?: Check<string> | Check<string>[]
 }
 
 /**
@@ -176,7 +185,6 @@ type NumberOptions = FieldMeta & {
   min?: number
   max?: number
   default?: number
-  check?: Check<number> | Check<number>[]
 }
 
 /** Числовое поле с границами `min`/`max` и пользовательскими проверками. */
@@ -185,17 +193,17 @@ export function defineNumber<const O extends NumberOptions, H = DefaultHeaderDat
 }
 
 /** Булево поле. */
-export function defineBoolean<const O extends FieldMeta & { default?: boolean; check?: Check<boolean> | Check<boolean>[] }, H = DefaultHeaderData>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+export function defineBoolean<const O extends FieldMeta & { default?: boolean }, H = DefaultHeaderData>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
   return { kind: 'boolean', ...options } as { kind: 'boolean' } & O & HeaderOptions<H> & { __value?: boolean }
 }
 
 /** Rich-text поле (редактор Tiptap). */
-export function defineRichText<const O extends FieldMeta & { default?: RichTextValue; check?: Check<RichTextValue> | Check<RichTextValue>[] }, H = DefaultHeaderData>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+export function defineRichText<const O extends FieldMeta & { default?: RichTextValue }, H = DefaultHeaderData>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
   return { kind: 'richText', ...options } as { kind: 'richText' } & O & HeaderOptions<H> & { __value?: RichTextValue }
 }
 
 /** Поле-картинка — выбор/загрузка ассета. */
-export function defineImage<const O extends FieldMeta & { default?: ImageValue; check?: Check<ImageValue> | Check<ImageValue>[] }, H = DefaultHeaderData>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+export function defineImage<const O extends FieldMeta & { default?: ImageValue }, H = DefaultHeaderData>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
   return { kind: 'image', ...options } as { kind: 'image' } & O & HeaderOptions<H> & { __value?: ImageValue }
 }
 
@@ -205,22 +213,33 @@ export interface DocumentRegistry {}
 /** Ключи зарегистрированных типов документов; пустой реестр → любая строка. */
 export type DocumentTypeKey = [keyof DocumentRegistry] extends [never] ? string : keyof DocumentRegistry & string
 
+/**
+ * Цель ссылки: тип документа `to` (ключ реестра) и переопределение его превью —
+ * декларативные данные `preview` и свой `previewComponent`, как у документа.
+ * Превью типизировано широко (previewComponent — ErasedComponent): реестр не
+ * отдаёт тип черновика по ключу, поэтому точный draft здесь недоступен.
+ */
+export type ReferenceTarget = {
+  to: DocumentTypeKey
+  preview?: DefaultPreviewData
+  previewComponent?: ErasedComponent
+}
+
 type ReferenceOptions = FieldMeta & {
-  /** Ключи (типы) документов, на которые можно ссылаться. */
-  to: readonly string[]
+  /** Типы документов, на которые можно ссылаться, с переопределением превью каждого. */
+  to: readonly ReferenceTarget[]
   size?: 'default' | 'compact'
   default?: ReferenceValue
 }
 
-/** Поле-ссылка на документ; `to` ограничено реестром DocumentRegistry (автодополнение и проверка в месте вызова), дереференс — на уровне find-запроса. */
-export function defineReference<const O extends Omit<ReferenceOptions, 'to'> & { to: readonly DocumentTypeKey[] }, H = DefaultHeaderData>(options: O & HeaderOptions<H>) {
-  return { kind: 'reference', ...options } as { kind: 'reference' } & O & HeaderOptions<H> & { __value?: ReferenceValue<O['to'][number]> }
+/** Поле-ссылка на документ; `to[].to` ограничено реестром DocumentRegistry (автодополнение и проверка в месте вызова), дереференс — на уровне find-запроса. */
+export function defineReference<const O extends Omit<ReferenceOptions, 'to'> & { to: readonly ReferenceTarget[] }, H = DefaultHeaderData>(options: O & HeaderOptions<H>) {
+  return { kind: 'reference', ...options } as { kind: 'reference' } & O & HeaderOptions<H> & { __value?: ReferenceValue<O['to'][number]['to']> }
 }
 
 type ObjectOptions = FieldMeta & {
   fields: FieldMap
   default?: Record<string, unknown>
-  check?: Check<any> | Check<any>[]
 }
 
 /** Вложенный объект со своей картой полей. */
@@ -245,7 +264,6 @@ type ArrayOptions = FieldMeta & {
    */
   of: AnyField | readonly AnyField[]
   default?: unknown[]
-  check?: Check<any> | Check<any>[]
 }
 
 /** Массив элементов — однородный (of — одно поле) или разнотипный (of — список полей). */

@@ -75,6 +75,19 @@ export function usePublishDocument(id: string) {
   })
 }
 
+/** Сбросить черновик до последней опубликованной версии (published → draft). */
+export function useResetDraft(id: string) {
+  const { projectId, client, run } = useStudio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => run(client.documents.resetDraft({ path: { projectId, id } })),
+    onSuccess: (doc) => {
+      qc.invalidateQueries({ queryKey: studioKeys.document(projectId, id) })
+      qc.invalidateQueries({ queryKey: studioKeys.documents(projectId, doc.type) })
+    },
+  })
+}
+
 /** Удалить документ. */
 export function useDeleteDocument(id: string) {
   const { projectId, client, run } = useStudio()

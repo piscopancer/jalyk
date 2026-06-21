@@ -12,14 +12,14 @@ export type FieldsOf<C extends AnyConfig, T extends DocumentType<C>> = C['docume
 
 // Целевые типы ссылки поля F: для одиночной ссылки — её `to`, для массива ссылок —
 // `to` элемента; иначе never (поле не ссылка).
-type RefTargets<F> = F extends { kind: 'reference'; to: infer To extends readonly string[] } ? To[number] : never
-type ArrayRefTargets<F> = F extends { kind: 'array'; of: infer Of extends { kind: 'reference'; to: readonly string[] } }
-  ? Of['to'][number]
+type RefTargets<F> = F extends { kind: 'reference'; to: infer To extends readonly { to: string }[] } ? To[number]['to'] : never
+type ArrayRefTargets<F> = F extends { kind: 'array'; of: infer Of extends { kind: 'reference'; to: readonly { to: string }[] } }
+  ? Of['to'][number]['to']
   : never
 
 // --- where -------------------------------------------------------------------
 
-type StringFilter = string | { equals?: string; in?: readonly string[]; contains?: string; not?: string }
+type StringFilter = string | { equals?: string; in?: readonly string[]; contains?: string; startsWith?: string; not?: string }
 type NumberFilter = number | { equals?: number; in?: readonly number[]; lt?: number; lte?: number; gt?: number; gte?: number; not?: number }
 type BooleanFilter = boolean | { equals?: boolean; not?: boolean }
 
@@ -33,10 +33,13 @@ type FieldWhere<C extends AnyConfig, F> = RefTargets<F> extends never
     : never
   : string | { equals?: string; in?: readonly string[] }
 
-/** Фильтр документов типа T: по его полям-скалярам, ссылкам (по id) и собственному id. */
+/** Фильтр документов типа T: по его полям-скалярам, ссылкам (по id), собственному id и логическим узлам AND/OR/NOT (древо). */
 export type Where<C extends AnyConfig, T extends DocumentType<C>> = Prettify<
   { [K in keyof FieldsOf<C, T> as FieldWhere<C, FieldsOf<C, T>[K]> extends never ? never : K]?: FieldWhere<C, FieldsOf<C, T>[K]> } & {
     id?: StringFilter
+    AND?: readonly Where<C, T>[]
+    OR?: readonly Where<C, T>[]
+    NOT?: Where<C, T>
   }
 >
 
@@ -123,6 +126,7 @@ function matchesFilter(value: unknown, filter: unknown): boolean {
   if ('not' in f && f.not !== undefined && value === f.not) return false
   if ('in' in f && Array.isArray(f.in) && !f.in.includes(value)) return false
   if ('contains' in f && typeof f.contains === 'string' && !(typeof value === 'string' && value.includes(f.contains))) return false
+  if ('startsWith' in f && typeof f.startsWith === 'string' && !(typeof value === 'string' && value.startsWith(f.startsWith))) return false
   if ('lt' in f && typeof f.lt === 'number' && !(typeof value === 'number' && value < f.lt)) return false
   if ('lte' in f && typeof f.lte === 'number' && !(typeof value === 'number' && value <= f.lte)) return false
   if ('gt' in f && typeof f.gt === 'number' && !(typeof value === 'number' && value > f.gt)) return false
@@ -132,12 +136,26 @@ function matchesFilter(value: unknown, filter: unknown): boolean {
 
 /**
  * Проверяет документ (id + значения полей в draft) против where. Ссылочные поля
- * фильтруются по их `_ref`. Возвращает true, если документ проходит все условия.
+ * фильтруются по их `_ref`. Узлы AND/OR/NOT задают логическое древо (рекурсия),
+ * остальные ключи — условия по полям. Возвращает true, если документ проходит.
  */
 export function matchesWhere(record: { id: string; draft: unknown }, where: Record<string, unknown>): boolean {
   const draft = record.draft !== null && typeof record.draft === 'object' ? (record.draft as Record<string, unknown>) : {}
   for (const [key, filter] of Object.entries(where)) {
     if (filter === undefined) continue
+    // Логические узлы древа: AND/OR — массивы подусловий, NOT — одно подусловие.
+    if (key === 'AND') {
+      if (Array.isArray(filter) && !filter.every((sub) => matchesWhere(record, sub as Record<string, unknown>))) return false
+      continue
+    }
+    if (key === 'OR') {
+      if (Array.isArray(filter) && filter.length > 0 && !filter.some((sub) => matchesWhere(record, sub as Record<string, unknown>))) return false
+      continue
+    }
+    if (key === 'NOT') {
+      if (filter !== null && typeof filter === 'object' && matchesWhere(record, filter as Record<string, unknown>)) return false
+      continue
+    }
     const raw = key === 'id' ? record.id : draft[key]
     // Ссылочное поле: фильтруем по _ref, если значение — объект-ссылка.
     const value = raw !== null && typeof raw === 'object' && '_ref' in raw ? (raw as { _ref: unknown })._ref : raw

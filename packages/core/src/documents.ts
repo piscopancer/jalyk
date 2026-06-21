@@ -53,6 +53,14 @@ export const countDocumentsByType = (projectId: string) =>
  * заменяет весь draft. Возвращает применённую path-дельту и тип документа (через
  * RETURNING — для SSE-событий, чтобы не делать лишний запрос). NotFoundError,
  * если документ не принадлежит проекту.
+ *
+ * jsonb_set с create_missing=true создаёт только последний недостающий ключ и
+ * лишь когда весь путь до него уже существует; при отсутствующем промежуточном
+ * родителе он молча возвращает исходный JSON (no-op). Поэтому для вложенных полей
+ * (например originalLyrics.language) каждого недостающего родителя достраиваем
+ * заранее: оборачиваем выражение во вложенные jsonb_set по префиксам пути,
+ * подставляя пустой контейнер — '[]' если следующий ключ числовой (индекс
+ * массива), иначе '{}'. coalesce оставляет уже существующего родителя нетронутым.
  */
 export const setDocumentField = (
   projectId: string,
@@ -62,20 +70,28 @@ export const setDocumentField = (
 ) =>
   Effect.gen(function* () {
     const valueJson = JSON.stringify(value ?? null)
-    const rows = yield* query((db) =>
-      path.length === 0
-        ? db.$queryRaw<{ type: string }[]>`
+    const rows = yield* query((db) => {
+      if (path.length === 0) {
+        return db.$queryRaw<{ type: string }[]>`
             UPDATE "document"
             SET "draft" = ${valueJson}::jsonb, "updatedAt" = now()
             WHERE "id" = ${id} AND "projectId" = ${projectId}
             RETURNING "type"`
-        : db.$queryRaw<{ type: string }[]>`
+      }
+      // Достраиваем недостающих родителей по каждому префиксу пути.
+      let target = Prisma.sql`"draft"`
+      for (let i = 1; i < path.length; i++) {
+        const prefix = path.slice(0, i)
+        const container = /^\d+$/.test(path[i]!) ? "[]" : "{}"
+        target = Prisma.sql`jsonb_set(${target}, ${prefix}::text[], coalesce("draft" #> ${prefix}::text[], ${container}::jsonb), true)`
+      }
+      return db.$queryRaw<{ type: string }[]>(Prisma.sql`
             UPDATE "document"
-            SET "draft" = jsonb_set("draft", ${path}::text[], ${valueJson}::jsonb, true),
+            SET "draft" = jsonb_set(${target}, ${path}::text[], ${valueJson}::jsonb, true),
                 "updatedAt" = now()
             WHERE "id" = ${id} AND "projectId" = ${projectId}
-            RETURNING "type"`,
-    )
+            RETURNING "type"`)
+    })
     if (rows.length === 0) {
       return yield* Effect.fail(new NotFoundError({ what: "document" }))
     }
@@ -96,6 +112,23 @@ export const publishDocument = (projectId: string, id: string) =>
           published: doc.draft as Prisma.InputJsonValue,
           publishedAt: new Date(),
         },
+      }),
+    )
+  })
+
+/** Сбросить черновик до опубликованной версии: published → draft. Если документ
+ * ещё не публиковали (published пуст), черновик становится пустым объектом.
+ * NotFoundError, если документ не принадлежит проекту. */
+export const resetDraftDocument = (projectId: string, id: string) =>
+  Effect.gen(function* () {
+    const doc = yield* getDocument(projectId, id)
+    if (!doc) {
+      return yield* Effect.fail(new NotFoundError({ what: "document" }))
+    }
+    return yield* query((db) =>
+      db.document.update({
+        where: { id },
+        data: { draft: (doc.published ?? {}) as Prisma.InputJsonValue },
       }),
     )
   })

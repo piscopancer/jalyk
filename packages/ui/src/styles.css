@@ -11,6 +11,24 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Тонкий скроллбар: тонкая полоса под Firefox (scrollbar-width) и компактный
+   webkit-скроллбар с приглушённым бегунком, фон дорожки прозрачный. */
+@utility thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
 /* Шрифт по умолчанию. Обычный @theme (не inline), чтобы переменная --font-sans
    выпускалась на :root и работала и в утилите font-sans, и в правиле body ниже. */
 @theme {
@@ -19,6 +37,9 @@
 }
 
 :root {
+  /* Нативные скроллбары/контролы следуют за color-scheme; в тёмной теме без него
+     они оставались светлыми (см. CodeBlock в диалоге ошибки). */
+  color-scheme: light;
   --radius: 0.45rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -55,6 +76,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

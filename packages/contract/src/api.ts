@@ -139,6 +139,13 @@ export const DocumentsGroup = HttpApiGroup.make('documents')
       .addError(Forbidden),
   )
   .add(
+    HttpApiEndpoint.post('resetDraft', '/projects/:projectId/documents/:id/reset')
+      .setPath(DocumentIdPath)
+      .addSuccess(DocumentInfo)
+      .addError(NotFound)
+      .addError(Forbidden),
+  )
+  .add(
     HttpApiEndpoint.del('delete', '/projects/:projectId/documents/:id')
       .setPath(DocumentIdPath)
       .addError(NotFound)

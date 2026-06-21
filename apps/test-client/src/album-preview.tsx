@@ -1,6 +1,6 @@
 import type { DefaultPreviewData, ReferenceValue } from "@jalyk/schema"
 import type { PreviewProps } from "@jalyk/studio"
-import { Disc3 } from "lucide-react"
+import { Disc3Icon } from "lucide-react"
 import { studio } from "./studio-config.ts"
 
 /** Черновик альбома в части, нужной превью; тип ссылки из схемы, пустые ссылки приходят как null. */
@@ -25,7 +25,7 @@ export function AlbumPreview({
 
   return (
     <div className='flex items-start gap-2.5'>
-      <Disc3 className='size-4 shrink-0 text-muted-foreground' />
+      <Disc3Icon className='size-4 shrink-0 text-muted-foreground' />
       <div className='flex min-w-0 flex-col gap-1'>
         <span className='truncate font-medium'>{title}</span>
         {refs.length > 0 ? (

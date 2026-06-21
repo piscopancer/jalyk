@@ -27,10 +27,8 @@ export function ProjectNotFound({ reason, projectId }: { reason: AccessDenial; p
           <p className="text-xs text-muted-foreground">
             Идентификатор проекта: <code>{projectId}</code>
           </p>
-          <Button asChild className="self-start">
-            <a href={JALYK_PROJECTS_URL} target="_blank" rel="noreferrer">
-              Открыть мои проекты
-            </a>
+          <Button className="self-start" render={<a href={JALYK_PROJECTS_URL} target="_blank" rel="noreferrer" />}>
+            Открыть мои проекты
           </Button>
         </CardContent>
       </Card>

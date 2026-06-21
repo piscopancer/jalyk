@@ -1,13 +1,53 @@
 // Публичный вход @jalyk/studio.
-export { Studio, type StudioProps } from './Studio.tsx'
+export { Studio, type StudioProps, type StudioLayout } from './Studio.tsx'
 // Дефолтные view и блоки — для композиции/частичного переопределения.
 export { MillerView } from './views/MillerView.tsx'
+export { LayerView } from './views/LayerView.tsx'
 export { ProjectGate } from './views/ProjectGate.tsx'
 export { ProjectNotFound, type AccessDenial } from './views/ProjectNotFound.tsx'
 export { JALYK_SITE_URL, JALYK_PROJECTS_URL } from './data/site.ts'
 export { TypesColumn, DocumentsColumn } from './views/columns.tsx'
+export { DocumentList, DocumentRow, type DocumentListProps } from './views/DocumentList.tsx'
+export { FilterBuilder } from './views/FilterBuilder.tsx'
+export { SortMenu } from './views/SortMenu.tsx'
+export {
+  useListState,
+  useFilterCount,
+  emptyFilter,
+  newGroup,
+  newCond,
+  nodeId,
+  type ListState,
+  type FilterNode,
+  type FilterGroup,
+  type FilterCond,
+  type FilterRel,
+  type RelQuantifier,
+  type FilterOp,
+  type SortState,
+  type SortDir,
+} from './data/list-state.ts'
+export {
+  compileFilterPredicate,
+  gatherFilterTypes,
+  relationTargets,
+  matchesSearch,
+  compareDocs,
+  DATE_SORT_FIELDS,
+  type EvalContext,
+  type FilterPredicate,
+} from './data/list-query.ts'
 export { DefaultPreview } from './views/DefaultPreview.tsx'
 export { DocumentEditor } from './views/DocumentEditor.tsx'
+export { DocumentJsonView } from './views/DocumentJsonView.tsx'
+export { IssueBadge } from './views/IssueBadge.tsx'
+export {
+  DocumentValidationProvider,
+  useDocumentValidation,
+  useFieldIssues,
+  validateDraft,
+  type DocumentValidation,
+} from './data/validation.tsx'
 export { CustomForm, type FormProps, type FormFieldProps, type FormFieldComponent } from './views/form.tsx'
 export { FieldInput } from './fields/FieldInput.tsx'
 export { FieldMenu } from './fields/FieldMenu.tsx'
@@ -52,6 +92,7 @@ export {
   useCreateDocument,
   useSetField,
   usePublishDocument,
+  useResetDraft,
   useDeleteDocument,
   useSchemaSnapshot,
   usePutSchemaSnapshot,
