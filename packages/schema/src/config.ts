@@ -1,5 +1,5 @@
 import type { DocumentOptions } from './document.ts'
-import type { DocumentRegistry, InferFields, Prettify } from './field.ts'
+import type { InferFields, Prettify, SchemaRegistry } from './field.ts'
 import type { ProjectConfig, ToolbarItems } from './project.ts'
 
 export type AnyConfig = {
@@ -10,22 +10,22 @@ export type AnyConfig = {
   toolbar?: ToolbarItems
 }
 
-type RegisteredType = keyof DocumentRegistry & string
+type RegisteredType = keyof SchemaRegistry & string
 
-/** Типы, по которым реестр DocumentRegistry разошёлся с documents; пусто = синхронны. */
+/** Типы, по которым реестр SchemaRegistry разошёлся с documents; пусто = синхронны (обычно так, ведь регистрируют тот же `typeof documents`). */
 type RegistryDrift<D> = [RegisteredType] extends [never]
   ? never
   :
       | Exclude<RegisteredType, keyof D & string>
       | Exclude<keyof D & string, RegisteredType>
 
-/** Собирает конфиг, сохраняя литералы; второй параметр требуется лишь при рассинхроне DocumentRegistry с documents. */
+/** Собирает конфиг, сохраняя литералы; второй параметр требуется лишь при рассинхроне SchemaRegistry с documents. */
 export function defineConfig<const D extends Record<string, DocumentOptions>>(
   config: { documents: D; project?: ProjectConfig; toolbar?: ToolbarItems },
   ..._drift: [RegistryDrift<D>] extends [never]
     ? []
     : [
-        error: `DocumentRegistry рассинхронизирован с documents: ${RegistryDrift<D>}`,
+        error: `SchemaRegistry рассинхронизирован с documents: ${RegistryDrift<D>}`,
       ]
 ): { documents: D; project?: ProjectConfig; toolbar?: ToolbarItems } {
   return config

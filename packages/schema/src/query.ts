@@ -1,5 +1,11 @@
 import type { AnyConfig, DocumentType } from './config.ts'
-import type { FieldMap, FieldValue, InferFields, Prettify } from './field.ts'
+import type {
+  FieldMap,
+  FieldValue,
+  InferFields,
+  Prettify,
+  SchemaRegistry,
+} from './field.ts'
 
 // Типизированный язык запросов к документам в духе Prisma. Это чисто типовой слой
 // (без React и без IO): из конфига выводятся фильтры where, проекции select и
@@ -229,6 +235,90 @@ export type QueryResult<
   T extends DocumentType<C>,
   A,
 > = A extends { select: infer S } ? Project<C, T, S> : DocumentRecord<C, T>
+
+// --- императивный async-клиент чтения ----------------------------------------
+// Те же запросы, что и хук-клиент студии, но как обычные async-функции (промисы),
+// чтобы их можно было звать вне рендера — например в колбэке шаблона по клику.
+
+/** Контракт чтения одного типа в async-форме (зеркало хук-версии без React). */
+export type AsyncDocumentApi<C extends AnyConfig, T extends DocumentType<C>> = {
+  findMany: <const A extends FindManyArgs<C, T>>(
+    args?: A,
+  ) => Promise<QueryResult<C, T, A>[]>
+  findUnique: <const A extends FindUniqueArgs<C, T>>(
+    args: A,
+  ) => Promise<QueryResult<C, T, A> | null>
+  count: (args?: { where?: Where<C, T> }) => Promise<number>
+}
+
+/** Императивный клиент по конфигу: client.<type>.{findMany,findUnique,count}. Используется и студией (createAsyncClient), и типизацией ctx.client шаблонов. */
+export type AsyncClientOf<C extends AnyConfig> = {
+  [T in DocumentType<C>]: AsyncDocumentApi<C, T>
+}
+
+// --- шаблоны полей -----------------------------------------------------------
+
+/**
+ * Синтетический конфиг из единого реестра схемы (`SchemaRegistry['documents']`, ключ →
+ * определение документа с его `fields`) — скармливается query-типам и AsyncDocumentApi.
+ * Намеренно НЕ `typeof config` и НЕ прямая ссылка `{ documents: RegisteredDocuments }`:
+ * любая из них форсирует вычисление всего объекта документов разом, включая тот, чей
+ * шаблон читает других, → цикл «documents → шаблон → TemplateClient → documents». Здесь
+ * же мапленный тип: индексация `['<тип>']` резолвит лишь одну запись лениво, поэтому
+ * шаблон одного документа читает любой другой; неустранимо лишь чтение СВОЕГО типа.
+ */
+type TemplateRegConfig = {
+  documents: {
+    [K in keyof SchemaRegistry]: {
+      fields: SchemaRegistry[K] extends { fields: infer F } ? F : never
+    }
+  }
+}
+
+/**
+ * Тип ctx.client: строго типизированный async-клиент по зарегистрированным документам.
+ * Ключуется прямо по ключам реестра, а конфиг пересекается с AnyConfig — иначе
+ * `DocumentType` от мапленного по augmented-интерфейсу типа схлопывается в `string`,
+ * и проекции становятся `never`.
+ */
+export type TemplateClient = {
+  [K in keyof SchemaRegistry & string]: AsyncDocumentApi<
+    TemplateRegConfig & AnyConfig,
+    K
+  >
+}
+
+/**
+ * Контекст, передаваемый колбэку шаблона в момент клика. `documentId` — id уже
+ * сохранённого документа. `client` — async-клиент для чтения других документов.
+ */
+export type TemplateContext = {
+  documentId: string
+  client: TemplateClient
+}
+
+/**
+ * Шаблон значения поля — заготовка, подставляемая одним кликом. `value` либо
+ * статическое значение типа поля, либо колбэк, считаемый на клиенте в момент клика;
+ * колбэк получает TemplateContext и может вернуть значение синхронно или промисом.
+ * `label` — подпись пункта подменю «Шаблоны» (из функции имя не вытащить).
+ */
+export type FieldTemplate<V> = {
+  label: string
+  value: V | ((ctx: TemplateContext) => V | Promise<V>)
+}
+
+/**
+ * Фабрика шаблона значения поля по образцу defineReference — обычная функция без
+ * хуков. Тип `V` НЕ выводится из тела колбэка (`NoInfer`), а приходит сверху — из
+ * ожидаемого типа, которым опция `templates` поля уже сузила элемент до значения
+ * поля. Это принципиально: при выводе `V` снизу TS пришлось бы вычислять тип
+ * `return` колбэка, тот читает `ctx.client`, что замкнулось бы на конфиг — цикл. С
+ * `NoInfer` тип поля известен сразу, а тело проверяется отдельным проходом после.
+ */
+export function defineTemplate<V>(template: FieldTemplate<V>): FieldTemplate<V> {
+  return template
+}
 
 // --- where: рантайм-предикат (чистый, без IO) --------------------------------
 

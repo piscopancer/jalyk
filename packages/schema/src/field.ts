@@ -6,6 +6,9 @@
 
 import type { Brand } from 'effect'
 import type { DefaultPreviewData } from './document.ts'
+// Тип шаблона живёт в query.ts (рядом с async-клиентом, который типизирует ctx);
+// импорт только типовой, поэтому встречный цикл query.ts → field.ts безопасен.
+import type { FieldTemplate } from './query.ts'
 
 /** Утилита: «расплющивает» пересечения типов в один читаемый объект. */
 export type Prettify<T> = { [K in keyof T]: T[K] } & {}
@@ -144,6 +147,8 @@ export type AnyField = FieldMeta & {
   __value?: unknown
   /** Значение поля по умолчанию — то, к чему его сбрасывает студия. */
   default?: unknown
+  /** Шаблоны значения поля — заготовки для подстановки одним кликом, см. FieldTemplate. */
+  templates?: readonly FieldTemplate<unknown>[]
   // Возможные специфичные свойства разных видов полей — нужны для рантайм-обхода
   // (валидация, снапшот), при описании заполняются только релевантные.
   fields?: FieldMap
@@ -229,21 +234,34 @@ type StringOptions = FieldMeta & {
 }
 
 /**
+ * Тип значения строкового поля по его опциям: для `input: { type: 'select',
+ * predefined }` — объединение предопределённых значений, иначе `string`. Вынесен
+ * отдельно, чтобы переиспользоваться в `__value` и в ограничении шаблонов без
+ * цикла (читает только `input`, не сам `templates`).
+ */
+type StringValue<O> = O extends {
+  input: { type: 'select'; predefined: infer P }
+}
+  ? P extends readonly { value: infer V }[]
+    ? V & string
+    : string
+  : string
+
+/**
  * Строковое поле. Для `input: { type: 'select', predefined }` тип значения
  * сужается до объединения предопределённых значений, иначе это `string`.
  */
 export function defineString<
   const O extends StringOptions,
   H = DefaultHeaderData,
->(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
-  return { kind: 'string', ...options } as { kind: 'string' } & O &
+>(
+  options: O &
     HeaderOptions<H> & {
-      __value?: O extends { input: { type: 'select'; predefined: infer P } }
-        ? P extends readonly { value: infer V }[]
-          ? V & string
-          : string
-        : string
-    }
+      templates?: readonly FieldTemplate<StringValue<O>>[]
+    } = {} as O & HeaderOptions<H>,
+) {
+  return { kind: 'string', ...options } as { kind: 'string' } & O &
+    HeaderOptions<H> & { __value?: StringValue<O> }
 }
 
 type NumberOptions = FieldMeta & {
@@ -256,7 +274,11 @@ type NumberOptions = FieldMeta & {
 export function defineNumber<
   const O extends NumberOptions,
   H = DefaultHeaderData,
->(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+>(
+  options: O &
+    HeaderOptions<H> & { templates?: readonly FieldTemplate<number>[] } = {} as O &
+    HeaderOptions<H>,
+) {
   return { kind: 'number', ...options } as { kind: 'number' } & O &
     HeaderOptions<H> & { __value?: number }
 }
@@ -265,7 +287,11 @@ export function defineNumber<
 export function defineBoolean<
   const O extends FieldMeta & { default?: boolean },
   H = DefaultHeaderData,
->(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+>(
+  options: O &
+    HeaderOptions<H> & { templates?: readonly FieldTemplate<boolean>[] } = {} as O &
+    HeaderOptions<H>,
+) {
   return { kind: 'boolean', ...options } as { kind: 'boolean' } & O &
     HeaderOptions<H> & { __value?: boolean }
 }
@@ -274,7 +300,12 @@ export function defineBoolean<
 export function defineRichText<
   const O extends FieldMeta & { default?: RichTextValue },
   H = DefaultHeaderData,
->(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+>(
+  options: O &
+    HeaderOptions<H> & {
+      templates?: readonly FieldTemplate<RichTextValue>[]
+    } = {} as O & HeaderOptions<H>,
+) {
   return { kind: 'richText', ...options } as { kind: 'richText' } & O &
     HeaderOptions<H> & { __value?: RichTextValue }
 }
@@ -283,7 +314,11 @@ export function defineRichText<
 export function defineImage<
   const O extends FieldMeta & { default?: ImageValue },
   H = DefaultHeaderData,
->(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+>(
+  options: O &
+    HeaderOptions<H> & { templates?: readonly FieldTemplate<ImageValue>[] } = {} as O &
+    HeaderOptions<H>,
+) {
   return { kind: 'image', ...options } as { kind: 'image' } & O &
     HeaderOptions<H> & { __value?: ImageValue }
 }
@@ -292,18 +327,30 @@ export function defineImage<
 export function defineAsset<
   const O extends FieldMeta & { accept?: AssetFilter; default?: AssetValue },
   H = DefaultHeaderData,
->(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+>(
+  options: O &
+    HeaderOptions<H> & { templates?: readonly FieldTemplate<AssetValue>[] } = {} as O &
+    HeaderOptions<H>,
+) {
   return { kind: 'asset', ...options } as { kind: 'asset' } & O &
     HeaderOptions<H> & { __value?: AssetValue }
 }
 
-/** Реестр типов документов; клиент расширяет через `declare module` (приём Register из TanStack). Авто-вывод из documents даёт цикл — список ручной. */
-export interface DocumentRegistry {}
+/**
+ * Единая точка регистрации схемы приложением (приём Register из TanStack): один интерфейс
+ * `interface SchemaRegistry { band: typeof bandDoc; ... }`, ключ → определение документа.
+ * Из него выводятся и ключи типов для `to` (`keyof` берёт лишь имена членов, не вычисляя
+ * их значения, поэтому ссылка `documents → defineReference → keyof` не образует цикла), и
+ * карты полей для шаблонов (`[K]['fields']` резолвится лениво по одному ключу). Намеренно
+ * интерфейс с отдельными членами, а не `typeof documents`: единый const вычисляется
+ * целиком, что втянуло бы документ с шаблоном и замкнуло бы тип сам на себя.
+ */
+export interface SchemaRegistry {}
 
 /** Ключи зарегистрированных типов документов; пустой реестр → любая строка. */
-export type DocumentTypeKey = [keyof DocumentRegistry] extends [never]
+export type DocumentTypeKey = [keyof SchemaRegistry] extends [never]
   ? string
-  : keyof DocumentRegistry & string
+  : keyof SchemaRegistry & string
 
 /**
  * Цель ссылки: тип документа `to` (ключ реестра) и переопределение его превью —
@@ -324,15 +371,27 @@ type ReferenceOptions = FieldMeta & {
   default?: ReferenceValue
 }
 
-/** Поле-ссылка на документ; `to[].to` ограничено реестром DocumentRegistry (автодополнение и проверка в месте вызова), дереференс — на уровне find-запроса. */
+/** Тип значения поля-ссылки по его опциям: ReferenceValue с union ключей целей `to`. */
+type ReferenceFieldValue<O> = O extends {
+  to: infer T extends readonly ReferenceTarget[]
+}
+  ? ReferenceValue<T[number]['to']>
+  : never
+
+/** Поле-ссылка на документ; `to[].to` ограничено реестром SchemaRegistry (автодополнение и проверка в месте вызова), дереференс — на уровне find-запроса. */
 export function defineReference<
   const O extends Omit<ReferenceOptions, 'to'> & {
     to: readonly ReferenceTarget[]
   },
   H = DefaultHeaderData,
->(options: O & HeaderOptions<H>) {
+>(
+  options: O &
+    HeaderOptions<H> & {
+      templates?: readonly FieldTemplate<ReferenceFieldValue<O>>[]
+    },
+) {
   return { kind: 'reference', ...options } as { kind: 'reference' } & O &
-    HeaderOptions<H> & { __value?: ReferenceValue<O['to'][number]['to']> }
+    HeaderOptions<H> & { __value?: ReferenceFieldValue<O> }
 }
 
 type ObjectOptions = FieldMeta & {
@@ -340,13 +399,23 @@ type ObjectOptions = FieldMeta & {
   default?: Record<string, unknown>
 }
 
+/** Тип значения вложенного объекта по его опциям: значения карты полей. */
+type ObjectFieldValue<O> = O extends { fields: infer F extends FieldMap }
+  ? InferFields<F>
+  : never
+
 /** Вложенный объект со своей картой полей. */
 export function defineObject<
   const O extends ObjectOptions,
   H = DefaultHeaderData,
->(options: O & HeaderOptions<H>) {
+>(
+  options: O &
+    HeaderOptions<H> & {
+      templates?: readonly FieldTemplate<ObjectFieldValue<O>>[]
+    },
+) {
   return { kind: 'object', ...options } as { kind: 'object' } & O &
-    HeaderOptions<H> & { __value?: InferFields<O['fields']> }
+    HeaderOptions<H> & { __value?: ObjectFieldValue<O> }
 }
 
 /**
@@ -371,17 +440,29 @@ type ArrayOptions = FieldMeta & {
   default?: unknown[]
 }
 
+/**
+ * Тип значения массива по его опциям: разнотипный (of — список полей) даёт
+ * элементы с `_type`/`_key` (ArrayItemValue), однородный (of — одно поле) — просто
+ * массив значений элемента.
+ */
+type ArrayFieldValue<O> = O extends { of: infer Of }
+  ? Of extends readonly AnyField[]
+    ? ArrayItemValue<Of[number]>[]
+    : Of extends AnyField
+      ? FieldValue<Of>[]
+      : never
+  : never
+
 /** Массив элементов — однородный (of — одно поле) или разнотипный (of — список полей). */
 export function defineArray<
   const O extends ArrayOptions,
   H = DefaultHeaderData,
->(options: O & HeaderOptions<H>) {
-  return { kind: 'array', ...options } as { kind: 'array' } & O &
+>(
+  options: O &
     HeaderOptions<H> & {
-      __value?: O['of'] extends readonly AnyField[]
-        ? ArrayItemValue<O['of'][number]>[]
-        : O['of'] extends AnyField
-          ? FieldValue<O['of']>[]
-          : never
-    }
+      templates?: readonly FieldTemplate<ArrayFieldValue<O>>[]
+    },
+) {
+  return { kind: 'array', ...options } as { kind: 'array' } & O &
+    HeaderOptions<H> & { __value?: ArrayFieldValue<O> }
 }

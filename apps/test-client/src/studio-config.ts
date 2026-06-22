@@ -9,6 +9,7 @@ import {
   defineProjectBadge,
   defineReference,
   defineString,
+  defineTemplate,
   index,
   rules,
 } from '@jalyk/schema'
@@ -49,8 +50,36 @@ const socialNetworks = [
 /** Поля альбома вынесены отдельно, чтобы форма AlbumForm типизировалась по `typeof albumFields` без цикла «конфиг → форма → тип конфига». */
 const albumFields = {
   cover: defineImage({ title: 'Обложка', icon: ImageIcon }),
-  title: defineString({ title: 'Название', icon: TagIcon }),
-  year: defineNumber({ title: 'Год', icon: CalendarDaysIcon, min: 0 }),
+  title: defineString({
+    title: 'Название',
+    icon: TagIcon,
+    templates: [
+      // Демонстрация async-шаблона: читает другой тип документа (группу) через
+      // ctx.client. Запрашивать можно любой зарегистрированный тип, кроме своего
+      // же (album читать album нельзя — самоссылка циклит на уровне типов).
+      defineTemplate({
+        label: 'По первой группе',
+        value: async (ctx) => {
+          // Фейковая задержка, чтобы проверить лоадер в диалоге.
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+          const bands = await ctx.client.band.findMany({
+            select: { name: true },
+            take: 1,
+          })
+          return bands[0]?.name ?? ''
+        },
+      }),
+    ],
+  }),
+  year: defineNumber({
+    title: 'Год',
+    icon: CalendarDaysIcon,
+    min: 0,
+    templates: [
+      { label: 'Текущий год', value: () => new Date().getFullYear() },
+      { label: '10 лет назад', value: () => new Date().getFullYear() - 10 },
+    ],
+  }),
   band: defineReference({
     title: 'Группа',
     icon: UsersIcon,
@@ -239,13 +268,13 @@ const documents = {
   track: trackDoc,
 }
 
-/** Реестр типов документов — даёт `to` автодополнение и проверку; список ручной (авто-вывод из documents даёт цикл). Рассинхрон ловит defineConfig. */
+/** Единая регистрация схемы: один интерфейс, ключ → определение документа. Из него выводятся и ключи типов (для `to` автодополнения и проверки), и карты полей (читаемые из колбэков шаблонов через ctx.client.<тип>). Индексация по ключу ленива, поэтому шаблон одного документа может читать любой другой; неустранимо лишь чтение своего же типа (истинная самоссылка циклит). Рассинхрон ловит defineConfig. */
 declare module '@jalyk/schema' {
-  interface DocumentRegistry {
-    band: true
-    artist: true
-    album: true
-    track: true
+  interface SchemaRegistry {
+    band: typeof bandDoc
+    artist: typeof artistDoc
+    album: typeof albumDoc
+    track: typeof trackDoc
   }
 }
 

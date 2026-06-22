@@ -1,6 +1,7 @@
 import type {
   AnyConfig,
   AnyField,
+  AsyncClientOf,
   DocumentType,
   FieldMap,
   FieldsOf,
@@ -235,6 +236,49 @@ type DocumentApi<C extends AnyConfig, T extends DocumentType<C>> = {
 
 export type StudioClient<C extends AnyConfig> = {
   [T in DocumentType<C>]: DocumentApi<C, T>
+}
+
+/** Императивный клиент студии (async-функции, не хуки) — общий тип из схемы AsyncClientOf. Нужен там, где запрос идёт вне рендера: колбэк шаблона по клику (см. defineTemplate). */
+export type StudioAsyncClient<C extends AnyConfig> = AsyncClientOf<C>
+
+/** Императивные чтения одного типа поверх тех же движков, что и хуки (runFindMany/project), но без react-query. */
+function makeAsyncApi(deps: Deps, config: AnyConfig, type: string) {
+  return {
+    findMany: (args: FindManyArgs<AnyConfig, never> = {}) =>
+      runFindMany(deps, config, type, args),
+    findUnique: async (args: { id: string; select?: unknown }) => {
+      const record = await deps.run(
+        deps.client.documents.get({
+          path: { projectId: deps.projectId, id: args.id },
+        }),
+      )
+      if (args.select)
+        return project(deps, new Map(), config, type, record, args.select)
+      return fullRecord(record)
+    },
+    count: async (args: { where?: Record<string, unknown> } = {}) => {
+      const all = await loadType(deps, new Map(), type)
+      return args.where
+        ? all.filter((d) =>
+            matchesWhere({ id: d.id, draft: d.draft }, args.where ?? {}),
+          ).length
+        : all.length
+    },
+  }
+}
+
+/** Собирает императивный клиент по конфигу (зеркало createStudio, но async-функции вместо хуков). Финально приводится к StudioAsyncClient<C>, как и createStudio. */
+export function createAsyncClient<const C extends AnyConfig>(
+  deps: Deps,
+  config: C,
+) {
+  const client = Object.fromEntries(
+    Object.keys(config.documents).map((type) => [
+      type,
+      makeAsyncApi(deps, config, type),
+    ]),
+  )
+  return client as unknown as StudioAsyncClient<C>
 }
 
 /** Хуки одного типа. Замыкаются на type (строка) и config; типы наводятся при финальном приведении объекта к Studio<C>. */

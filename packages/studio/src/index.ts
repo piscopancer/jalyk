@@ -134,7 +134,12 @@ export {
   type PreviewProps,
   type HeaderProps,
 } from './data/react-bridge.tsx'
-export { createStudio, type StudioClient } from './data/createStudio.tsx'
+export {
+  createStudio,
+  createAsyncClient,
+  type StudioClient,
+  type StudioAsyncClient,
+} from './data/createStudio.tsx'
 export {
   useDocuments,
   useDocument,
