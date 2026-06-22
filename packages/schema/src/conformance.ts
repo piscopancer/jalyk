@@ -73,6 +73,7 @@ export function fieldFit(field: AnyField, value: unknown): FieldFit {
     case 'boolean':
       return typeof value === 'boolean' ? 'ok' : 'type'
     case 'image':
+    case 'asset':
       return typeof (value as { assetId?: unknown }).assetId === 'string'
         ? 'ok'
         : 'structure'

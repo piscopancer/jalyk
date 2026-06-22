@@ -1,5 +1,5 @@
 import type { AnyConfig, DocumentType } from './config.ts'
-import type { FieldValue, InferFields, Prettify } from './field.ts'
+import type { FieldMap, FieldValue, InferFields, Prettify } from './field.ts'
 
 // Типизированный язык запросов к документам в духе Prisma. Это чисто типовой слой
 // (без React и без IO): из конфига выводятся фильтры where, проекции select и
@@ -26,6 +26,20 @@ type ArrayRefTargets<F> = F extends {
   of: infer Of extends { kind: 'reference'; to: readonly { to: string }[] }
 }
   ? Of['to'][number]['to']
+  : never
+
+// Карта подполей поля-объекта F (defineObject); иначе never.
+type ObjectFieldsOf<F> = F extends {
+  kind: 'object'
+  fields: infer Sub extends FieldMap
+}
+  ? Sub
+  : never
+// Карта подполей элемента массива объектов (defineArray of defineObject); иначе never.
+type ArrayObjectFieldsOf<F> = F extends { kind: 'array'; of: infer Of }
+  ? Of extends { kind: 'object'; fields: infer Sub extends FieldMap }
+    ? Sub
+    : never
   : never
 
 // --- where -------------------------------------------------------------------
@@ -61,21 +75,49 @@ type ScalarFilter<V> = [V] extends [string]
       ? BooleanFilter
       : never
 
-// Фильтр одного поля: ссылка фильтруется по id (_ref), скаляр — по значению.
-type FieldWhere<C extends AnyConfig, F> =
-  RefTargets<F> extends never
-    ? ArrayRefTargets<F> extends never
-      ? ScalarFilter<FieldValue<F>>
-      : never
-    : string | { equals?: string; in?: readonly string[] }
+/** Фильтр ссылки (одиночной или массива ссылок) — по id целевого документа. */
+type RefFilter = string | { equals?: string; in?: readonly string[] }
 
-/** Фильтр документов типа T: по его полям-скалярам, ссылкам (по id), собственному id и логическим узлам AND/OR/NOT (древо). */
+/** Фильтр массива объектов в духе Prisma: хотя бы один / все / ни одного элемента проходит вложенный where. */
+type ArrayObjectFilter<C extends AnyConfig, Fm extends FieldMap> = {
+  some?: WhereFields<C, Fm>
+  every?: WhereFields<C, Fm>
+  none?: WhereFields<C, Fm>
+}
+
+// Фильтр одного поля: ссылка — по id (_ref); объект — рекурсивный where по подполям;
+// массив объектов — some/every/none; скаляр — по значению.
+type FieldWhere<C extends AnyConfig, F> =
+  ArrayRefTargets<F> extends never
+    ? RefTargets<F> extends never
+      ? ObjectFieldsOf<F> extends never
+        ? ArrayObjectFieldsOf<F> extends never
+          ? ScalarFilter<FieldValue<F>>
+          : ArrayObjectFilter<C, ArrayObjectFieldsOf<F>>
+        : WhereFields<C, ObjectFieldsOf<F>>
+      : RefFilter
+    : RefFilter
+
+/** Условия по подполям карты Fm плюс логические узлы AND/OR/NOT (используется для документа и вложенного объекта). */
+type WhereFieldsBody<C extends AnyConfig, Fm extends FieldMap> = {
+  [K in keyof Fm as FieldWhere<C, Fm[K]> extends never ? never : K]?: FieldWhere<
+    C,
+    Fm[K]
+  >
+}
+
+/** Where по карте полей Fm: условия подполей и древо AND/OR/NOT. */
+type WhereFields<C extends AnyConfig, Fm extends FieldMap> = Prettify<
+  WhereFieldsBody<C, Fm> & {
+    AND?: readonly WhereFields<C, Fm>[]
+    OR?: readonly WhereFields<C, Fm>[]
+    NOT?: WhereFields<C, Fm>
+  }
+>
+
+/** Фильтр документов типа T: по его полям, собственному id и логическим узлам AND/OR/NOT (древо). */
 export type Where<C extends AnyConfig, T extends DocumentType<C>> = Prettify<
-  {
-    [K in keyof FieldsOf<C, T> as FieldWhere<C, FieldsOf<C, T>[K]> extends never
-      ? never
-      : K]?: FieldWhere<C, FieldsOf<C, T>[K]>
-  } & {
+  WhereFieldsBody<C, FieldsOf<C, T>> & {
     id?: StringFilter
     AND?: readonly Where<C, T>[]
     OR?: readonly Where<C, T>[]
@@ -85,49 +127,66 @@ export type Where<C extends AnyConfig, T extends DocumentType<C>> = Prettify<
 
 // --- select + джоины ---------------------------------------------------------
 
-// Выбор одного поля: скаляр — только `true`; ссылка (одиночная или массив) — `true`
-// (оставить ReferenceValue) либо вложенный select целевого типа (дереференс-джоин).
+// Выбор одного поля: скаляр — только `true`; ссылка (одиночная/массив) — `true`
+// (оставить ReferenceValue) или вложенный select целевого типа (дереференс-джоин);
+// объект/массив объектов — `true` (всё значение) или подвыбор их полей.
 type FieldSelect<C extends AnyConfig, F> =
   ArrayRefTargets<F> extends never
     ? RefTargets<F> extends never
-      ? true
+      ? ObjectFieldsOf<F> extends never
+        ? ArrayObjectFieldsOf<F> extends never
+          ? true
+          : true | SelectFields<C, ArrayObjectFieldsOf<F>>
+        : true | SelectFields<C, ObjectFieldsOf<F>>
       : true | Select<C, RefTargets<F>>
     : true | Select<C, ArrayRefTargets<F>>
 
+/** Подвыбор полей карты Fm (для документа и вложенного объекта). */
+type SelectFields<C extends AnyConfig, Fm extends FieldMap> = {
+  [K in keyof Fm]?: FieldSelect<C, Fm[K]>
+}
+
 /** Проекция полей документа типа T. `id`/`_type` выбираются явно, как в Prisma. */
-export type Select<C extends AnyConfig, T extends DocumentType<C>> = {
-  [K in keyof FieldsOf<C, T>]?: FieldSelect<C, FieldsOf<C, T>[K]>
-} & { id?: true; _type?: true }
+export type Select<C extends AnyConfig, T extends DocumentType<C>> =
+  SelectFields<C, FieldsOf<C, T>> & { id?: true; _type?: true }
 
 // Результат выбора одного поля по подвыбору Sel.
 type FieldResult<C extends AnyConfig, F, Sel> = Sel extends true
   ? FieldValue<F>
-  : RefTargets<F> extends never
-    ? ArrayRefTargets<F> extends never
-      ? FieldValue<F>
-      : Sel extends Select<C, ArrayRefTargets<F>>
-        ? Project<C, ArrayRefTargets<F>, Sel>[]
+  : ArrayRefTargets<F> extends never
+    ? RefTargets<F> extends never
+      ? ObjectFieldsOf<F> extends never
+        ? ArrayObjectFieldsOf<F> extends never
+          ? FieldValue<F>
+          : Sel extends SelectFields<C, ArrayObjectFieldsOf<F>>
+            ? ProjectFields<C, ArrayObjectFieldsOf<F>, Sel>[]
+            : never
+        : Sel extends SelectFields<C, ObjectFieldsOf<F>>
+          ? ProjectFields<C, ObjectFieldsOf<F>, Sel> | null
+          : never
+      : Sel extends Select<C, RefTargets<F>>
+        ? Project<C, RefTargets<F>, Sel> | null
         : never
-    : Sel extends Select<C, RefTargets<F>>
-      ? Project<C, RefTargets<F>, Sel> | null
+    : Sel extends Select<C, ArrayRefTargets<F>>
+      ? Project<C, ArrayRefTargets<F>, Sel>[]
       : never
+
+/** Проекция карты полей Fm по выбору S (для документа и вложенного объекта). */
+type ProjectFields<C extends AnyConfig, Fm extends FieldMap, S> = Prettify<{
+  [K in keyof S & keyof Fm]: FieldResult<C, Fm[K], S[K]>
+}>
 
 /**
  * Документ типа T, спроецированный по выбору S. T может быть объединением
- * (полиморфная ссылка) — тогда проекция распределяется по членам. Джоины
- * дереференсятся через FieldResult рекурсивно на любую глубину.
+ * (полиморфная ссылка) — тогда проекция распределяется по членам. Джоины и
+ * вложенные объекты дереференсятся через FieldResult рекурсивно на любую глубину.
  */
 export type Project<C extends AnyConfig, T extends DocumentType<C>, S> =
   T extends DocumentType<C>
     ? Prettify<
         (S extends { id: true } ? { id: string } : unknown) &
-          (S extends { _type: true } ? { _type: T } : unknown) & {
-            [K in keyof S & keyof FieldsOf<C, T>]: FieldResult<
-              C,
-              FieldsOf<C, T>[K],
-              S[K]
-            >
-          }
+          (S extends { _type: true } ? { _type: T } : unknown) &
+          ProjectFields<C, FieldsOf<C, T>, S>
       >
     : never
 
@@ -172,6 +231,29 @@ export type QueryResult<
 > = A extends { select: infer S } ? Project<C, T, S> : DocumentRecord<C, T>
 
 // --- where: рантайм-предикат (чистый, без IO) --------------------------------
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object'
+}
+
+// Операторы скалярного фильтра — отличают фильтр-объект скаляра/ссылки от
+// вложенного where по подполям объекта.
+const SCALAR_OPS = new Set([
+  'equals',
+  'not',
+  'in',
+  'contains',
+  'startsWith',
+  'lt',
+  'lte',
+  'gt',
+  'gte',
+])
+
+/** Значение для скалярного сравнения: у ссылки берём её id (_ref), иначе само значение. */
+function refValue(raw: unknown): unknown {
+  return isRecord(raw) && '_ref' in raw ? (raw as { _ref: unknown })._ref : raw
+}
 
 // Предикат «значение прошло фильтр». Чистая функция — джоины и загрузку делает
 // студия, сюда приходит уже значение поля документа.
@@ -222,26 +304,44 @@ function matchesFilter(value: unknown, filter: unknown): boolean {
 }
 
 /**
- * Проверяет документ (id + значения полей в draft) против where. Ссылочные поля
- * фильтруются по их `_ref`. Узлы AND/OR/NOT задают логическое древо (рекурсия),
- * остальные ключи — условия по полям. Возвращает true, если документ проходит.
+ * Предикат одного поля по форме фильтра: массив объектов — some/every/none;
+ * вложенный объект — рекурсивная проверка подполей; скаляр/ссылка — matchesFilter.
  */
-export function matchesWhere(
-  record: { id: string; draft: unknown },
+function matchesField(value: unknown, filter: unknown): boolean {
+  if (!isRecord(filter)) return refValue(value) === filter
+  const keys = Object.keys(filter)
+  // Фильтр массива объектов: хотя бы один / все / ни одного элемента.
+  if (keys.some((k) => k === 'some' || k === 'every' || k === 'none')) {
+    const items = Array.isArray(value) ? value : []
+    if (isRecord(filter.some) && !items.some((el) => matchesFields(el, filter.some as Record<string, unknown>)))
+      return false
+    if (isRecord(filter.none) && items.some((el) => matchesFields(el, filter.none as Record<string, unknown>)))
+      return false
+    if (isRecord(filter.every) && !items.every((el) => matchesFields(el, filter.every as Record<string, unknown>)))
+      return false
+    return true
+  }
+  // Скалярный/ссылочный фильтр-объект (операторы) либо пустой объект.
+  if (keys.length === 0 || keys.some((k) => SCALAR_OPS.has(k)))
+    return matchesFilter(refValue(value), filter)
+  // Иначе вложенный объект: проверяем его подполя.
+  return matchesFields(value, filter)
+}
+
+/** Проверяет источник (объект значений) против where: узлы AND/OR/NOT — древо, остальные ключи — условия по полям. */
+function matchesFields(
+  source: unknown,
   where: Record<string, unknown>,
+  id?: string,
 ): boolean {
-  const draft =
-    record.draft !== null && typeof record.draft === 'object'
-      ? (record.draft as Record<string, unknown>)
-      : {}
+  const rec = isRecord(source) ? source : {}
   for (const [key, filter] of Object.entries(where)) {
     if (filter === undefined) continue
-    // Логические узлы древа: AND/OR — массивы подусловий, NOT — одно подусловие.
     if (key === 'AND') {
       if (
         Array.isArray(filter) &&
         !filter.every((sub) =>
-          matchesWhere(record, sub as Record<string, unknown>),
+          matchesFields(source, sub as Record<string, unknown>, id),
         )
       )
         return false
@@ -252,28 +352,30 @@ export function matchesWhere(
         Array.isArray(filter) &&
         filter.length > 0 &&
         !filter.some((sub) =>
-          matchesWhere(record, sub as Record<string, unknown>),
+          matchesFields(source, sub as Record<string, unknown>, id),
         )
       )
         return false
       continue
     }
     if (key === 'NOT') {
-      if (
-        filter !== null &&
-        typeof filter === 'object' &&
-        matchesWhere(record, filter as Record<string, unknown>)
-      )
-        return false
+      if (isRecord(filter) && matchesFields(source, filter, id)) return false
       continue
     }
-    const raw = key === 'id' ? record.id : draft[key]
-    // Ссылочное поле: фильтруем по _ref, если значение — объект-ссылка.
-    const value =
-      raw !== null && typeof raw === 'object' && '_ref' in raw
-        ? (raw as { _ref: unknown })._ref
-        : raw
-    if (!matchesFilter(value, filter)) return false
+    const value = key === 'id' && id !== undefined ? id : rec[key]
+    if (!matchesField(value, filter)) return false
   }
   return true
+}
+
+/**
+ * Проверяет документ (id + значения полей в draft) против where. Ссылочные поля
+ * фильтруются по их `_ref`, объекты — рекурсивно, массивы объектов — some/every/none.
+ * Возвращает true, если документ проходит.
+ */
+export function matchesWhere(
+  record: { id: string; draft: unknown },
+  where: Record<string, unknown>,
+): boolean {
+  return matchesFields(record.draft, where, record.id)
 }

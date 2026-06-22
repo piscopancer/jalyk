@@ -22,6 +22,7 @@ import {
   StringField,
 } from './defaults.tsx'
 import { DefaultHeader } from './DefaultHeader.tsx'
+import { AssetField } from './AssetField.tsx'
 import { ImageField } from './image.tsx'
 import { ObjectField } from './object.tsx'
 import { ReferenceField } from './reference.tsx'
@@ -75,6 +76,7 @@ const defaults: Partial<Record<FieldKind, FieldComponent>> = {
   number: NumberField,
   boolean: BooleanField,
   image: ImageField,
+  asset: AssetField,
   reference: ReferenceField,
   object: ObjectField,
   array: ArrayField,

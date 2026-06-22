@@ -8,6 +8,7 @@ import {
   createAsset,
   deleteAsset,
   getAssetById,
+  getAssetUsage,
   listAssets,
 } from '@jalyk/core'
 import { Api, NotFound } from '@jalyk/contract'
@@ -23,12 +24,14 @@ const toInfo = (asset: {
   filename: string
   contentType: string
   size: number
+  createdAt: Date
 }) => ({
   id: asset.id,
   projectId: asset.projectId,
   filename: asset.filename,
   contentType: asset.contentType,
   size: asset.size,
+  createdAt: asset.createdAt.toISOString(),
 })
 
 // Группа ассетов проекта: загрузка, список и удаление (раздача байтов — отдельная
@@ -69,6 +72,16 @@ export const AssetsLive = HttpApiBuilder.group(Api, 'assets', (handlers) =>
           ),
         ),
         Effect.map((assets) => assets.map(toInfo)),
+      ),
+    )
+    // Использование хранилища: суммарный вес ассетов и лимит. Только чтение.
+    .handle('usage', ({ path }) =>
+      access(path.projectId).pipe(
+        Effect.andThen(
+          getAssetUsage(path.projectId).pipe(
+            Effect.catchTag('DbError', (e) => Effect.die(e)),
+          ),
+        ),
       ),
     )
     // Удаление ассета: требует право записи. Сперва удаляем запись в БД (с

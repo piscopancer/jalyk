@@ -1,5 +1,5 @@
 import type { DefaultPreviewData, ReferenceValue } from '@jalyk/schema'
-import type { PreviewProps } from '@jalyk/studio'
+import { DefaultPreviewIndicators, type PreviewProps } from '@jalyk/studio'
 import { Disc3Icon } from 'lucide-react'
 import { studio } from './studio-config.ts'
 
@@ -26,6 +26,7 @@ export function AlbumPreview({
   return (
     <div className="flex items-start gap-2.5">
       <Disc3Icon className="size-4 shrink-0 text-muted-foreground" />
+      <DefaultPreviewIndicators className="order-last ml-auto pl-2" />
       <div className="flex min-w-0 flex-col gap-1">
         <span className="truncate font-medium">{title}</span>
         {refs.length > 0 ? (

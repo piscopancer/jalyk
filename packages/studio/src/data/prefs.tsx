@@ -12,9 +12,13 @@ import type { StudioLayout } from '../Studio.tsx'
 /** Предпочтение темы: следовать системной либо принудительно светлая/тёмная. */
 export type ThemePref = 'system' | 'light' | 'dark'
 
+/** Вид галереи ассетов: сетка плиток или список строк. */
+export type AssetView = 'grid' | 'list'
+
 type PrefsValue = {
   layoutAtom: PrimitiveAtom<StudioLayout>
   themeAtom: PrimitiveAtom<ThemePref>
+  assetViewAtom: PrimitiveAtom<AssetView>
 }
 
 const PrefsContext = createContext<PrefsValue | null>(null)
@@ -54,9 +58,17 @@ export function StudioPrefsProvider({
       ),
     [projectId],
   )
+  const assetViewAtom = useMemo(
+    () =>
+      atomWithStorage<AssetView>(
+        `jalyk:studio:v1:${projectId}:asset-view`,
+        'grid',
+      ),
+    [projectId],
+  )
   const value = useMemo<PrefsValue>(
-    () => ({ layoutAtom, themeAtom }),
-    [layoutAtom, themeAtom],
+    () => ({ layoutAtom, themeAtom, assetViewAtom }),
+    [layoutAtom, themeAtom, assetViewAtom],
   )
   return <PrefsContext.Provider value={value}>{children}</PrefsContext.Provider>
 }
@@ -69,4 +81,9 @@ export function useStudioLayout() {
 /** Текущее предпочтение темы и сеттер; персистится в localStorage. */
 export function useStudioThemePref() {
   return useAtom(usePrefs().themeAtom)
+}
+
+/** Текущий вид галереи ассетов (сетка/список) и сеттер; персистится в localStorage. */
+export function useStudioAssetView() {
+  return useAtom(usePrefs().assetViewAtom)
 }

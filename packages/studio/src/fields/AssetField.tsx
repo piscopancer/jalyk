@@ -1,4 +1,4 @@
-import { anyImage, type ImageValue } from '@jalyk/schema'
+import type { AssetValue } from '@jalyk/schema'
 import {
   Button,
   Dialog,
@@ -7,46 +7,70 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@jalyk/ui'
+import { FileIcon } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { formatBytes, isImageType, matchesFilter } from '../data/asset-filter.ts'
 import { useStudio } from '../data/context.tsx'
 import { useField } from '../data/field.ts'
-import { useUploadAsset } from '../data/hooks.ts'
+import { useAssets, useUploadAsset } from '../data/hooks.ts'
 import { AssetGallery } from './AssetGallery.tsx'
 import type { FieldComponentProps } from './registry.tsx'
 
-/** Редактор поля-картинки. Значение — { assetId }. Выбор файла загружает ассет и записывает его id в поле; превью берётся по публичному URL ассета. Очистка пишет null (поле становится пустым). */
-export function ImageField({ path }: FieldComponentProps) {
-  const handle = useField<ImageValue>(path)
+/** Редактор поля-ассета (любой тип файла). Значение — { assetId }. `field.accept` (массив глобов MIME) ограничивает допустимые типы: им фильтруется и системный выбор файла, и галерея «Смотреть все». Превью: картинка — миниатюрой, прочее — иконкой файла с именем и весом. Очистка пишет null. */
+export function AssetField({ path, field }: FieldComponentProps) {
+  const handle = useField<AssetValue>(path)
   const { assetUrl } = useStudio()
+  const assets = useAssets()
   const upload = useUploadAsset()
   const inputRef = useRef<HTMLInputElement>(null)
   const [galleryOpen, setGalleryOpen] = useState(false)
 
+  const filter = field.accept
   const assetId = handle.value?.assetId
+  const asset = (assets.data ?? []).find((a) => a.id === assetId)
+  const image = asset ? isImageType(asset.contentType) : false
+  const accept = filter ? filter.join(',') : undefined
 
   const onFile = (file: File) => {
+    if (filter && !matchesFilter(file.type, filter)) return
     upload.mutate(file, {
-      onSuccess: (asset) => handle.set({ assetId: asset.id }),
+      onSuccess: (uploaded) => handle.set({ assetId: uploaded.id }),
     })
   }
 
   return (
     <div className="flex flex-col gap-2">
       {assetId ? (
-        <img
-          src={assetUrl(assetId)}
-          alt=""
-          className="max-h-48 w-auto rounded-md border object-contain"
-        />
+        image ? (
+          <img
+            src={assetUrl(assetId)}
+            alt=""
+            className="max-h-48 w-auto rounded-md border object-contain"
+          />
+        ) : (
+          <div className="flex items-center gap-2 rounded-md border p-3 text-sm">
+            <FileIcon className="size-8 shrink-0 text-muted-foreground" />
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate" title={asset?.filename}>
+                {asset?.filename ?? assetId}
+              </span>
+              {asset ? (
+                <span className="text-xs text-muted-foreground">
+                  {formatBytes(asset.size)}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        )
       ) : (
         <div className="flex h-32 items-center justify-center rounded-md border border-dashed text-xs text-muted-foreground">
-          Нет изображения
+          Нет файла
         </div>
       )}
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept={accept}
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0]
@@ -70,13 +94,13 @@ export function ImageField({ path }: FieldComponentProps) {
           >
             Смотреть все
           </DialogTrigger>
-          <DialogContent className="max-w-[90vw] sm:max-w-3xl">
+          <DialogContent className="max-w-[90vw] sm:max-w-4xl">
             <DialogHeader>
               <DialogTitle>Файлы проекта</DialogTitle>
             </DialogHeader>
             <AssetGallery
               currentAssetId={assetId}
-              filter={anyImage}
+              filter={filter}
               onSelect={(id) => {
                 handle.set({ assetId: id })
                 setGalleryOpen(false)

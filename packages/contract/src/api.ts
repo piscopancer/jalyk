@@ -219,6 +219,15 @@ export const AssetInfo = Schema.Struct({
   filename: Schema.String,
   contentType: Schema.String,
   size: Schema.Number,
+  // Дата загрузки ISO-строкой (обработчик приводит из Date) — для сортировки в студии.
+  createdAt: Schema.String,
+})
+
+// Использование хранилища проектом: суммарный вес ассетов и текущий лимит, оба в
+// байтах. Студия рисует из этого прогресс-бар «Хранилище».
+export const AssetUsageInfo = Schema.Struct({
+  used: Schema.Number,
+  quota: Schema.Number,
 })
 
 // Загрузка ассета: тело запроса — сырые байты файла, имя и тип идут в query
@@ -239,6 +248,12 @@ export const AssetsGroup = HttpApiGroup.make('assets')
     HttpApiEndpoint.get('list', '/projects/:projectId/assets')
       .setPath(ProjectIdPath)
       .addSuccess(Schema.Array(AssetInfo))
+      .addError(NotFound),
+  )
+  .add(
+    HttpApiEndpoint.get('usage', '/projects/:projectId/assets/usage')
+      .setPath(ProjectIdPath)
+      .addSuccess(AssetUsageInfo)
       .addError(NotFound),
   )
   .add(

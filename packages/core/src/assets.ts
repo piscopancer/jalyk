@@ -23,6 +23,23 @@ export const listAssets = (projectId: string) =>
     db.asset.findMany({ where: { projectId }, orderBy: { createdAt: 'desc' } }),
   )
 
+/** Лимит хранилища проекта в байтах. Пока единая константа (1 ГиБ); когда у
+ * проектов появятся тарифы, значение переедет в запись проекта и будет читаться
+ * из неё в getAssetUsage. */
+export const ASSET_QUOTA_BYTES = 1024 ** 3
+
+/** Использование хранилища проектом: суммарный вес ассетов (агрегат по БД,
+ * изоляция по projectId) и текущий лимит. */
+export const getAssetUsage = (projectId: string) =>
+  query((db) =>
+    db.asset.aggregate({ where: { projectId }, _sum: { size: true } }),
+  ).pipe(
+    Effect.map((result) => ({
+      used: result._sum.size ?? 0,
+      quota: ASSET_QUOTA_BYTES,
+    })),
+  )
+
 /** Удалить ассет проекта. Возвращает удалённую запись (нужен key, чтобы стереть
  * байты из хранилища). NotFoundError, если чужой/нет — сперва читаем с фильтром
  * по projectId (изоляция), затем удаляем по id. */

@@ -34,6 +34,7 @@ export function ProjectNotFound({
           </p>
           <Button
             className="self-start"
+            nativeButton={false}
             render={
               <a href={JALYK_PROJECTS_URL} target="_blank" rel="noreferrer" />
             }

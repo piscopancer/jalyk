@@ -23,18 +23,31 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useFieldClipboard } from '../data/clipboard.tsx'
+import { useDocumentContext } from '../data/document.tsx'
 import { useField } from '../data/field.ts'
+import { useDocument } from '../data/hooks.ts'
+import { jsonEqual } from '../data/json-equal.ts'
+import { getAtPath } from '../data/path.ts'
 import type { FieldComponentProps } from './registry.tsx'
 
-/** Меню-троеточие в заголовке поля. Действия работают над значением поля по пути через useField: сброс к дефолту из схемы, копирование значения во внутренний буфер студии (и системный), вставка (только если вид скопированного совпадает с видом этого поля) и детальный просмотр сырого значения в формате JSON. */
+/** Меню-троеточие в заголовке поля. Действия работают над значением поля по пути через useField: сброс черновика поля к опубликованному значению (только если документ публиковали и поле изменено), сброс к дефолту из схемы, копирование значения во внутренний буфер студии (и системный), вставка (только если вид скопированного совпадает с видом этого поля) и детальный просмотр сырого значения в формате JSON. */
 export function FieldMenu({ path, field }: FieldComponentProps) {
   const handle = useField(path)
   const clipboard = useFieldClipboard()
+  const { id } = useDocumentContext()
+  const doc = useDocument(id)
   const [detailOpen, setDetailOpen] = useState(false)
 
   // Вставка доступна, если в буфере есть значение того же вида, что и это поле.
   const canPaste =
     clipboard.entry !== null && clipboard.entry.kind === field.kind
+
+  // Сброс черновика поля доступен, только если документ уже публиковали и значение
+  // этого поля в черновике отличается от опубликованного; иначе сбрасывать нечего.
+  const published = doc.data?.published
+  const publishedValue = getAtPath(published, path)
+  const canResetDraft =
+    published != null && !jsonEqual(handle.value, publishedValue)
 
   return (
     <>
@@ -52,6 +65,15 @@ export function FieldMenu({ path, field }: FieldComponentProps) {
           <MoreHorizontalIcon />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-52">
+          {canResetDraft ? (
+            <DropdownMenuItem
+              onClick={() => handle.set(publishedValue ?? null)}
+            >
+              <DropdownMenuItemRow icon={<RotateCcwIcon />}>
+                Сбросить черновик
+              </DropdownMenuItemRow>
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem onClick={() => handle.set(field.default)}>
             <DropdownMenuItemRow icon={<RotateCcwIcon />}>
               Сбросить до дефолта

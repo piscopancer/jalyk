@@ -26,6 +26,7 @@ export type UploadedAsset = {
   filename: string
   contentType: string
   size: number
+  createdAt: string
 }
 
 /** Контекст студии: построенный клиент, рантайм и projectId, два моста к react-query (run — с throw'ом ошибки, runEither — с явным Either) и подписка на SSE-поток событий проекта. */

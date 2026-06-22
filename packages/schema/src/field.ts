@@ -36,6 +36,7 @@ export type FieldKind =
   | 'boolean'
   | 'richText'
   | 'image'
+  | 'asset'
   | 'reference'
   | 'object'
   | 'array'
@@ -108,6 +109,22 @@ export type RichTextValue = {
 /** Значение поля-картинки — ссылка на загруженный ассет. */
 export type ImageValue = { assetId: string }
 
+/** Значение поля-ассета — ссылка на загруженный ассет любого типа. Форма та же, что у картинки; различается только редактор и набор допустимых типов. */
+export type AssetValue = { assetId: string }
+
+/**
+ * Фильтр допустимых типов ассета — массив глобов MIME-типа. Глоб либо ровно тип
+ * (`video/mp4`), либо категория с подстановкой (`video/*`). Единственная ось
+ * ограничения: студия и прячет по нему неподходящие ассеты, и выводит из него
+ * колонку категорий. Готовые пресеты — `anyImage`/`anyVideo`/`anyAudio`/`anyText`.
+ */
+export type AssetFilter = readonly string[]
+
+export const anyImage = ['image/*'] as const satisfies AssetFilter
+export const anyVideo = ['video/*'] as const satisfies AssetFilter
+export const anyAudio = ['audio/*'] as const satisfies AssetFilter
+export const anyText = ['text/*'] as const satisfies AssetFilter
+
 /**
  * Значение поля-ссылки: id целевого документа и его тип (один из `to`). Тип лежит
  * в `_toType`, а не `_type`, чтобы `_type` остался свободен под дискриминатор члена
@@ -134,6 +151,8 @@ export type AnyField = FieldMeta & {
   // членов (разнотипный массив).
   of?: AnyField | readonly AnyField[]
   to?: readonly ReferenceTarget[]
+  /** Допустимые типы ассета (поле kind: 'asset') — массив глобов MIME, см. AssetFilter. */
+  accept?: AssetFilter
   min?: number
   max?: number
   input?: {
@@ -267,6 +286,15 @@ export function defineImage<
 >(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
   return { kind: 'image', ...options } as { kind: 'image' } & O &
     HeaderOptions<H> & { __value?: ImageValue }
+}
+
+/** Поле-ассет — выбор/загрузка файла любого типа. `accept` ограничивает допустимые типы (массив глобов MIME, см. AssetFilter); без него принимаются любые. */
+export function defineAsset<
+  const O extends FieldMeta & { accept?: AssetFilter; default?: AssetValue },
+  H = DefaultHeaderData,
+>(options: O & HeaderOptions<H> = {} as O & HeaderOptions<H>) {
+  return { kind: 'asset', ...options } as { kind: 'asset' } & O &
+    HeaderOptions<H> & { __value?: AssetValue }
 }
 
 /** Реестр типов документов; клиент расширяет через `declare module` (приём Register из TanStack). Авто-вывод из documents даёт цикл — список ручной. */

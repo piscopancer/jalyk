@@ -1,6 +1,8 @@
 import type {
   AnyConfig,
+  AnyField,
   DocumentType,
+  FieldMap,
   FieldsOf,
   FindManyArgs,
   FindUniqueArgs,
@@ -70,7 +72,66 @@ async function resolveRef(
   return target ? project(deps, cache, config, ref._toType, target, sel) : null
 }
 
-/** Строит проекцию документа по select. Скаляр с true — копируется как есть, ссылка с вложенным select — дереференсится (джоин) рекурсивно на любую глубину. */
+/** Проецирует карту полей fields по select поверх источника source (черновик документа или вложенный объект). Скаляр с true — копируется; ссылка — джоин; объект/массив объектов — рекурсивно. */
+async function projectFields(
+  deps: Deps,
+  cache: Map<string, readonly DocItem[]>,
+  config: AnyConfig,
+  fields: FieldMap,
+  source: unknown,
+  select: unknown,
+) {
+  const src = isRecord(source) ? source : {}
+  const out: Record<string, unknown> = {}
+  if (!isRecord(select)) return out
+  for (const [key, sel] of Object.entries(select)) {
+    if (!sel || key === 'id' || key === '_type') continue
+    const value = src[key]
+    if (sel === true) {
+      out[key] = value
+      continue
+    }
+    const field = fields[key]
+    if (field?.kind === 'object') {
+      out[key] = isRecord(value)
+        ? await projectFields(
+            deps,
+            cache,
+            config,
+            field.fields ?? {},
+            value,
+            sel,
+          )
+        : null
+    } else if (field?.kind === 'array') {
+      const of = field.of
+      // Однородный массив: of — одно описание поля (не список членов).
+      const single = of && !Array.isArray(of) ? (of as AnyField) : undefined
+      const items = Array.isArray(value) ? value : []
+      if (single?.kind === 'object') {
+        // Массив объектов: проецируем подполя каждого элемента.
+        out[key] = await Promise.all(
+          items.map((el) =>
+            projectFields(deps, cache, config, single.fields ?? {}, el, sel),
+          ),
+        )
+      } else {
+        // Массив ссылок: дереференс поэлементно.
+        out[key] = (
+          await Promise.all(
+            items.map((item) => resolveRef(deps, cache, config, item, sel)),
+          )
+        ).filter((x) => x !== null)
+      }
+    } else {
+      // Одиночная ссылка.
+      out[key] = await resolveRef(deps, cache, config, value, sel)
+    }
+  }
+  return out
+}
+
+/** Строит проекцию документа по select: поля через projectFields плюс служебные id/_type. */
 async function project(
   deps: Deps,
   cache: Map<string, readonly DocItem[]>,
@@ -79,37 +140,18 @@ async function project(
   record: DocItem,
   select: unknown,
 ) {
-  const draft = isRecord(record.draft) ? record.draft : {}
   const fields = config.documents[type]?.fields ?? {}
-  const out: Record<string, unknown> = {}
-  if (!isRecord(select)) return out
-  for (const [key, sel] of Object.entries(select)) {
-    if (!sel) continue
-    if (key === 'id') {
-      out.id = record.id
-      continue
-    }
-    if (key === '_type') {
-      out._type = record.type
-      continue
-    }
-    const value = draft[key]
-    if (sel === true) {
-      out[key] = value
-      continue
-    }
-    // Вложенный select по полю-ссылке — джоин. Массив ссылок резолвится поэлементно.
-    const field = fields[key]
-    if (field?.kind === 'array') {
-      const items = Array.isArray(value) ? value : []
-      out[key] = (
-        await Promise.all(
-          items.map((item) => resolveRef(deps, cache, config, item, sel)),
-        )
-      ).filter((x) => x !== null)
-    } else {
-      out[key] = await resolveRef(deps, cache, config, value, sel)
-    }
+  const out = await projectFields(
+    deps,
+    cache,
+    config,
+    fields,
+    record.draft,
+    select,
+  )
+  if (isRecord(select)) {
+    if (select.id) out.id = record.id
+    if (select._type) out._type = record.type
   }
   return out
 }

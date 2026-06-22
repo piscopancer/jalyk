@@ -53,7 +53,7 @@ export function useCreateDocument() {
   })
 }
 
-/** Точечная запись поля-по-пути. Низкоуровневая мутация; поверх неё строится useField (см. field-хуки). Кэш документа инвалидируется по его id. */
+/** Точечная запись поля-по-пути. Низкоуровневая мутация; поверх неё строится useField (см. field-хуки). Инвалидирует и сам документ по id, и списки документов (studioKeys.documentsAll — префикс покрывает список типа и запросы query), чтобы строки списка и их превью с индикаторами замечаний обновились сразу, а не после переоткрытия. */
 export function useSetField(id: string) {
   const { projectId, client, run } = useStudio()
   const qc = useQueryClient()
@@ -67,6 +67,7 @@ export function useSetField(id: string) {
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: studioKeys.document(projectId, id) })
+      qc.invalidateQueries({ queryKey: studioKeys.documentsAll(projectId) })
     },
   })
 }
@@ -130,8 +131,10 @@ export function useUploadAsset() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (file: File) => uploadAsset(file),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: studioKeys.assets(projectId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: studioKeys.assets(projectId) })
+      qc.invalidateQueries({ queryKey: studioKeys.assetUsage(projectId) })
+    },
   })
 }
 
@@ -144,15 +147,27 @@ export function useAssets() {
   })
 }
 
-/** Удалить ассет проекта (запись + байты). Инвалидирует список ассетов. */
+/** Использование хранилища проектом (суммарный вес ассетов и лимит) — для
+ * прогресс-бара «Хранилище» в галерее. */
+export function useAssetUsage() {
+  const { projectId, client, run } = useStudio()
+  return useQuery({
+    queryKey: studioKeys.assetUsage(projectId),
+    queryFn: () => run(client.assets.usage({ path: { projectId } })),
+  })
+}
+
+/** Удалить ассет проекта (запись + байты). Инвалидирует список ассетов и использование хранилища. */
 export function useDeleteAsset() {
   const { projectId, client, run } = useStudio()
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) =>
       run(client.assets.delete({ path: { projectId, id } })),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: studioKeys.assets(projectId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: studioKeys.assets(projectId) })
+      qc.invalidateQueries({ queryKey: studioKeys.assetUsage(projectId) })
+    },
   })
 }
 

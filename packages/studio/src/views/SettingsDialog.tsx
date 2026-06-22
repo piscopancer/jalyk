@@ -166,6 +166,7 @@ function ManagementSection() {
           variant="outline"
           size="sm"
           className="self-start"
+          nativeButton={false}
           render={
             <a href={projectUrl} target="_blank" rel="noreferrer noopener" />
           }

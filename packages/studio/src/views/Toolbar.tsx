@@ -89,6 +89,7 @@ function AccountMenu() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
+          nativeButton={false}
           render={
             <a
               href={JALYK_SITE_URL}
