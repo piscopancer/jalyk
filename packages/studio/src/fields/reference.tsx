@@ -12,6 +12,10 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -21,12 +25,15 @@ import {
   CheckIcon,
   ChevronsUpDownIcon,
   FileTextIcon,
+  PencilIcon,
+  PlusIcon,
   XIcon,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useStudio } from '../data/context.tsx'
 import { useField } from '../data/field.ts'
-import { useDocuments } from '../data/hooks.ts'
+import { useSegmentNav } from '../data/navigation.tsx'
+import { useCreateDocument, useDocuments } from '../data/hooks.ts'
 import { getAtPath } from '../data/path.ts'
 import { PreviewStateProvider } from '../data/preview-state.tsx'
 import {
@@ -173,7 +180,10 @@ function TypeOptions({
 
 /** Редактор поля-ссылки. Значение — { _ref, _toType }. Триггер-кнопка показывает превью выбранного документа; по клику открывается поповер с поиском по документам допустимых типов (field.to). Поповер закрывается по Esc и клику вне (Popover/Command из @jalyk/ui). Кнопка-крест рядом очищает значение. */
 export function ReferenceField({ path, field }: FieldComponentProps) {
+  const { config } = useStudio()
   const handle = useField<ReferenceValue>(path)
+  const nav = useSegmentNav()
+  const create = useCreateDocument()
   const [open, setOpen] = useState(false)
   const targets = field.to ?? []
   const targetByType = new Map<string, ReferenceTarget>(
@@ -182,10 +192,25 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
 
   const ref = handle.value?._ref
   const refType = handle.value?._toType
+  // Сегменты доступны только внутри дерева навигации и если текущий сегмент объявляет потомка 'document'; иначе кнопки создания/редактирования не показываем.
+  const openDocument = nav?.openDocument
 
   const pick = (id: string, type: string) => {
     handle.set({ _ref: id, _toType: type })
     setOpen(false)
+  }
+
+  const createAndOpen = (type: string) => {
+    create.mutate(
+      { type },
+      {
+        onSuccess: (doc) => {
+          handle.set({ _ref: doc.id, _toType: type })
+          setOpen(false)
+          if (openDocument) nav?.go(openDocument(type, doc.id))
+        },
+      },
+    )
   }
 
   return (
@@ -219,9 +244,47 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
           </span>
           <ChevronsUpDownIcon className="size-4 shrink-0 opacity-50" />
         </PopoverTrigger>
-        <PopoverContent className="w-(--anchor-width) p-0" align="start">
+        <PopoverContent
+          className="min-w-(--anchor-width) max-w-[28rem] p-0"
+          align="start"
+        >
           <Command>
-            <CommandInput placeholder="Поиск документа…" />
+            <div className="flex items-center gap-1 p-1 pb-0 [&>[data-slot=command-input-wrapper]]:flex-1 [&>[data-slot=command-input-wrapper]]:p-0">
+              <CommandInput placeholder="Поиск документа…" />
+              {openDocument && targets.length > 0 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button
+                        type="button"
+                        size="icon"
+                        aria-label="Новый документ"
+                        disabled={create.isPending}
+                        className="size-8 shrink-0"
+                      />
+                    }
+                  >
+                    <PlusIcon />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {targets.map((target) => {
+                      const def = config.documents[target.to]
+                      const Icon = asIcon(def?.icon)
+                      return (
+                        <DropdownMenuItem
+                          key={target.to}
+                          disabled={create.isPending}
+                          onClick={() => createAndOpen(target.to)}
+                        >
+                          {Icon ? <Icon /> : <FileTextIcon />}
+                          {def?.title ?? target.to}
+                        </DropdownMenuItem>
+                      )
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+            </div>
             <CommandList>
               <CommandEmpty>Ничего не найдено</CommandEmpty>
               {targets.map((target) => (
@@ -236,6 +299,18 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
           </Command>
         </PopoverContent>
       </Popover>
+      {ref && refType && openDocument ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Редактировать"
+          className="shrink-0 text-muted-foreground"
+          onClick={() => nav?.go(openDocument(refType, ref))}
+        >
+          <PencilIcon />
+        </Button>
+      ) : null}
       {ref ? (
         <Button
           type="button"

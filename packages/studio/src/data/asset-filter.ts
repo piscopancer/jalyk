@@ -87,7 +87,7 @@ export function formatLabel(contentType: string): string {
   const known = FORMAT_LABELS[contentType]
   if (known) return known
   const subtype = contentType.split('/')[1] ?? contentType
-  const base = subtype.split('+')[0].replace(/^vnd\./, '')
+  const base = (subtype.split('+').at(0) ?? subtype).replace(/^vnd\./, '')
   const segment = base.split('.').at(-1) ?? base
   return segment.toUpperCase()
 }

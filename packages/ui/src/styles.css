@@ -31,6 +31,17 @@
 
 /* Шрифт по умолчанию. Обычный @theme (не inline), чтобы переменная --font-sans
    выпускалась на :root и работала и в утилите font-sans, и в правиле body ниже. */
+/* Геометрический узор: тонкие полоски под 45° с отступом (repeating-linear-gradient на цвете границы), как ненавязчивый задник, например под хедером сегмента. */
+@utility diagonal-stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    color-mix(in oklch, var(--border) 55%, transparent) 0,
+    color-mix(in oklch, var(--border) 55%, transparent) 1px,
+    transparent 1px,
+    transparent 8px
+  );
+}
+
 @theme {
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono:

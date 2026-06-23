@@ -6,7 +6,7 @@ import {
   useAssetUsage,
   type AnyPathSegment,
 } from '@jalyk/studio'
-import { HardDriveIcon, SparklesIcon } from 'lucide-react'
+import { HardDriveIcon, MountainIcon, SparklesIcon } from 'lucide-react'
 
 // Кастомная навигация студии: корневой сегмент — дефолтная колонка типов (она по
 // старому открывает сегмент документов из @jalyk/studio), а под списком добавлена
@@ -29,7 +29,7 @@ function formatBytes(bytes: number): string {
 function StoragePanel() {
   const usage = useAssetUsage()
   return (
-    <div className="flex w-72 shrink-0 flex-col gap-4 border-r p-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
       <div className="flex items-center gap-2 text-sm font-medium">
         <HardDriveIcon className="size-4 text-muted-foreground" />
         Хранилище проекта
@@ -61,7 +61,48 @@ function StoragePanel() {
 /** Сегмент «Джарибек»: лист дерева, рисует панель хранилища. */
 const jaribekSegment = definePathSegment({
   key: 'jaribek',
+  title: 'Джарибек',
+  width: 'w-72 shrink-0',
   view: () => <StoragePanel />,
+})
+
+/** Десять имён жителей Кавказа для демо-сегмента. */
+const caucasusNames = [
+  'Аслан',
+  'Тамерлан',
+  'Зураб',
+  'Шамиль',
+  'Мурат',
+  'Руслан',
+  'Бекхан',
+  'Георгий',
+  'Леван',
+  'Хаджимурат',
+] as const
+
+/** Панель со списком имён жителей Кавказа. */
+function CaucasusPanel() {
+  return (
+    <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-1">
+      {caucasusNames.map((name) => (
+        <li
+          key={name}
+          className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm"
+        >
+          <MountainIcon className="size-4 text-muted-foreground" />
+          {name}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/** Сегмент «Кавказ»: лист дерева, выводит десять имён жителей Кавказа. */
+const caucasusSegment = definePathSegment({
+  key: 'caucasus',
+  title: 'Кавказ',
+  width: 'w-56 shrink-0',
+  view: () => <CaucasusPanel />,
 })
 
 /** Прочитать строковый params звена next (он типизирован как unknown). */
@@ -76,19 +117,34 @@ function nextType(
 /** Корень кастомной навигации: дефолтная колонка типов + кнопка «Джарибек» под списком. */
 export const customRootSegment: AnyPathSegment = definePathSegment({
   key: 'types',
-  children: { documents: documentsSegment, jaribek: jaribekSegment },
+  title: 'Типы',
+  width: 'w-56 shrink-0',
+  children: {
+    documents: documentsSegment,
+    jaribek: jaribekSegment,
+    caucasus: caucasusSegment,
+  },
   view: ({ open, go, next }) => (
     <TypesColumn
       selected={nextType(next)}
       onSelect={(type) => go(open.documents({ type }))}
       footer={
-        <PathSegmentLink
-          to={open.jaribek({})}
-          className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-muted/50"
-        >
-          <SparklesIcon className="size-4 text-muted-foreground" />
-          Джарибек
-        </PathSegmentLink>
+        <div className="flex flex-col gap-0.5">
+          <PathSegmentLink
+            to={open.jaribek({})}
+            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-muted/50"
+          >
+            <SparklesIcon className="size-4 text-muted-foreground" />
+            Джарибек
+          </PathSegmentLink>
+          <PathSegmentLink
+            to={open.caucasus({})}
+            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-muted/50"
+          >
+            <MountainIcon className="size-4 text-muted-foreground" />
+            Кавказ
+          </PathSegmentLink>
+        </div>
       }
     />
   ),

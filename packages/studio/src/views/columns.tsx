@@ -23,7 +23,7 @@ export function TypesColumn({
   )
 
   return (
-    <div className="flex w-56 shrink-0 flex-col overflow-hidden border-r">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-1">
         {Object.entries(config.documents).map(([type, definition]) => {
           const Icon = asIcon(definition.icon)

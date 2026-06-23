@@ -1,4 +1,8 @@
-import { definePathSegment, type SegmentParams } from '../data/navigation.tsx'
+import {
+  definePathSegment,
+  type AnyPathSegment,
+  type SegmentParams,
+} from '../data/navigation.tsx'
 import { DocumentEditor } from './DocumentEditor.tsx'
 import { DocumentsColumn, TypesColumn } from './columns.tsx'
 
@@ -17,17 +21,25 @@ function paramString(params: SegmentParams, key: string): string | undefined {
 /** Лист дерева: редактор конкретного документа. Удаление закрывает сегмент и возвращает к списку. */
 const documentSegment = definePathSegment({
   key: 'document',
+  title: 'Документ',
+  width: 'w-max min-w-[24rem] shrink-0',
   params: (p: { type: string; docId: string }) => p,
   view: ({ params, close }) => (
-    <div className="min-w-0 flex-1 overflow-hidden">
+    <div className="min-h-0 flex-1 overflow-hidden">
       <DocumentEditor id={params.docId} type={params.type} onDeleted={close} />
     </div>
   ),
 })
 
+// Рекурсия дерева: из документа можно открыть документ — поле ссылки в форме открывает сегмент связанного документа, и так по цепочке без предела. Присваиваем потомка после определения, потому что сегмент ссылается сам на себя.
+;(documentSegment.children as Record<string, AnyPathSegment>).document =
+  documentSegment
+
 /** Список документов выбранного типа; выбор открывает сегмент документа. Экспортируется как строительный блок: потребитель кладёт его в children своего корня. */
 export const documentsSegment = definePathSegment({
   key: 'documents',
+  title: 'Документы',
+  width: 'w-72 shrink-0',
   params: (p: { type: string }) => p,
   children: { document: documentSegment },
   view: ({ params, open, go, next }) => (
@@ -44,6 +56,8 @@ export const documentsSegment = definePathSegment({
 /** Корень дефолтной навигации: колонка типов документов. */
 export const defaultRootSegment = definePathSegment({
   key: 'types',
+  title: 'Типы',
+  width: 'w-56 shrink-0',
   children: { documents: documentsSegment },
   view: ({ open, go, next }) => (
     <TypesColumn

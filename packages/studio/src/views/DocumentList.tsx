@@ -255,7 +255,7 @@ export function DocumentList({
     .sort((a, b) => compareDocs(a, b, state.sort))
 
   return (
-    <div className="flex w-72 shrink-0 flex-col overflow-hidden border-r">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {controls ? (
         <ListToolbar
           type={type}

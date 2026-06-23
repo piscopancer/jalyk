@@ -130,9 +130,11 @@ export { getAtPath, setAtPath, samePath } from './data/path.ts'
 export {
   definePathSegment,
   PathSegmentLink,
+  SegmentHeader,
   NavigationProvider,
   useNavStack,
   usePathSegmentNav,
+  useSegmentNav,
   type PathSegment,
   type AnyPathSegment,
   type SegmentParams,

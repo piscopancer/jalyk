@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@jalyk/ui'
+import { ImagesIcon, UploadIcon, XIcon } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useStudio } from '../data/context.tsx'
 import { useField } from '../data/field.ts'
@@ -62,13 +63,15 @@ export function ImageField({ path }: FieldComponentProps) {
           disabled={upload.isPending}
           onClick={() => inputRef.current?.click()}
         >
-          {upload.isPending ? 'Загрузка…' : assetId ? 'Заменить' : 'Загрузить'}
+          <UploadIcon />
+          {upload.isPending ? 'Загрузка…' : 'Загрузить'}
         </Button>
         <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
           <DialogTrigger
             render={<Button type="button" size="sm" variant="outline" />}
           >
-            Смотреть все
+            <ImagesIcon />
+            Выбрать
           </DialogTrigger>
           <DialogContent className="max-w-[90vw] sm:max-w-3xl">
             <DialogHeader>
@@ -90,8 +93,10 @@ export function ImageField({ path }: FieldComponentProps) {
             size="sm"
             variant="ghost"
             onClick={() => handle.set(null)}
+            className="ml-auto text-muted-foreground"
           >
-            Удалить
+            <XIcon />
+            Убрать
           </Button>
         ) : null}
       </div>

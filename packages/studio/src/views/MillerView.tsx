@@ -5,7 +5,7 @@ export function MillerView() {
   const stack = useNavStack()
 
   return (
-    <div className="flex h-full min-h-0 w-full">
+    <div className="flex h-full min-h-0 w-full overflow-x-scroll overflow-y-hidden">
       {stack.map((segment) => (
         <div key={segment.key} className="contents">
           {segment.node}

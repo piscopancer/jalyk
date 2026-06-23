@@ -1,5 +1,7 @@
+import { cn } from '@jalyk/ui'
 import { useAtom, type PrimitiveAtom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
+import { XIcon } from 'lucide-react'
 import {
   createContext,
   useContext,
@@ -60,6 +62,10 @@ export type PathSegment<
   Children extends Record<string, AnySegment>,
 > = {
   key: Key
+  /** Заголовок сегмента, выводится в хедере колонки. У корня крестика нет, но title показывается. */
+  title?: string
+  /** Tailwind-классы ширины/роста колонки сегмента (например 'w-56 shrink-0' или 'min-w-0 flex-1'); применяются к обёртке. */
+  width?: string
   children: Children
   view: (ctx: SegmentRenderContext<Params, Children>) => ReactNode
 }
@@ -71,6 +77,10 @@ export function definePathSegment<
   const Children extends Record<string, AnySegment> = Record<string, never>,
 >(def: {
   key: Key
+  /** Заголовок сегмента, выводится в хедере колонки. */
+  title?: string
+  /** Tailwind-классы ширины/роста колонки сегмента (по умолчанию растягивается). */
+  width?: string
   /** Identity-функция, фиксирующая тип params экземпляра (например (p: { docId: string }) => p). */
   params?: (params: Params) => Params
   children?: Children
@@ -80,6 +90,8 @@ export function definePathSegment<
 }) {
   return {
     key: def.key,
+    title: def.title,
+    width: def.width,
     children: def.children ?? ({} as Children),
     view: def.view,
   } satisfies PathSegment<Key, Params, Children>
@@ -176,7 +188,16 @@ function useNavigation() {
   return ctx
 }
 
-type SegmentNav = { go: (target: OpenTarget) => void; close: () => void }
+type SegmentNav = {
+  go: (target: OpenTarget) => void
+  close: () => void
+  /** Заголовок текущего сегмента (из definePathSegment). */
+  title: string | undefined
+  /** Можно ли закрыть сегмент: корень закрыть нельзя. */
+  canClose: boolean
+  /** Переход к сегменту документа, если текущий сегмент объявляет потомка 'document' (инлайн-создание/редактирование в поле ссылки). */
+  openDocument: ((type: string, docId: string) => OpenTarget) | undefined
+}
 
 const SegmentNavContext = createContext<SegmentNav | null>(null)
 
@@ -187,6 +208,38 @@ export function usePathSegmentNav() {
     throw new Error('PathSegmentLink должен рендериться внутри сегмента пути')
   }
   return ctx
+}
+
+/** Контекст сегмента или null — для компонентов (например поля ссылки), которые работают и вне дерева навигации. */
+export function useSegmentNav() {
+  return useContext(SegmentNavContext)
+}
+
+/** Хедер сегмента: заголовок и крестик-закрытие у правого края. Крестик скрыт у корня (canClose=false). Вне сегмента ничего не рисует. Ставится первым элементом в колонке view. */
+export function SegmentHeader({ className }: { className?: string }) {
+  const ctx = useContext(SegmentNavContext)
+  if (!ctx) return null
+  const { title, canClose, close } = ctx
+  return (
+    <div
+      className={cn(
+        'diagonal-stripes flex h-9 shrink-0 items-center justify-between gap-2 border-b px-3',
+        className,
+      )}
+    >
+      <span className="truncate text-sm font-medium">{title}</span>
+      {canClose ? (
+        <button
+          type="button"
+          aria-label="Закрыть"
+          onClick={close}
+          className="-mr-1 flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-muted/50"
+        >
+          <XIcon className="size-4" />
+        </button>
+      ) : null}
+    </div>
+  )
 }
 
 /** Кнопка-переход в следующий сегмент. to — результат open.<child>(params). */
@@ -224,12 +277,18 @@ export function useNavStack() {
     const go = (target: OpenTarget) =>
       setEntries((prev) => [...prev.slice(0, depth + 1), target])
     const close = () => setEntries((prev) => prev.slice(0, depth))
+    const canClose = depth > 0
+    const open = buildOpen(r.segment)
+    const docOpen = open.document
+    const openDocument = docOpen
+      ? (type: string, docId: string) => docOpen({ type, docId })
+      : undefined
     const ctx: SegmentRenderContext<
       SegmentParams,
       Record<string, AnySegment>
     > = {
       params: r.entry.params,
-      open: buildOpen(r.segment),
+      open,
       go,
       close,
       next: entries[depth + 1],
@@ -237,8 +296,20 @@ export function useNavStack() {
     return {
       key: `${depth}:${r.entry.key}`,
       node: (
-        <SegmentNavContext.Provider value={{ go, close }}>
-          {r.segment.view(ctx)}
+        <SegmentNavContext.Provider
+          value={{ go, close, title: r.segment.title, canClose, openDocument }}
+        >
+          <div
+            className={cn(
+              'flex h-full min-h-0 flex-col overflow-hidden border-r',
+              r.segment.width ?? 'min-w-0 flex-1',
+            )}
+          >
+            <SegmentHeader />
+            <div className="flex min-h-0 flex-1 flex-col">
+              {r.segment.view(ctx)}
+            </div>
+          </div>
         </SegmentNavContext.Provider>
       ),
     }
