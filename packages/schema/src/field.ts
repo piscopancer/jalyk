@@ -371,27 +371,21 @@ type ReferenceOptions = FieldMeta & {
   default?: ReferenceValue
 }
 
-/** Тип значения поля-ссылки по его опциям: ReferenceValue с union ключей целей `to`. */
-type ReferenceFieldValue<O> = O extends {
-  to: infer T extends readonly ReferenceTarget[]
-}
-  ? ReferenceValue<T[number]['to']>
-  : never
-
-/** Поле-ссылка на документ; `to[].to` ограничено реестром SchemaRegistry (автодополнение и проверка в месте вызова), дереференс — на уровне find-запроса. */
+/** Поле-ссылка на документ; `to[].to` ограничено реестром SchemaRegistry (автодополнение и проверка в месте вызова), дереференс — на уровне find-запроса. Цели `to` выводятся в отдельный дженерик `To`, поэтому `templates` контекстно типизируется значением ссылки в момент набора (см. defineObject про замыкание на `O`). */
 export function defineReference<
   const O extends Omit<ReferenceOptions, 'to'> & {
     to: readonly ReferenceTarget[]
   },
+  const To extends readonly ReferenceTarget[],
   H = DefaultHeaderData,
 >(
   options: O &
-    HeaderOptions<H> & {
-      templates?: readonly FieldTemplate<ReferenceFieldValue<O>>[]
+    HeaderOptions<H> & { to: To } & {
+      templates?: readonly FieldTemplate<ReferenceValue<To[number]['to']>>[]
     },
 ) {
   return { kind: 'reference', ...options } as { kind: 'reference' } & O &
-    HeaderOptions<H> & { __value?: ReferenceFieldValue<O> }
+    HeaderOptions<H> & { __value?: ReferenceValue<To[number]['to']> }
 }
 
 type ObjectOptions = FieldMeta & {
@@ -399,23 +393,19 @@ type ObjectOptions = FieldMeta & {
   default?: Record<string, unknown>
 }
 
-/** Тип значения вложенного объекта по его опциям: значения карты полей. */
-type ObjectFieldValue<O> = O extends { fields: infer F extends FieldMap }
-  ? InferFields<F>
-  : never
-
-/** Вложенный объект со своей картой полей. */
+/** Вложенный объект со своей картой полей. Карта полей выводится в отдельный дженерик `F` прямо из `fields`, поэтому `templates` контекстно типизируется значением объекта (`InferFields<F>`) уже в момент набора — редактор подсказывает форму. Будь тип значения завязан на общий `O` (выводимый из всего объекта опций, включая сам `templates`), вывод замкнулся бы и подсказок внутри `value` не было бы. */
 export function defineObject<
   const O extends ObjectOptions,
+  const F extends FieldMap,
   H = DefaultHeaderData,
 >(
   options: O &
-    HeaderOptions<H> & {
-      templates?: readonly FieldTemplate<ObjectFieldValue<O>>[]
+    HeaderOptions<H> & { fields: F } & {
+      templates?: readonly FieldTemplate<InferFields<F>>[]
     },
 ) {
   return { kind: 'object', ...options } as { kind: 'object' } & O &
-    HeaderOptions<H> & { __value?: ObjectFieldValue<O> }
+    HeaderOptions<H> & { __value?: InferFields<F> }
 }
 
 /**
@@ -441,28 +431,28 @@ type ArrayOptions = FieldMeta & {
 }
 
 /**
- * Тип значения массива по его опциям: разнотипный (of — список полей) даёт
+ * Тип значения массива по типу его элемента `of`: разнотипный (of — список полей) даёт
  * элементы с `_type`/`_key` (ArrayItemValue), однородный (of — одно поле) — просто
- * массив значений элемента.
+ * массив значений элемента. Берёт тип элемента напрямую, чтобы фабрика выводила его в
+ * отдельный дженерик и контекстно типизировала `templates` без замыкания на `O`.
  */
-type ArrayFieldValue<O> = O extends { of: infer Of }
-  ? Of extends readonly AnyField[]
-    ? ArrayItemValue<Of[number]>[]
-    : Of extends AnyField
-      ? FieldValue<Of>[]
-      : never
-  : never
+type ArrayFieldValueOf<Of> = Of extends readonly AnyField[]
+  ? ArrayItemValue<Of[number]>[]
+  : Of extends AnyField
+    ? FieldValue<Of>[]
+    : never
 
-/** Массив элементов — однородный (of — одно поле) или разнотипный (of — список полей). */
+/** Массив элементов — однородный (of — одно поле) или разнотипный (of — список полей). Тип элемента выводится в отдельный дженерик `Of` прямо из `of`, поэтому `templates` подсказывает форму элемента в момент набора (см. defineObject про замыкание на `O`). */
 export function defineArray<
   const O extends ArrayOptions,
+  const Of extends ArrayOptions['of'],
   H = DefaultHeaderData,
 >(
   options: O &
-    HeaderOptions<H> & {
-      templates?: readonly FieldTemplate<ArrayFieldValue<O>>[]
+    HeaderOptions<H> & { of: Of } & {
+      templates?: readonly FieldTemplate<ArrayFieldValueOf<Of>>[]
     },
 ) {
   return { kind: 'array', ...options } as { kind: 'array' } & O &
-    HeaderOptions<H> & { __value?: ArrayFieldValue<O> }
+    HeaderOptions<H> & { __value?: ArrayFieldValueOf<Of> }
 }

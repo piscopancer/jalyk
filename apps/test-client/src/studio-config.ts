@@ -127,6 +127,14 @@ const artistDoc = defineDocument({
       icon: LinkIcon,
       of: defineObject({
         title: 'Ссылка',
+        templates: [
+          {
+            label: 'Пользователь ВК',
+            value: {
+              network: 'vk',
+            },
+          },
+        ],
         fields: {
           network: defineString({
             title: 'Соцсеть',

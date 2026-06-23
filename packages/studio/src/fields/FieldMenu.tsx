@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
   toast,
 } from '@jalyk/ui'
-import type { TemplateContext } from '@jalyk/schema'
+import type { FieldTemplate, TemplateContext } from '@jalyk/schema'
 import {
   ClipboardPasteIcon,
   CopyIcon,
@@ -82,19 +82,19 @@ export function FieldMenu({ path, field }: FieldComponentProps) {
   // Применение шаблона унифицировано: любой клик открывает диалог с лоадером,
   // колбэк резолвится (возможно async), затем диалог показывает дифф либо ошибку,
   // и запись идёт только по подтверждению.
-  const applyTemplate = async (label: string, raw: unknown) => {
-    setPending({ label, status: 'loading' })
+  const applyTemplate = async (template: FieldTemplate<unknown>) => {
+    setPending({ label: template.label, status: 'loading' })
     try {
-      const value = await resolveTemplate(raw, {
+      const value = await resolveTemplate(template.value, {
         documentId: id,
         // Граница типов: клиент собран из рантайм-конфига (AnyConfig), а колбэк
         // ждёт специфичный тип приложения из TemplateClientRegistry. Студия не
         // знает тип конфига приложения, поэтому здесь каст, как в createStudio.
         client: asyncClient as unknown as TemplateContext['client'],
       })
-      setPending({ label, status: 'ready', value })
+      setPending({ label: template.label, status: 'ready', value })
     } catch (error) {
-      setPending({ label, status: 'error', error })
+      setPending({ label: template.label, status: 'error', error })
     }
   }
 
@@ -169,9 +169,7 @@ export function FieldMenu({ path, field }: FieldComponentProps) {
                 {templates.map((template, i) => (
                   <DropdownMenuItem
                     key={i}
-                    onClick={() =>
-                      void applyTemplate(template.label, template.value)
-                    }
+                    onClick={() => void applyTemplate(template)}
                   >
                     {template.label}
                   </DropdownMenuItem>

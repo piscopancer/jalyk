@@ -1,5 +1,6 @@
 import { Studio } from '@jalyk/studio'
 import { createFileRoute } from '@tanstack/react-router'
+import { customRootSegment } from '../custom-studio.tsx'
 import { config } from '../studio-config.ts'
 
 // Конфиг подключения берём из окружения (VITE_JALYK_* в корневом .env). projectId
@@ -25,6 +26,7 @@ function StudioPage() {
       apiUrl={apiUrl}
       config={config}
       layout={'miller'}
+      navigation={{ root: customRootSegment }}
     />
   )
 }

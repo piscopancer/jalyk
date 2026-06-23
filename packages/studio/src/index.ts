@@ -128,6 +128,20 @@ export { useProjectEvents, useLiveInvalidation } from './data/events-hooks.ts'
 export { studioKeys } from './data/keys.ts'
 export { getAtPath, setAtPath, samePath } from './data/path.ts'
 export {
+  definePathSegment,
+  PathSegmentLink,
+  NavigationProvider,
+  useNavStack,
+  usePathSegmentNav,
+  type PathSegment,
+  type AnyPathSegment,
+  type SegmentParams,
+  type SegmentRenderContext,
+  type OpenTarget,
+  type PathEntry,
+} from './data/navigation.tsx'
+export { defaultRootSegment, documentsSegment } from './views/segments.tsx'
+export {
   asIcon,
   asComponent,
   type IconComponent,
@@ -152,5 +166,6 @@ export {
   useSchemaSnapshot,
   usePutSchemaSnapshot,
   useUploadAsset,
+  useAssetUsage,
 } from './data/hooks.ts'
 export type { StudioApiClient, StudioRuntime } from './data/runtime.ts'

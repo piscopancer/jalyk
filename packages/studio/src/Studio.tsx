@@ -5,6 +5,10 @@ import { FieldClipboardProvider } from './data/clipboard.tsx'
 import { StudioProvider } from './data/context.tsx'
 import { StudioErrorProvider } from './data/error-context.tsx'
 import { useLiveInvalidation } from './data/events-hooks.ts'
+import {
+  NavigationProvider,
+  type AnyPathSegment,
+} from './data/navigation.tsx'
 import { StudioPrefsProvider, useStudioLayout } from './data/prefs.tsx'
 import { StudioThemeProvider, useStudioDark } from './data/theme.tsx'
 import {
@@ -14,6 +18,7 @@ import {
 import { LayerView } from './views/LayerView.tsx'
 import { MillerView } from './views/MillerView.tsx'
 import { ProjectGate } from './views/ProjectGate.tsx'
+import { defaultRootSegment } from './views/segments.tsx'
 import { Toolbar } from './views/Toolbar.tsx'
 
 /** Встроенные лейауты студии; ключ выбирается пропом `layout`. */
@@ -33,6 +38,8 @@ export type StudioProps = {
   fieldComponents?: FieldComponents
   /** Встроенный лейаут студии: `miller` (колонки, по умолчанию) или `layer` (стопка-«блинчики»). Перебивается `children`. */
   layout?: StudioLayout
+  /** Навигация студии: ключ персиста пути в localStorage (для нескольких студий на странице) и корневой сегмент дерева. По умолчанию ключ `default` и встроенное дерево типы→документы→редактор. */
+  navigation?: { key?: string; root?: AnyPathSegment }
   /** Полная замена вида студии. Если не задано — выбранный `layout`. */
   children?: ReactNode
 }
@@ -52,6 +59,7 @@ function StudioShell({
   apiUrl,
   config,
   fieldComponents,
+  navigation,
   children,
 }: StudioProps) {
   const dark = useStudioDark()
@@ -70,14 +78,20 @@ function StudioShell({
             <StudioErrorProvider>
               <FieldClipboardProvider>
                 <FieldComponentsProvider components={fieldComponents ?? {}}>
-                  <ProjectGate>
-                    <div className="flex h-full min-h-0 flex-col">
-                      <Toolbar />
-                      <div className="min-h-0 flex-1">
-                        <StudioBody>{children}</StudioBody>
+                  <NavigationProvider
+                    projectId={projectId}
+                    navKey={navigation?.key}
+                    root={navigation?.root ?? defaultRootSegment}
+                  >
+                    <ProjectGate>
+                      <div className="flex h-full min-h-0 flex-col">
+                        <Toolbar />
+                        <div className="min-h-0 flex-1">
+                          <StudioBody>{children}</StudioBody>
+                        </div>
                       </div>
-                    </div>
-                  </ProjectGate>
+                    </ProjectGate>
+                  </NavigationProvider>
                 </FieldComponentsProvider>
                 <Toaster
                   position="bottom-right"
