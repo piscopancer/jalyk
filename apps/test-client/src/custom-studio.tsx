@@ -29,7 +29,7 @@ function formatBytes(bytes: number): string {
 function StoragePanel() {
   const usage = useAssetUsage()
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
+    <div className="flex min-h-0 w-72 flex-1 flex-col gap-4 p-4">
       <div className="flex items-center gap-2 text-sm font-medium">
         <HardDriveIcon className="size-4 text-muted-foreground" />
         Хранилище проекта
@@ -62,7 +62,6 @@ function StoragePanel() {
 const jaribekSegment = definePathSegment({
   key: 'jaribek',
   title: 'Джарибек',
-  width: 'w-72 shrink-0',
   view: () => <StoragePanel />,
 })
 
@@ -83,7 +82,7 @@ const caucasusNames = [
 /** Панель со списком имён жителей Кавказа. */
 function CaucasusPanel() {
   return (
-    <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-1">
+    <ul className="flex min-h-0 w-84 flex-1 flex-col gap-0.5 overflow-y-auto p-1">
       {caucasusNames.map((name) => (
         <li
           key={name}
@@ -101,7 +100,6 @@ function CaucasusPanel() {
 const caucasusSegment = definePathSegment({
   key: 'caucasus',
   title: 'Кавказ',
-  width: 'w-56 shrink-0',
   view: () => <CaucasusPanel />,
 })
 
@@ -118,7 +116,6 @@ function nextType(
 export const customRootSegment: AnyPathSegment = definePathSegment({
   key: 'types',
   title: 'Типы',
-  width: 'w-56 shrink-0',
   children: {
     documents: documentsSegment,
     jaribek: jaribekSegment,

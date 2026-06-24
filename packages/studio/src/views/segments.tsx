@@ -22,10 +22,9 @@ function paramString(params: SegmentParams, key: string): string | undefined {
 const documentSegment = definePathSegment({
   key: 'document',
   title: 'Документ',
-  width: 'w-max min-w-[24rem] shrink-0',
   params: (p: { type: string; docId: string }) => p,
   view: ({ params, close }) => (
-    <div className="min-h-0 flex-1 overflow-hidden">
+    <div className="min-h-0 w-max min-w-[24rem] flex-1 overflow-hidden">
       <DocumentEditor id={params.docId} type={params.type} onDeleted={close} />
     </div>
   ),
@@ -39,7 +38,6 @@ const documentSegment = definePathSegment({
 export const documentsSegment = definePathSegment({
   key: 'documents',
   title: 'Документы',
-  width: 'w-72 shrink-0',
   params: (p: { type: string }) => p,
   children: { document: documentSegment },
   view: ({ params, open, go, next }) => (
@@ -57,7 +55,6 @@ export const documentsSegment = definePathSegment({
 export const defaultRootSegment = definePathSegment({
   key: 'types',
   title: 'Типы',
-  width: 'w-56 shrink-0',
   children: { documents: documentsSegment },
   view: ({ open, go, next }) => (
     <TypesColumn

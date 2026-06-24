@@ -125,20 +125,6 @@ export function FieldMenu({ path, field }: FieldComponentProps) {
           <MoreHorizontalIcon />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-52">
-          {canResetDraft ? (
-            <DropdownMenuItem
-              onClick={() => handle.set(publishedValue ?? null)}
-            >
-              <DropdownMenuItemRow icon={<RotateCcwIcon />}>
-                Сбросить черновик
-              </DropdownMenuItemRow>
-            </DropdownMenuItem>
-          ) : null}
-          <DropdownMenuItem onClick={() => handle.set(field.default)}>
-            <DropdownMenuItemRow icon={<RotateCcwIcon />}>
-              Сбросить до дефолта
-            </DropdownMenuItemRow>
-          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
               clipboard.copy(field.kind, handle.value)
@@ -177,10 +163,28 @@ export function FieldMenu({ path, field }: FieldComponentProps) {
               </DropdownMenuSubContent>
             </DropdownMenuSub>
           ) : null}
-          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setDetailOpen(true)}>
             <DropdownMenuItemRow icon={<FileJson2Icon />}>
               Детальный просмотр
+            </DropdownMenuItemRow>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {canResetDraft ? (
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => handle.set(publishedValue ?? null)}
+            >
+              <DropdownMenuItemRow icon={<RotateCcwIcon />}>
+                Сбросить черновик
+              </DropdownMenuItemRow>
+            </DropdownMenuItem>
+          ) : null}
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => handle.set(field.default)}
+          >
+            <DropdownMenuItemRow icon={<RotateCcwIcon />}>
+              Сбросить до дефолта
             </DropdownMenuItemRow>
           </DropdownMenuItem>
         </DropdownMenuContent>

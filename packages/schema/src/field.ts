@@ -156,6 +156,8 @@ export type AnyField = FieldMeta & {
   // членов (разнотипный массив).
   of?: AnyField | readonly AnyField[]
   to?: readonly ReferenceTarget[]
+  /** Поле массива: показывать ли строку поиска над списком элементов. */
+  search?: boolean
   /** Допустимые типы ассета (поле kind: 'asset') — массив глобов MIME, см. AssetFilter. */
   accept?: AssetFilter
   min?: number
@@ -428,6 +430,8 @@ type ArrayOptions = FieldMeta & {
    */
   of: AnyField | readonly AnyField[]
   default?: unknown[]
+  /** Показывать строку поиска над списком элементов (по умолчанию выключено). */
+  search?: boolean
 }
 
 /**

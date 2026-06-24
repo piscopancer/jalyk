@@ -64,8 +64,6 @@ export type PathSegment<
   key: Key
   /** Заголовок сегмента, выводится в хедере колонки. У корня крестика нет, но title показывается. */
   title?: string
-  /** Tailwind-классы ширины/роста колонки сегмента (например 'w-56 shrink-0' или 'min-w-0 flex-1'); применяются к обёртке. */
-  width?: string
   children: Children
   view: (ctx: SegmentRenderContext<Params, Children>) => ReactNode
 }
@@ -79,8 +77,6 @@ export function definePathSegment<
   key: Key
   /** Заголовок сегмента, выводится в хедере колонки. */
   title?: string
-  /** Tailwind-классы ширины/роста колонки сегмента (по умолчанию растягивается). */
-  width?: string
   /** Identity-функция, фиксирующая тип params экземпляра (например (p: { docId: string }) => p). */
   params?: (params: Params) => Params
   children?: Children
@@ -91,7 +87,6 @@ export function definePathSegment<
   return {
     key: def.key,
     title: def.title,
-    width: def.width,
     children: def.children ?? ({} as Children),
     view: def.view,
   } satisfies PathSegment<Key, Params, Children>
@@ -299,12 +294,7 @@ export function useNavStack() {
         <SegmentNavContext.Provider
           value={{ go, close, title: r.segment.title, canClose, openDocument }}
         >
-          <div
-            className={cn(
-              'flex h-full min-h-0 flex-col overflow-hidden border-r',
-              r.segment.width ?? 'min-w-0 flex-1',
-            )}
-          >
+          <div className="flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-r">
             <SegmentHeader />
             <div className="flex min-h-0 flex-1 flex-col">
               {r.segment.view(ctx)}

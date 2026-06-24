@@ -23,6 +23,7 @@ import {
 } from '@jalyk/ui'
 import {
   CheckIcon,
+  ChevronDownIcon,
   ChevronsUpDownIcon,
   FileTextIcon,
   PencilIcon,
@@ -43,6 +44,7 @@ import {
 } from '../data/react-bridge.tsx'
 import { validateDraft } from '../data/validation.tsx'
 import { DefaultPreview } from '../views/DefaultPreview.tsx'
+import { DocumentEditor } from '../views/DocumentEditor.tsx'
 import type { FieldComponentProps } from './registry.tsx'
 
 /** Строковое имя поля-источника (title/description) из данных превью; данные цели или документа приходят рантайм-стёртыми, поэтому читаем через getAtPath. */
@@ -185,6 +187,7 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
   const nav = useSegmentNav()
   const create = useCreateDocument()
   const [open, setOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const targets = field.to ?? []
   const targetByType = new Map<string, ReferenceTarget>(
     targets.map((target) => [target.to, target]),
@@ -214,8 +217,24 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Popover open={open} onOpenChange={setOpen}>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        {ref && refType ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={expanded ? 'Свернуть форму' : 'Развернуть форму'}
+            aria-expanded={expanded}
+            className="shrink-0 text-muted-foreground"
+            onClick={() => setExpanded((v) => !v)}
+          >
+            <ChevronDownIcon
+              className={cn('transition-transform', expanded && 'rotate-180')}
+            />
+          </Button>
+        ) : null}
+        <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           render={
             <Button
@@ -298,30 +317,44 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
             </CommandList>
           </Command>
         </PopoverContent>
-      </Popover>
-      {ref && refType && openDocument ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="Редактировать"
-          className="shrink-0 text-muted-foreground"
-          onClick={() => nav?.go(openDocument(refType, ref))}
-        >
-          <PencilIcon />
-        </Button>
-      ) : null}
-      {ref ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="Очистить"
-          className="shrink-0 text-muted-foreground"
-          onClick={() => handle.set(null)}
-        >
-          <XIcon />
-        </Button>
+        </Popover>
+        {ref && refType && openDocument ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Открыть в сегменте"
+            className="shrink-0 text-muted-foreground"
+            onClick={() => nav?.go(openDocument(refType, ref))}
+          >
+            <PencilIcon />
+          </Button>
+        ) : null}
+        {ref ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Очистить"
+            className="shrink-0 text-muted-foreground"
+            onClick={() => handle.set(null)}
+          >
+            <XIcon />
+          </Button>
+        ) : null}
+      </div>
+      {expanded && ref && refType ? (
+        <div className="overflow-hidden rounded-lg border">
+          <DocumentEditor
+            id={ref}
+            type={refType}
+            variant="inline"
+            onDeleted={() => {
+              handle.set(null)
+              setExpanded(false)
+            }}
+          />
+        </div>
       ) : null}
     </div>
   )

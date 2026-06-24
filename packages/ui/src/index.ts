@@ -46,6 +46,16 @@ export {
   DropdownMenuSubContent,
 } from './components/dropdown-menu.tsx'
 export {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuItemRow,
+  ContextMenuSeparator,
+  ContextMenuGroup,
+  ContextMenuLabel,
+} from './components/context-menu.tsx'
+export {
   Dialog,
   DialogClose,
   DialogContent,

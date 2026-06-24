@@ -5,8 +5,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  Input,
+  cn,
 } from '@jalyk/ui'
-import { PlusIcon, Trash2Icon } from 'lucide-react'
+import { GripVerticalIcon, MinusIcon, PlusIcon, SearchIcon } from 'lucide-react'
 import { useField } from '../data/field.ts'
 import { FieldEditor } from './FieldInput.tsx'
 import type { FieldComponentProps } from './registry.tsx'
@@ -75,36 +77,57 @@ export function ArrayField({ path, field }: FieldComponentProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      {items.map((item, index) => {
-        const member = memberFor(item)
-        const reactKey = (item as { _key?: string } | null)?._key ?? index
-        return (
-          <div key={reactKey} className="flex gap-2 rounded-md border p-3">
-            <div className="min-w-0 flex-1">
-              {member ? (
-                <FieldEditor path={[...path, String(index)]} field={member} />
-              ) : null}
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label="Удалить элемент"
-              className="shrink-0 text-muted-foreground"
-              onClick={() => removeAt(index)}
-            >
-              <Trash2Icon />
-            </Button>
+    <div className="overflow-hidden rounded-md border">
+      <div className="border-b">
+        {field.search ? (
+          <div className="relative p-2 pb-1">
+            <SearchIcon className="pointer-events-none absolute left-4 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              // Визуальный поиск без фильтрации: у элемента массива нет известного студии текста-заголовка, искать пока не по чему.
+              placeholder="Поиск"
+              className="h-7 w-full pl-7"
+            />
           </div>
-        )
-      })}
+        ) : null}
+        <div className="px-2 py-1.5 text-right text-xs text-muted-foreground">
+          Всего: {items.length}
+        </div>
+      </div>
+      <div className={cn('divide-y', items.length > 0 && 'border-b')}>
+        {items.map((item, index) => {
+          const member = memberFor(item)
+          const reactKey = (item as { _key?: string } | null)?._key ?? index
+          return (
+            <div key={reactKey} className="flex items-stretch">
+              <div
+                // Заглушка перетаскивания: ручка нарисована, но dnd ещё не реализован — поэтому без действия и без hover-подсветки кнопки.
+                aria-hidden
+                className="flex w-7 shrink-0 cursor-grab items-center justify-center border-r text-muted-foreground"
+              >
+                <GripVerticalIcon className="size-4" />
+              </div>
+              <div className="min-w-0 flex-1 p-2">
+                {member ? (
+                  <FieldEditor path={[...path, String(index)]} field={member} />
+                ) : null}
+              </div>
+              <button
+                type="button"
+                aria-label="Удалить элемент"
+                className="flex w-7 shrink-0 items-center justify-center border-l text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                onClick={() => removeAt(index)}
+              >
+                <MinusIcon className="size-4" />
+              </button>
+            </div>
+          )
+        })}
+      </div>
       {members.length <= 1 ? (
         <Button
           type="button"
-          variant="outline"
-          size="sm"
-          className="self-start"
+          variant="ghost"
+          className="w-full justify-center rounded-none"
           disabled={!members[0]}
           onClick={() => members[0] && add(members[0])}
         >
@@ -116,9 +139,11 @@ export function ArrayField({ path, field }: FieldComponentProps) {
             render={
               <Button
                 type="button"
-                variant="outline"
-                size="sm"
-                className="self-start"
+                variant="ghost"
+                className={cn(
+                  'w-full justify-center rounded-none',
+                  items.length > 0 && 'border-t border-t-border',
+                )}
               />
             }
           >

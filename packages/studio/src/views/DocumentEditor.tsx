@@ -3,28 +3,15 @@ import {
   Button,
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
+  cn,
 } from '@jalyk/ui'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNowStrict } from 'date-fns'
 import { ru } from 'date-fns/locale'
-import {
-  Code2Icon,
-  MoreHorizontalIcon,
-  RotateCcwIcon,
-  Trash2Icon,
-} from 'lucide-react'
-import { useState } from 'react'
+import { MoreHorizontalIcon, RotateCcwIcon } from 'lucide-react'
 import { useStudio } from '../data/context.tsx'
 import { DocumentProvider } from '../data/document.tsx'
 import {
-  useDeleteDocument,
   useDocument,
   usePublishDocument,
   useResetDraft,
@@ -37,7 +24,7 @@ import {
 } from '../data/validation.tsx'
 import { UnknownField } from '../fields/AnomalousField.tsx'
 import { FieldInput } from '../fields/FieldInput.tsx'
-import { DocumentJsonView } from './DocumentJsonView.tsx'
+import { useDocumentMenu } from './document-menu.tsx'
 import { CustomForm, type FormProps } from './form.tsx'
 import { IssueBadge } from './IssueBadge.tsx'
 
@@ -50,10 +37,10 @@ function draftState(
   return jsonEqual(draft, published) ? 'clean' : 'changed'
 }
 
-/** Относительное «N дней назад» через date-fns с русской локалью. */
+/** Относительное «N назад» через date-fns с русской локалью; strict — без «около». */
 function publishedLabel(publishedAt: string | null | undefined): string {
   if (!publishedAt) return 'Ещё не публиковалось'
-  return `Опубликовано ${formatDistanceToNow(new Date(publishedAt), { addSuffix: true, locale: ru })}`
+  return `Опубликовано ${formatDistanceToNowStrict(new Date(publishedAt), { addSuffix: true, locale: ru })}`
 }
 
 /** Нижняя панель действий документа: статус черновика и сброс, публикация с датой, троеточие (удалить, просмотр JSON). */
@@ -66,10 +53,9 @@ function DocumentActions({
 }) {
   const doc = useDocument(id)
   const publish = usePublishDocument(id)
-  const remove = useDeleteDocument(id)
   const reset = useResetDraft(id)
   const { issues, hasError } = useDocumentValidation()
-  const [jsonOpen, setJsonOpen] = useState(false)
+  const { items, dialog } = useDocumentMenu(id, onDeleted)
 
   const state = draftState(doc.data?.draft, doc.data?.published)
 
@@ -86,7 +72,7 @@ function DocumentActions({
         {state === 'changed' && (
           <Button
             size="sm"
-            variant="outline"
+            variant="destructive"
             disabled={reset.isPending}
             onClick={() => reset.mutate()}
           >
@@ -109,21 +95,7 @@ function DocumentActions({
           >
             <MoreHorizontalIcon />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setJsonOpen(true)}>
-              <Code2Icon />
-              Просмотреть JSON
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant="destructive"
-              disabled={remove.isPending}
-              onClick={() => remove.mutate(undefined, { onSuccess: onDeleted })}
-            >
-              <Trash2Icon />
-              {remove.isPending ? 'Удаляем…' : 'Удалить'}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
+          <DropdownMenuContent align="end">{items}</DropdownMenuContent>
         </DropdownMenu>
       </div>
 
@@ -133,32 +105,22 @@ function DocumentActions({
           : publishedLabel(doc.data?.publishedAt)}
       </span>
 
-      <Sheet open={jsonOpen} onOpenChange={setJsonOpen}>
-        <SheetContent className="w-[32rem] sm:max-w-[32rem]">
-          <SheetHeader>
-            <SheetTitle>JSON документа</SheetTitle>
-            <SheetDescription>
-              Черновик; ссылки разворачиваются и подгружают связанный документ.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="-mx-2 flex-1 overflow-auto px-2">
-            <DocumentJsonView draft={doc.data?.draft} />
-          </div>
-        </SheetContent>
-      </Sheet>
+      {dialog}
     </div>
   )
 }
 
-/** Дефолтный редактор документа: рисует FieldInput по полям типа внутри DocumentProvider (нужен useField). */
+/** Дефолтный редактор документа: рисует FieldInput по полям типа внутри DocumentProvider (нужен useField). `variant='column'` заполняет колонку сегмента со своим скроллом; `variant='inline'` растёт по контенту (для разворота под превью поля ссылки). */
 export function DocumentEditor({
   id,
   type,
   onDeleted,
+  variant = 'column',
 }: {
   id: string
   type: string
   onDeleted?: () => void
+  variant?: 'column' | 'inline'
 }) {
   const { config } = useStudio()
   const doc = useDocument(id)
@@ -174,12 +136,18 @@ export function DocumentEditor({
 
   // formComponent (ErasedComponent) рисуется вместо перебора полей; narrow через asComponent на границе со схемой.
   const Form = asComponent<FormProps<FieldMap>>(definition.formComponent)
+  const inline = variant === 'inline'
 
   return (
     <DocumentProvider id={id} type={type}>
       <DocumentValidationProvider id={id} type={type}>
-        <div className="flex h-full flex-col">
-          <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
+        <div className={cn('flex flex-col', inline ? 'min-h-0' : 'h-full')}>
+          <div
+            className={cn(
+              'flex flex-col gap-5 p-4',
+              inline ? '' : 'flex-1 overflow-y-auto',
+            )}
+          >
             {doc.isLoading ? (
               <span className="text-sm text-muted-foreground">Загрузка…</span>
             ) : null}

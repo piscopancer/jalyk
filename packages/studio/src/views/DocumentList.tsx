@@ -41,6 +41,7 @@ import {
 } from '../data/react-bridge.tsx'
 import { validateDraft } from '../data/validation.tsx'
 import { DefaultPreview } from './DefaultPreview.tsx'
+import { DocumentContextMenu } from './document-menu.tsx'
 import { FilterBuilder } from './FilterBuilder.tsx'
 import { SortMenu } from './SortMenu.tsx'
 
@@ -139,27 +140,32 @@ export function DocumentRow({
 
   return (
     <li>
-      <button
-        className={cn(
-          'flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-muted/50',
-          selected === doc.id &&
-            'bg-accent font-medium hover:bg-accent dark:hover:bg-accent',
-        )}
-        onClick={() => onSelect(doc.id)}
-      >
-        <span className="min-w-0 flex-1">
-          <PreviewStateProvider value={state}>
-            <Preview
-              document={doc}
-              icon={icon}
-              title={title}
-              description={description}
-              preview={preview}
-              state={state}
-            />
-          </PreviewStateProvider>
-        </span>
-      </button>
+      <DocumentContextMenu
+        id={doc.id}
+        trigger={
+          <button
+            className={cn(
+              'flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-muted/50',
+              selected === doc.id &&
+                'bg-accent font-medium hover:bg-accent dark:hover:bg-accent',
+            )}
+            onClick={() => onSelect(doc.id)}
+          >
+            <span className="min-w-0 flex-1">
+              <PreviewStateProvider value={state}>
+                <Preview
+                  document={doc}
+                  icon={icon}
+                  title={title}
+                  description={description}
+                  preview={preview}
+                  state={state}
+                />
+              </PreviewStateProvider>
+            </span>
+          </button>
+        }
+      />
     </li>
   )
 }
@@ -255,7 +261,7 @@ export function DocumentList({
     .sort((a, b) => compareDocs(a, b, state.sort))
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="flex min-h-0 w-72 flex-1 flex-col overflow-hidden">
       {controls ? (
         <ListToolbar
           type={type}
