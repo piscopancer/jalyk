@@ -92,8 +92,14 @@ export {
   BooleanField,
   FallbackField,
 } from './fields/defaults.tsx'
-export { ImageField } from './fields/image.tsx'
 export { AssetField } from './fields/AssetField.tsx'
+export { DateField, DateRangeField } from './fields/date.tsx'
+export {
+  type AssetPreset,
+  type AssetPreviewProps,
+  audioAssetPreset,
+  imageAssetPreset,
+} from './fields/asset-presets.tsx'
 export { ReferenceField } from './fields/reference.tsx'
 export {
   FieldComponentsProvider,

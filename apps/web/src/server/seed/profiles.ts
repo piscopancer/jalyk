@@ -1,4 +1,5 @@
 import type { PrismaClient } from '@jalyk/db'
+import { Match } from 'effect'
 import { SEED_IDS, type SeedProfile } from './config'
 
 // Популяция тестовых данных через Prisma (createMany/create) — наглядно и
@@ -64,12 +65,10 @@ export async function runSeed(
   db: PrismaClient,
   profile: SeedProfile,
 ): Promise<void> {
-  switch (profile) {
-    case 'demo':
-      return seedDemo(db)
-    case 'many':
-      return seedMany(db)
-    case 'empty':
-      return
-  }
+  return Match.value(profile).pipe(
+    Match.when('demo', () => seedDemo(db)),
+    Match.when('many', () => seedMany(db)),
+    Match.when('empty', () => Promise.resolve()),
+    Match.exhaustive,
+  )
 }

@@ -1,3 +1,4 @@
+import { Match } from 'effect'
 import type { AnyField, FieldMap } from './field.ts'
 
 // Структурное соответствие сохранённого значения схеме поля. Это не пользовательская
@@ -35,17 +36,12 @@ function categoryOf(value: unknown): ValueCategory {
 function expectedCategory(
   kind: AnyField['kind'],
 ): Exclude<ValueCategory, 'empty'> {
-  switch (kind) {
-    case 'string':
-    case 'number':
-    case 'boolean':
-      return 'scalar'
-    case 'array':
-      return 'array'
-    default:
-      // richText, image, reference, object — все контейнеры-объекты.
-      return 'object'
-  }
+  return Match.value(kind).pipe(
+    Match.whenOr('string', 'number', 'boolean', 'date', () => 'scalar' as const),
+    Match.when('array', () => 'array' as const),
+    // richText, asset, dateRange, reference, object — все контейнеры-объекты.
+    Match.orElse(() => 'object' as const),
+  )
 }
 
 /** Структурное соответствие значения полю. Пустое значение (поле просто не заполнено) всегда подходит — обязательность проверяет defineDocument.validate, не эта функция. */
@@ -57,8 +53,8 @@ export function fieldFit(field: AnyField, value: unknown): FieldFit {
   if (cat !== expected) return 'structure'
 
   // Категория совпала — для скаляров доуточняем примитивный тип и вариант select.
-  switch (field.kind) {
-    case 'string': {
+  return Match.value(field.kind).pipe(
+    Match.when('string', () => {
       if (typeof value !== 'string') return 'type'
       const predefined = field.input?.predefined
       if (field.input?.type === 'select' && predefined) {
@@ -67,24 +63,30 @@ export function fieldFit(field: AnyField, value: unknown): FieldFit {
           : 'type'
       }
       return 'ok'
-    }
-    case 'number':
-      return typeof value === 'number' ? 'ok' : 'type'
-    case 'boolean':
-      return typeof value === 'boolean' ? 'ok' : 'type'
-    case 'image':
-    case 'asset':
-      return typeof (value as { assetId?: unknown }).assetId === 'string'
+    }),
+    Match.when('number', () => (typeof value === 'number' ? 'ok' : 'type')),
+    Match.when('boolean', () => (typeof value === 'boolean' ? 'ok' : 'type')),
+    // Хранимое значение даты — просто строка; формат (дата/ISO) выверяет редактор, не структурная проверка.
+    Match.when('date', () => (typeof value === 'string' ? 'ok' : 'type')),
+    Match.when('dateRange', () =>
+      typeof (value as { from?: unknown }).from === 'string' &&
+      typeof (value as { to?: unknown }).to === 'string'
         ? 'ok'
-        : 'structure'
-    case 'reference':
-      return typeof (value as { _ref?: unknown })._ref === 'string'
+        : 'structure',
+    ),
+    Match.when('asset', () =>
+      typeof (value as { assetId?: unknown }).assetId === 'string'
         ? 'ok'
-        : 'structure'
-    default:
-      // object/array/richText: контейнер на месте, содержимое проверяется глубже по дереву.
-      return 'ok'
-  }
+        : 'structure',
+    ),
+    Match.when('reference', () =>
+      typeof (value as { _ref?: unknown })._ref === 'string'
+        ? 'ok'
+        : 'structure',
+    ),
+    // object/array/richText: контейнер на месте, содержимое проверяется глубже по дереву.
+    Match.orElse(() => 'ok' as const),
+  )
 }
 
 /** Ключи объекта, присутствующие в значении, но отсутствующие в схеме объекта (поле удалили из схемы). Безобидны: документ отдаётся клиенту, поле срезается; в студии показываются как «неизвестные». Служебные ключи (`_key`, `_type`…) не считаются. */

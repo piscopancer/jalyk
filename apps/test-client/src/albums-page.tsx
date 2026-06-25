@@ -14,7 +14,7 @@ const loadAlbums = (client: NonNullable<typeof content>) =>
     select: {
       id: true,
       title: true,
-      year: true,
+      releaseDate: true,
       cover: true,
       band: {
         name: true,
@@ -98,9 +98,9 @@ export function AlbumsPage() {
               <div className="min-w-0 flex-1">
                 <h2 className="text-lg font-medium">
                   {album.title ?? 'Без названия'}{' '}
-                  {album.year != null && (
+                  {album.releaseDate != null && (
                     <span className="font-normal text-muted-foreground">
-                      ({album.year})
+                      ({album.releaseDate.slice(0, 4)})
                     </span>
                   )}
                 </h2>

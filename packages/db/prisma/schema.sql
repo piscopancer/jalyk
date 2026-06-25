@@ -161,8 +161,6 @@ CREATE TABLE "asset" (
     "filename" TEXT NOT NULL,
     "contentType" TEXT NOT NULL,
     "size" INTEGER NOT NULL,
-    "width" INTEGER,
-    "height" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "asset_pkey" PRIMARY KEY ("id")

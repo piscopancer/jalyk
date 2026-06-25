@@ -3,7 +3,7 @@ import { Button } from '@jalyk/ui'
 import { studio } from './studio-config.ts'
 import type { AlbumFields } from './studio-config.ts'
 
-/** Кастомная форма альбома: обложка слева, справа название/год/группа и кнопка поиска в Google, ниже треки. Field типизирован полями альбома. */
+/** Кастомная форма альбома: обложка слева, справа название/дата выхода/группа и кнопка поиска в Google, ниже треки. Field типизирован полями альбома. */
 export function AlbumForm({ Field, fields }: FormProps<AlbumFields>) {
   const bands = studio.band.findMany({ select: { id: true, name: true } })
   const bandRef = fields.band.value
@@ -17,7 +17,7 @@ export function AlbumForm({ Field, fields }: FormProps<AlbumFields>) {
         <Field name="cover" />
         <div className="flex flex-col gap-4">
           <Field name="title" />
-          <Field name="year" />
+          <Field name="releaseDate" />
           <div className="flex items-end gap-2">
             <Field name="band" className="flex-1" />
             <Button

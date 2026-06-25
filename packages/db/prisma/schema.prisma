@@ -214,8 +214,6 @@ model Asset {
   filename    String
   contentType String
   size        Int
-  width       Int?
-  height      Int?
   createdAt   DateTime @default(now())
 
   @@index([projectId])

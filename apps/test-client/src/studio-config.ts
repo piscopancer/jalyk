@@ -1,10 +1,10 @@
 import {
   defineArray,
+  defineAsset,
   defineBoolean,
   defineConfig,
+  defineDate,
   defineDocument,
-  defineImage,
-  defineNumber,
   defineObject,
   defineProjectBadge,
   defineReference,
@@ -13,7 +13,7 @@ import {
   index,
   rules,
 } from '@jalyk/schema'
-import { createStudio } from '@jalyk/studio'
+import { audioAssetPreset, createStudio, imageAssetPreset } from '@jalyk/studio'
 import {
   CalendarDaysIcon,
   Disc3Icon,
@@ -49,7 +49,7 @@ const socialNetworks = [
 
 /** Поля альбома вынесены отдельно, чтобы форма AlbumForm типизировалась по `typeof albumFields` без цикла «конфиг → форма → тип конфига». */
 const albumFields = {
-  cover: defineImage({ title: 'Обложка', icon: ImageIcon }),
+  cover: defineAsset({ ...imageAssetPreset, title: 'Обложка', icon: ImageIcon }),
   title: defineString({
     title: 'Название',
     icon: TagIcon,
@@ -71,14 +71,10 @@ const albumFields = {
       }),
     ],
   }),
-  year: defineNumber({
-    title: 'Год',
+  releaseDate: defineDate({
+    title: 'Дата выхода',
     icon: CalendarDaysIcon,
-    min: 0,
-    templates: [
-      { label: 'Текущий год', value: () => new Date().getFullYear() },
-      { label: '10 лет назад', value: () => new Date().getFullYear() - 10 },
-    ],
+    format: 'long',
   }),
   band: defineReference({
     title: 'Группа',
@@ -158,7 +154,7 @@ const albumDoc = defineDocument({
   previewComponent: AlbumPreview,
   formComponent: AlbumForm,
   fields: albumFields,
-  list: { search: ['title'], sort: ['title', 'year'] },
+  list: { search: ['title'], sort: ['title', 'releaseDate'] },
   validate: (doc, path) => [
     rules.required(doc.title, { path: path(['title']) }),
     rules.required(doc.band, { path: path(['band']) }),
@@ -184,6 +180,7 @@ const trackDoc = defineDocument({
   list: { search: ['title'], sort: ['title'] },
   fields: {
     title: defineString({ title: 'Название', icon: TagIcon }),
+    audio: defineAsset({ ...audioAssetPreset, title: 'Аудиофайл', icon: Music2Icon }),
     explicit: defineBoolean({
       title: 'Ненормативный контент',
       icon: ShieldAlertIcon,

@@ -38,8 +38,9 @@ export type FieldKind =
   | 'number'
   | 'boolean'
   | 'richText'
-  | 'image'
   | 'asset'
+  | 'date'
+  | 'dateRange'
   | 'reference'
   | 'object'
   | 'array'
@@ -109,10 +110,7 @@ export type RichTextValue = {
   [key: string]: unknown
 }
 
-/** Значение поля-картинки — ссылка на загруженный ассет. */
-export type ImageValue = { assetId: string }
-
-/** Значение поля-ассета — ссылка на загруженный ассет любого типа. Форма та же, что у картинки; различается только редактор и набор допустимых типов. */
+/** Значение поля-ассета — ссылка на загруженный ассет любого типа. Какие типы допустимы и как рисуется превью, задаёт пресет (`accept` + `component`). */
 export type AssetValue = { assetId: string }
 
 /**
@@ -127,6 +125,31 @@ export const anyImage = ['image/*'] as const satisfies AssetFilter
 export const anyVideo = ['video/*'] as const satisfies AssetFilter
 export const anyAudio = ['audio/*'] as const satisfies AssetFilter
 export const anyText = ['text/*'] as const satisfies AssetFilter
+
+/**
+ * Значение поля-даты — строка. Формат задаёт флаг `time`: при `time: false`
+ * хранится голая календарная дата `"YYYY-MM-DD"` (без зоны и времени), при
+ * `time: true` — момент в UTC, ISO с `Z` (`"2026-06-25T14:30:00Z"`). Скрытые
+ * разряды времени (см. `show`) фиксируются в строке как `:00`.
+ */
+export type DateValue = string
+
+/**
+ * Значение поля-диапазона дат — две строки того же формата, что DateValue
+ * (определяется тем же флагом `time`). `from` не позже `to`; равенство —
+ * проверяет правило документа, форму — conformance.
+ */
+export type DateRangeValue = { from: string; to: string }
+
+/**
+ * Какие разряды времени показывать в пикере (поля ввода) при `time: true`.
+ * По умолчанию рисуются `hour` и `min`, `sec` — нет. Управляет только вводом и
+ * показом: скрытые разряды в хранимой строке всё равно фиксируются в `:00`.
+ */
+export type TimeParts = { hour?: boolean; min?: boolean; sec?: boolean }
+
+/** Формат отображения выбранной даты — только на показ, не на хранение. */
+export type DateFormat = 'short' | 'long'
 
 /**
  * Значение поля-ссылки: id целевого документа и его тип (один из `to`). Тип лежит
@@ -160,6 +183,14 @@ export type AnyField = FieldMeta & {
   search?: boolean
   /** Допустимые типы ассета (поле kind: 'asset') — массив глобов MIME, см. AssetFilter. */
   accept?: AssetFilter
+  /** Компонент превью выбранного ассета (поле kind: 'asset'), приходит из пресета студии; без него рисуется дефолтное превью (картинка/иконка файла). */
+  component?: ErasedComponent
+  /** Хранить ли время (поля kind: 'date' | 'dateRange'): false — голая дата, true — момент UTC. */
+  time?: boolean
+  /** Какие разряды времени показывать при time: true (поля даты), см. TimeParts. */
+  show?: TimeParts
+  /** Формат отображения даты (поля даты) — на показ, не на хранение. */
+  format?: DateFormat
   min?: number
   max?: number
   input?: {
@@ -312,22 +343,13 @@ export function defineRichText<
     HeaderOptions<H> & { __value?: RichTextValue }
 }
 
-/** Поле-картинка — выбор/загрузка ассета. */
-export function defineImage<
-  const O extends FieldMeta & { default?: ImageValue },
-  H = DefaultHeaderData,
->(
-  options: O &
-    HeaderOptions<H> & { templates?: readonly FieldTemplate<ImageValue>[] } = {} as O &
-    HeaderOptions<H>,
-) {
-  return { kind: 'image', ...options } as { kind: 'image' } & O &
-    HeaderOptions<H> & { __value?: ImageValue }
-}
-
-/** Поле-ассет — выбор/загрузка файла любого типа. `accept` ограничивает допустимые типы (массив глобов MIME, см. AssetFilter); без него принимаются любые. */
+/** Поле-ассет — выбор/загрузка файла. `accept` ограничивает допустимые типы (массив глобов MIME, см. AssetFilter); без него принимаются любые. `component` — компонент превью выбранного ассета из пресета студии. Обычно вызывается распылением готового пресета: `defineAsset({ ...imageAssetPreset })`. */
 export function defineAsset<
-  const O extends FieldMeta & { accept?: AssetFilter; default?: AssetValue },
+  const O extends FieldMeta & {
+    accept?: AssetFilter
+    component?: ErasedComponent
+    default?: AssetValue
+  },
   H = DefaultHeaderData,
 >(
   options: O &
@@ -336,6 +358,40 @@ export function defineAsset<
 ) {
   return { kind: 'asset', ...options } as { kind: 'asset' } & O &
     HeaderOptions<H> & { __value?: AssetValue }
+}
+
+/** Общие опции полей даты: хранить ли время (`time`), какие разряды показывать (`show`) и формат отображения (`format`). */
+type DateMeta = FieldMeta & {
+  time?: boolean
+  show?: TimeParts
+  format?: DateFormat
+}
+
+/** Поле-дата — одна дата. Значение — строка: `"YYYY-MM-DD"` при `time: false`, ISO с `Z` при `time: true` (см. DateValue). Редактор — календарь плюс поля времени по `show`. */
+export function defineDate<
+  const O extends DateMeta & { default?: DateValue },
+  H = DefaultHeaderData,
+>(
+  options: O &
+    HeaderOptions<H> & { templates?: readonly FieldTemplate<DateValue>[] } = {} as O &
+    HeaderOptions<H>,
+) {
+  return { kind: 'date', ...options } as { kind: 'date' } & O &
+    HeaderOptions<H> & { __value?: DateValue }
+}
+
+/** Поле-диапазон дат. Значение — `{ from, to }` строками того же формата, что у defineDate (см. DateRangeValue). Редактор — календарь на два месяца с диапазонным выделением плюс поля времени по `show`. */
+export function defineDateRange<
+  const O extends DateMeta & { default?: DateRangeValue },
+  H = DefaultHeaderData,
+>(
+  options: O &
+    HeaderOptions<H> & {
+      templates?: readonly FieldTemplate<DateRangeValue>[]
+    } = {} as O & HeaderOptions<H>,
+) {
+  return { kind: 'dateRange', ...options } as { kind: 'dateRange' } & O &
+    HeaderOptions<H> & { __value?: DateRangeValue }
 }
 
 /**

@@ -7,16 +7,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@jalyk/ui'
-import { FileIcon } from 'lucide-react'
+import { FileIcon, FolderOpenIcon, UploadIcon, XIcon } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { formatBytes, isImageType, matchesFilter } from '../data/asset-filter.ts'
 import { useStudio } from '../data/context.tsx'
 import { useField } from '../data/field.ts'
 import { useAssets, useUploadAsset } from '../data/hooks.ts'
+import type { AssetPreviewProps } from './asset-presets.tsx'
 import { AssetGallery } from './AssetGallery.tsx'
 import type { FieldComponentProps } from './registry.tsx'
 
-/** Редактор поля-ассета (любой тип файла). Значение — { assetId }. `field.accept` (массив глобов MIME) ограничивает допустимые типы: им фильтруется и системный выбор файла, и галерея «Смотреть все». Превью: картинка — миниатюрой, прочее — иконкой файла с именем и весом. Очистка пишет null. */
+/** Редактор поля-ассета. Значение — { assetId }. `field.accept` (массив глобов MIME) ограничивает допустимые типы: им фильтруется и системный выбор файла, и галерея «Смотреть все». Превью выбранного файла рисует `field.component` из пресета (картинка, аудиоплеер и т.д.); без пресета — дефолт: картинка миниатюрой, прочее иконкой файла с именем и весом. Очистка пишет null. */
 export function AssetField({ path, field }: FieldComponentProps) {
   const handle = useField<AssetValue>(path)
   const { assetUrl } = useStudio()
@@ -26,6 +27,9 @@ export function AssetField({ path, field }: FieldComponentProps) {
   const [galleryOpen, setGalleryOpen] = useState(false)
 
   const filter = field.accept
+  const Preview = field.component as
+    | ((props: AssetPreviewProps) => React.ReactNode)
+    | undefined
   const assetId = handle.value?.assetId
   const asset = (assets.data ?? []).find((a) => a.id === assetId)
   const image = asset ? isImageType(asset.contentType) : false
@@ -41,7 +45,9 @@ export function AssetField({ path, field }: FieldComponentProps) {
   return (
     <div className="flex flex-col gap-2">
       {assetId ? (
-        image ? (
+        Preview && asset ? (
+          <Preview asset={asset} url={assetUrl(assetId)} />
+        ) : image ? (
           <img
             src={assetUrl(assetId)}
             alt=""
@@ -86,13 +92,15 @@ export function AssetField({ path, field }: FieldComponentProps) {
           disabled={upload.isPending}
           onClick={() => inputRef.current?.click()}
         >
+          <UploadIcon />
           {upload.isPending ? 'Загрузка…' : assetId ? 'Заменить' : 'Загрузить'}
         </Button>
         <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
           <DialogTrigger
             render={<Button type="button" size="sm" variant="outline" />}
           >
-            Смотреть все
+            <FolderOpenIcon />
+            Выбрать
           </DialogTrigger>
           <DialogContent className="max-w-[90vw] sm:max-w-4xl">
             <DialogHeader>
@@ -114,8 +122,10 @@ export function AssetField({ path, field }: FieldComponentProps) {
             size="sm"
             variant="ghost"
             onClick={() => handle.set(null)}
+            className="ml-auto text-muted-foreground"
           >
-            Удалить
+            <XIcon />
+            Убрать
           </Button>
         ) : null}
       </div>
