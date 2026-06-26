@@ -23,6 +23,10 @@ import type { FieldComponentProps } from './registry.tsx'
 /** Диапазон выбора календаря; структурно совпадает с DateRange из react-day-picker (тип календаря в @jalyk/ui), поэтому зависимость на сам пакет не нужна. */
 type DateRange = { from: Date | undefined; to?: Date | undefined }
 
+/** Границы выпадающего выбора месяца/года в календаре: с 1900 по текущий год + 10. */
+const CALENDAR_START = new Date(1900, 0)
+const CALENDAR_END = new Date(new Date().getFullYear() + 10, 11)
+
 /** Какие разряды времени реально показывать: при time:false ни одного, иначе hour/min по умолчанию, sec — нет. */
 function resolveShow(show: TimeParts | undefined, time: boolean) {
   if (!time) return { hour: false, min: false, sec: false }
@@ -180,6 +184,9 @@ export function DateField({ path, field, invalid }: FieldComponentProps) {
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
+          captionLayout="dropdown"
+          startMonth={CALENDAR_START}
+          endMonth={CALENDAR_END}
           selected={date}
           defaultMonth={date}
           locale={ru}
@@ -260,6 +267,9 @@ export function DateRangeField({ path, field, invalid }: FieldComponentProps) {
         <Calendar
           mode="range"
           numberOfMonths={2}
+          captionLayout="dropdown"
+          startMonth={CALENDAR_START}
+          endMonth={CALENDAR_END}
           selected={range}
           defaultMonth={range?.from}
           locale={ru}

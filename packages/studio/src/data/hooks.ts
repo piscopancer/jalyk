@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useStudio } from './context.tsx'
 import { studioKeys } from './keys.ts'
+import { setAtPath } from './path.ts'
 
 // Хуки данных студии. Чтение — useQuery по ключам из keys.ts; запись — useMutation с инвалидацией затронутых ключей. queryFn/mutationFn запускают эффект клиента через run из контекста (ошибка → состояние ошибки react-query, тип ошибки сохраняется в канале эффекта).
 
@@ -53,7 +54,7 @@ export function useCreateDocument() {
   })
 }
 
-/** Точечная запись поля-по-пути. Низкоуровневая мутация; поверх неё строится useField (см. field-хуки). Инвалидирует и сам документ по id, и списки документов (studioKeys.documentsAll — префикс покрывает список типа и запросы query), чтобы строки списка и их превью с индикаторами замечаний обновились сразу, а не после переоткрытия. */
+/** Точечная запись поля-по-пути. Низкоуровневая мутация; поверх неё строится useField (см. field-хуки). Оптимистично патчит draft в кэше документа по пути сразу при старте мутации, чтобы редактор (особенно перетаскивание элементов массива) не показывал старое значение до ответа сервера; при ошибке откатывает снапшот. По завершении инвалидирует сам документ по id и списки документов (studioKeys.documentsAll — префикс покрывает список типа и запросы query), чтобы строки списка и их превью с индикаторами замечаний обновились. */
 export function useSetField(id: string) {
   const { projectId, client, run } = useStudio()
   const qc = useQueryClient()
@@ -65,8 +66,36 @@ export function useSetField(id: string) {
           payload: { path: input.path, value: input.value },
         }),
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: studioKeys.document(projectId, id) })
+    onMutate: (input) => {
+      const key = studioKeys.document(projectId, id)
+      // Отменяем активные рефетчи документа, иначе ответ устаревшего запроса перетрёт
+      // оптимистичное значение. Промис не ждём: setQueryData ниже должен примениться
+      // синхронно, в том же кадре, что и вызвавшее мутацию действие (дроп при dnd),
+      // иначе обновление уезжает в следующий тик и dnd-kit мерит старые позиции.
+      qc.cancelQueries({ queryKey: key })
+      const previous = qc.getQueryData(key)
+      qc.setQueryData<{ draft: unknown } & Record<string, unknown>>(
+        key,
+        (prev) =>
+          prev
+            ? { ...prev, draft: setAtPath(prev.draft, input.path, input.value) }
+            : prev,
+      )
+      return { previous }
+    },
+    onError: (_error, _input, context) => {
+      if (context?.previous !== undefined)
+        qc.setQueryData(
+          studioKeys.document(projectId, id),
+          context.previous,
+        )
+    },
+    // Сам открытый документ намеренно НЕ инвалидируем: его кэш уже держат в актуальном
+    // состоянии оптимистичный патч (onMutate) и SSE-эхо этой же правки (см. useField).
+    // Лишний рефетч документа заменял бы массив свежим объектом спустя ~100мс round-trip
+    // и давал бы видимую реконсиляцию-перестановку после перетаскивания. Списки же
+    // (превью с индикаторами замечаний) обновляем — у них своего оптимизма нет.
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: studioKeys.documentsAll(projectId) })
     },
   })

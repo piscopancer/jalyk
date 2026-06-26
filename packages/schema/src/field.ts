@@ -194,6 +194,7 @@ export type AnyField = FieldMeta & {
   min?: number
   max?: number
   input?: {
+    /** type строкового поля (normal/multiline/select) или булева ('checkbox'/'switch'). */
     type?: string
     predefined?: readonly { value: string; title?: string; icon?: FieldIcon }[]
   }
@@ -316,9 +317,15 @@ export function defineNumber<
     HeaderOptions<H> & { __value?: number }
 }
 
-/** Булево поле. */
+type BooleanOptions = FieldMeta & {
+  default?: boolean
+  /** Вариант редактора: чекбокс (по умолчанию) или тумблер. */
+  input?: { type?: 'checkbox' | 'switch' }
+}
+
+/** Булево поле. `input.type: 'switch'` рисует тумблер вместо чекбокса. */
 export function defineBoolean<
-  const O extends FieldMeta & { default?: boolean },
+  const O extends BooleanOptions,
   H = DefaultHeaderData,
 >(
   options: O &

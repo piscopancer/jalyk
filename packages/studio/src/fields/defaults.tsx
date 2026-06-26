@@ -6,6 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
   Textarea,
   cn,
 } from '@jalyk/ui'
@@ -108,13 +109,25 @@ export function NumberField({ path, invalid }: FieldComponentProps) {
   )
 }
 
-export function BooleanField({ path, invalid }: FieldComponentProps) {
+export function BooleanField({ path, field, invalid }: FieldComponentProps) {
   const handle = useField<boolean>(path)
+  const checked = handle.value === true
+  const onCheckedChange = (next: boolean) => handle.set(next === true)
+  // Вариант редактора: 'switch' рисует тумблер, иначе (по умолчанию) — чекбокс.
+  if (field.input?.type === 'switch') {
+    return (
+      <Switch
+        aria-invalid={invalid || undefined}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+      />
+    )
+  }
   return (
     <Checkbox
       className={cn(invalid && 'border-destructive')}
-      checked={handle.value === true}
-      onCheckedChange={(checked) => handle.set(checked === true)}
+      checked={checked}
+      onCheckedChange={onCheckedChange}
     />
   )
 }

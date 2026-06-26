@@ -184,6 +184,7 @@ const trackDoc = defineDocument({
     explicit: defineBoolean({
       title: 'Ненормативный контент',
       icon: ShieldAlertIcon,
+      input: { type: 'switch' },
     }),
     albums: defineArray({
       title: 'Альбомы',

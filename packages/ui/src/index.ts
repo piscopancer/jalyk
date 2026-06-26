@@ -98,6 +98,7 @@ export {
 } from './components/sheet.tsx'
 export { Calendar, CalendarDayButton } from './components/calendar.tsx'
 export { Checkbox } from './components/checkbox.tsx'
+export { Switch } from './components/switch.tsx'
 export { CodeBlock } from './components/code-block.tsx'
 export { Textarea } from './components/textarea.tsx'
 export { Toaster } from './components/sonner.tsx'

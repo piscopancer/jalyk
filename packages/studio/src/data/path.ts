@@ -35,3 +35,24 @@ export function setAtPath(
 export function samePath(a: readonly string[], b: readonly string[]): boolean {
   return a.length === b.length && a.every((key, i) => key === b[i])
 }
+
+/** Глубокое сравнение JSON-значений, нечувствительное к порядку ключей в объектах. Нужно, чтобы распознать эхо собственной правки: значение проходит сериализацию контракта и может вернуться с переставленными ключами, поэтому сравнение по JSON.stringify ненадёжно. Работает только для сериализуемого JSON (вся модель данных такая): примитивы, массивы, простые объекты. */
+export function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true
+  if (typeof a !== typeof b) return false
+  if (a === null || b === null) return a === b
+  if (Array.isArray(a) || Array.isArray(b)) {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length)
+      return false
+    return a.every((item, i) => deepEqual(item, b[i]))
+  }
+  if (typeof a === 'object' && typeof b === 'object') {
+    const ao = a as Record<string, unknown>
+    const bo = b as Record<string, unknown>
+    const ak = Object.keys(ao)
+    const bk = Object.keys(bo)
+    if (ak.length !== bk.length) return false
+    return ak.every((key) => key in bo && deepEqual(ao[key], bo[key]))
+  }
+  return false
+}

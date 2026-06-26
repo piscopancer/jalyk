@@ -5,7 +5,7 @@ import { useDocumentContext } from './document.tsx'
 import { useFieldSource } from './field-source.tsx'
 import { useDocument, useSetField } from './hooks.ts'
 import { studioKeys } from './keys.ts'
-import { getAtPath, samePath, setAtPath } from './path.ts'
+import { deepEqual, getAtPath, samePath, setAtPath } from './path.ts'
 
 /** Хэндл поля документа: типизированный доступ к значению по пути плюс точечная запись и статус мутации. Подписан на SSE-события того же документа и пути — правка из другого клиента патчит кэш и приходит сюда как новое value. */
 export type FieldHandle<T> = {
@@ -33,7 +33,7 @@ export function useField<T = unknown>(path: readonly string[]): FieldHandle<T> {
   const setField = useSetField(id)
   const source = useFieldSource()
 
-  // Удалённые правки этого же поля: патчим кэш документа по пути из события, чтобы value обновилось без перезапроса. Своя правка тоже вернётся сюда — патч до того же значения безвреден.
+  // Удалённые правки этого же поля: патчим кэш документа по пути из события, чтобы value обновилось без перезапроса. Своя правка тоже вернётся сюда эхом — но тогда значение уже совпадает с кэшем (его положил оптимистичный апдейт), и мы возвращаем prev без изменений: иначе setAtPath создал бы новый массив со свежими идентичностями объектов, давая лишний перерендер и видимую перестановку элементов (например, после dnd) спустя ~100мс round-trip.
   const pathKey = JSON.stringify(path)
   useEffect(
     () =>
@@ -45,13 +45,16 @@ export function useField<T = unknown>(path: readonly string[]): FieldHandle<T> {
         ) {
           qc.setQueryData<CachedDocument>(
             studioKeys.document(projectId, id),
-            (prev) =>
-              prev
-                ? {
-                    ...prev,
-                    draft: setAtPath(prev.draft, event.path, event.value),
-                  }
-                : prev,
+            (prev) => {
+              if (!prev) return prev
+              const current = getAtPath(prev.draft, event.path)
+              // Нечувствительно к порядку ключей: эхо своей правки возвращается через сериализацию контракта и может прийти с переставленными ключами; иначе патч прошёл бы зря и дал лишний перерендер.
+              if (deepEqual(current, event.value)) return prev
+              return {
+                ...prev,
+                draft: setAtPath(prev.draft, event.path, event.value),
+              }
+            },
           )
         }
       }),
