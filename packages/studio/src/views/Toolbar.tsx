@@ -14,7 +14,7 @@ import { BoxIcon, ExternalLinkIcon, SettingsIcon, UserIcon } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { useStudio } from '../data/context.tsx'
 import { usePresence } from '../data/presence.ts'
-import { asComponent, asIcon } from '../data/react-bridge.tsx'
+import { asComponent, DynamicIcon } from '../data/react-bridge.tsx'
 import { JALYK_SITE_URL } from '../data/site.ts'
 import { Avatar, OnlineUsers } from './Presence.tsx'
 import { SettingsDialog } from './SettingsDialog.tsx'
@@ -29,11 +29,8 @@ function ProjectBadge() {
   const { config } = useStudio()
   const project = config.project
   const name = project?.name ?? 'Проект'
-  const Icon = asIcon(project?.icon)
-  const iconNode: ReactNode = Icon ? (
-    <Icon className="size-4" />
-  ) : (
-    <BoxIcon className="size-4" />
+  const iconNode: ReactNode = (
+    <DynamicIcon icon={project?.icon} fallback={BoxIcon} className="size-4" />
   )
   const Custom = asComponent<ProjectBadgeComponentProps<ReactNode>>(
     project?.badgeComponent,

@@ -1,10 +1,39 @@
+import type { DocumentPreviewState } from '@jalyk/schema'
+import { worstSeverity } from '@jalyk/schema'
 import { cn } from '@jalyk/ui'
 import { FileTextIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useStudio } from '../data/context.tsx'
+import { jsonEqual } from '../data/json-equal.ts'
+import { PreviewStateProvider } from '../data/preview-state.tsx'
 import { asIcon } from '../data/react-bridge.tsx'
-import { useDocumentCounts } from '../data/hooks.ts'
+import { useDocumentCounts, useDocuments } from '../data/hooks.ts'
+import { validateDraft } from '../data/validation.tsx'
 import { DocumentList } from './DocumentList.tsx'
+import { DefaultPreviewIndicators } from './PreviewIndicators.tsx'
+
+/** Сводный статус типа: грузит все его документы и агрегирует состояние — синяя точка, если у кого-то есть черновик, красная/жёлтая по худшим замечаниям всех черновиков. Те же точки, что в превью документа. Свой компонент на тип, потому что хук-загрузчик нельзя звать в цикле переменной длины. */
+function TypeStatus({ type }: { type: string }) {
+  const { config } = useStudio()
+  const documents = useDocuments(type)
+  const def = config.documents[type]
+  const docs = documents.data ?? []
+  const issues = docs.flatMap((doc) => validateDraft(def, doc.draft).issues)
+  const hasDraft = docs.some(
+    (doc) => doc.published == null || !jsonEqual(doc.draft, doc.published),
+  )
+  const state: DocumentPreviewState = {
+    hasDraft,
+    issues,
+    worst: worstSeverity(issues),
+    hasError: issues.some((issue) => issue.severity === 'error'),
+  }
+  return (
+    <PreviewStateProvider value={state}>
+      <DefaultPreviewIndicators />
+    </PreviewStateProvider>
+  )
+}
 
 /** Колонка типов документов (левая). Берёт типы из конфига, рядом — счётчик документов из useDocumentCounts. Выбор типа поднимается наверх через onSelect. Необязательный footer прижимается к низу колонки (например, кнопка кастомного сегмента). */
 export function TypesColumn({
@@ -45,8 +74,11 @@ export function TypesColumn({
                   )}
                   {definition.title ?? type}
                 </span>
-                <span className="text-xs text-muted-foreground">
-                  {countByType.get(type) ?? 0}
+                <span className="flex items-center gap-2">
+                  <TypeStatus type={type} />
+                  <span className="text-xs text-muted-foreground">
+                    {countByType.get(type) ?? 0}
+                  </span>
                 </span>
               </button>
             </li>

@@ -15,6 +15,15 @@ export default defineConfig(({ mode }) => {
   Object.assign(process.env, loadEnv(mode, monorepoRoot, ''))
   return {
     server: { port: 3000, host: true },
-    plugins: [tsconfigPaths(), tailwindcss(), tanstackStart(), viteReact()],
+    plugins: [
+      tsconfigPaths(),
+      tailwindcss(),
+      tanstackStart(),
+      // React Compiler автоматически мемоизирует рендеры; workspace-пакеты
+      // (@jalyk/studio, @jalyk/ui) экспортируют сырой src и резолвятся в
+      // реальные пути вне node_modules, поэтому Babel этого плагина покрывает
+      // и их.
+      viteReact({ babel: { plugins: [['babel-plugin-react-compiler', {}]] } }),
+    ],
   }
 })

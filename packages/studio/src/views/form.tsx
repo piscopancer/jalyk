@@ -63,7 +63,12 @@ function useFormProps(fields: Record<string, unknown>): {
   const doc = useDocument(id)
   const handles: Record<string, FieldHandle<unknown>> = {}
   for (const key of Object.keys(fields)) {
-    // ключи статичны (из конфига) — порядок вызовов useField стабилен между рендерами
+    // Ключи статичны (из конфига) и для смонтированного типа документа
+    // неизменны, поэтому порядок вызовов useField стабилен между рендерами — по
+    // контракту React это корректно. Правило консервативно запрещает хуки в
+    // цикле; здесь это осознанное исключение, а не баг (публичный API формы
+    // требует собрать все хэндлы на этом уровне синхронно).
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     handles[key] = useField([key])
   }
   const draft = doc.data?.draft

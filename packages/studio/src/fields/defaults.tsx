@@ -10,7 +10,7 @@ import {
   Textarea,
   cn,
 } from '@jalyk/ui'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useField } from '../data/field.ts'
 import type { FieldComponentProps } from './registry.tsx'
 
@@ -21,10 +21,19 @@ const invalidText = 'text-destructive'
 
 function useCommittedText(path: readonly string[]) {
   const handle = useField<string>(path)
-  const [local, setLocal] = useState(handle.value ?? '')
-  useEffect(() => setLocal(handle.value ?? ''), [handle.value])
+  const external = handle.value ?? ''
+  const [local, setLocal] = useState(external)
+  // Внешнее значение (например, правка по SSE) синхронизируем в локальный буфер
+  // во время рендера, отслеживая предыдущее: правка извне обновляет буфер, а
+  // локальный ввод между правками сохраняется. Замена useEffect+setState, на
+  // которую ругается set-state-in-effect (лишний проход после коммита).
+  const [synced, setSynced] = useState(external)
+  if (external !== synced) {
+    setSynced(external)
+    setLocal(external)
+  }
   const commit = () => {
-    if (local !== (handle.value ?? '')) handle.set(local)
+    if (local !== external) handle.set(local)
   }
   return { local, setLocal, commit, handle }
 }
@@ -86,8 +95,14 @@ export function StringField({ path, field, invalid }: FieldComponentProps) {
 
 export function NumberField({ path, invalid }: FieldComponentProps) {
   const handle = useField<number>(path)
-  const [local, setLocal] = useState(handle.value?.toString() ?? '')
-  useEffect(() => setLocal(handle.value?.toString() ?? ''), [handle.value])
+  const external = handle.value?.toString() ?? ''
+  const [local, setLocal] = useState(external)
+  // Синхронизация внешнего значения в локальный буфер во время рендера (см. useCommittedText).
+  const [synced, setSynced] = useState(external)
+  if (external !== synced) {
+    setSynced(external)
+    setLocal(external)
+  }
   // Пустая строка очищает поле (null), иначе пишем число, игнорируя нечисловой ввод.
   const commit = () => {
     if (local === '') {
@@ -135,14 +150,15 @@ export function BooleanField({ path, field, invalid }: FieldComponentProps) {
 /** Фолбэк для видов без специального редактора (richText/image/reference/object/ array): редактирование значения JSON-ом. Коммит на blur, если JSON валиден. */
 export function FallbackField({ path }: FieldComponentProps) {
   const handle = useField(path)
-  const [text, setText] = useState(() =>
-    JSON.stringify(handle.value ?? null, null, 2),
-  )
+  const external = JSON.stringify(handle.value ?? null, null, 2)
+  const [text, setText] = useState(external)
   const [error, setError] = useState<string | null>(null)
-  useEffect(
-    () => setText(JSON.stringify(handle.value ?? null, null, 2)),
-    [handle.value],
-  )
+  // Синхронизация внешнего значения в локальный буфер во время рендера (см. useCommittedText).
+  const [synced, setSynced] = useState(external)
+  if (external !== synced) {
+    setSynced(external)
+    setText(external)
+  }
   const commit = () => {
     try {
       handle.set(JSON.parse(text))

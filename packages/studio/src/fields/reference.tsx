@@ -36,12 +36,9 @@ import { useField } from '../data/field.ts'
 import { useSegmentNav } from '../data/navigation.tsx'
 import { useCreateDocument, useDocuments } from '../data/hooks.ts'
 import { getAtPath } from '../data/path.ts'
+import { jsonEqual } from '../data/json-equal.ts'
 import { PreviewStateProvider } from '../data/preview-state.tsx'
-import {
-  asComponent,
-  asIcon,
-  type PreviewProps,
-} from '../data/react-bridge.tsx'
+import { Dynamic, DynamicIcon } from '../data/react-bridge.tsx'
 import { validateDraft } from '../data/validation.tsx'
 import { DefaultPreview } from '../views/DefaultPreview.tsx'
 import { DocumentEditor } from '../views/DocumentEditor.tsx'
@@ -72,11 +69,14 @@ function RefPreview({
   type,
   id,
   draft,
+  hasDraft = false,
 }: {
   target?: ReferenceTarget
   type: string
   id: string
   draft: unknown
+  /** Есть ли у документа-цели неопубликованный черновик — синяя точка превью. В списке вариантов неизвестно (false), у выбранной ссылки вычисляется в SelectedRef. */
+  hasDraft?: boolean
 }) {
   const { config } = useStudio()
   const def = config.documents[type]
@@ -87,15 +87,16 @@ function RefPreview({
     previewKey(def?.preview, 'description')
   const title = draftString(draft, titleKey) ?? id
   const description = draftString(draft, descriptionKey)
-  const Icon = asIcon(
-    getAtPath(target?.preview, ['icon']) ??
-      getAtPath(def?.preview, ['icon']) ??
-      def?.icon,
-  )
-  const icon = Icon ? (
-    <Icon className="size-4" />
-  ) : (
-    <FileTextIcon className="size-4" />
+  const icon = (
+    <DynamicIcon
+      icon={
+        getAtPath(target?.preview, ['icon']) ??
+        getAtPath(def?.preview, ['icon']) ??
+        def?.icon
+      }
+      fallback={FileTextIcon}
+      className="size-4"
+    />
   )
   const preview: DefaultPreviewData = {
     title: titleKey,
@@ -103,27 +104,26 @@ function RefPreview({
     icon:
       getAtPath(target?.preview, ['icon']) ?? getAtPath(def?.preview, ['icon']),
   }
-  const Preview =
-    asComponent<PreviewProps<unknown, DefaultPreviewData>>(
-      target?.previewComponent ?? def?.previewComponent,
-    ) ?? DefaultPreview
-  // У связанного документа здесь нет published — признак черновика неизвестен; показываем только замечания валидации его черновика.
   const validation = validateDraft(def, draft)
   const state: DocumentPreviewState = {
-    hasDraft: false,
+    hasDraft,
     issues: validation.issues,
     worst: validation.worst,
     hasError: validation.hasError,
   }
   return (
     <PreviewStateProvider value={state}>
-      <Preview
-        document={{ id, type, draft }}
-        icon={icon}
-        title={title}
-        description={description}
-        preview={preview}
-        state={state}
+      <Dynamic
+        component={target?.previewComponent ?? def?.previewComponent}
+        fallback={DefaultPreview}
+        props={{
+          document: { id, type, draft },
+          icon,
+          title,
+          description,
+          preview,
+          state,
+        }}
       />
     </PreviewStateProvider>
   )
@@ -216,9 +216,15 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
     )
   }
 
+  const showForm = expanded && !!ref && !!refType
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
+    <div className={cn('flex flex-col', !showForm && 'gap-2')}>
+      <div
+        className={cn(
+          'flex items-stretch overflow-hidden rounded-md border',
+          showForm && 'diagonal-stripes rounded-b-none',
+        )}
+      >
         {ref && refType ? (
           <Button
             type="button"
@@ -226,7 +232,7 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
             size="icon"
             aria-label={expanded ? 'Свернуть форму' : 'Развернуть форму'}
             aria-expanded={expanded}
-            className="shrink-0 text-muted-foreground"
+            className="h-auto shrink-0 rounded-none border-r text-muted-foreground"
             onClick={() => setExpanded((v) => !v)}
           >
             <ChevronDownIcon
@@ -238,10 +244,10 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
         <PopoverTrigger
           render={
             <Button
-              variant="outline"
+              variant="ghost"
               role="combobox"
               aria-expanded={open}
-              className="h-auto min-h-9 flex-1 justify-between py-1.5 font-normal"
+              className="h-auto min-h-9 flex-1 justify-between rounded-none py-1.5 font-normal"
             />
           }
         >
@@ -288,14 +294,13 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
                   <DropdownMenuContent align="end">
                     {targets.map((target) => {
                       const def = config.documents[target.to]
-                      const Icon = asIcon(def?.icon)
                       return (
                         <DropdownMenuItem
                           key={target.to}
                           disabled={create.isPending}
                           onClick={() => createAndOpen(target.to)}
                         >
-                          {Icon ? <Icon /> : <FileTextIcon />}
+                          <DynamicIcon icon={def?.icon} fallback={FileTextIcon} />
                           {def?.title ?? target.to}
                         </DropdownMenuItem>
                       )
@@ -324,7 +329,7 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
             variant="ghost"
             size="icon"
             aria-label="Открыть в сегменте"
-            className="shrink-0 text-muted-foreground"
+            className="h-auto shrink-0 rounded-none border-l text-muted-foreground"
             onClick={() => nav?.go(openDocument(refType, ref))}
           >
             <PencilIcon />
@@ -336,15 +341,15 @@ export function ReferenceField({ path, field }: FieldComponentProps) {
             variant="ghost"
             size="icon"
             aria-label="Очистить"
-            className="shrink-0 text-muted-foreground"
+            className="h-auto shrink-0 rounded-none border-l text-muted-foreground"
             onClick={() => handle.set(null)}
           >
             <XIcon />
           </Button>
         ) : null}
       </div>
-      {expanded && ref && refType ? (
-        <div className="overflow-hidden rounded-lg border">
+      {showForm ? (
+        <div className="overflow-hidden rounded-b-lg border border-t-0">
           <DocumentEditor
             id={ref}
             type={refType}
@@ -372,5 +377,15 @@ function SelectedRef({
 }) {
   const documents = useDocuments(type)
   const doc = (documents.data ?? []).find((d) => d.id === id)
-  return <RefPreview target={target} type={type} id={id} draft={doc?.draft} />
+  // Тот же признак черновика, что в списке документов: цель ещё не публиковали или её draft расходится с published.
+  const hasDraft = !!doc && (doc.published == null || !jsonEqual(doc.draft, doc.published))
+  return (
+    <RefPreview
+      target={target}
+      type={type}
+      id={id}
+      draft={doc?.draft}
+      hasDraft={hasDraft}
+    />
+  )
 }

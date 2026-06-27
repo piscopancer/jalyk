@@ -8,7 +8,12 @@ import { studioKeys } from './keys.ts'
 export function useProjectEvents(handler: (event: ProjectEvent) => void): void {
   const { subscribeEvents } = useStudio()
   const ref = useRef(handler)
-  ref.current = handler
+  // Свежий обработчик кладём в ref из эффекта, а не в рендере: запись ref во
+  // время рендера нарушает чистоту (и правило react-hooks/refs). Подписка
+  // по-прежнему завязана только на subscribeEvents и зовёт ref.current.
+  useEffect(() => {
+    ref.current = handler
+  })
   useEffect(
     () => subscribeEvents((event) => ref.current(event)),
     [subscribeEvents],

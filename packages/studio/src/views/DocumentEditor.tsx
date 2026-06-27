@@ -3,16 +3,25 @@ import {
   Button,
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
   cn,
 } from '@jalyk/ui'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { ru } from 'date-fns/locale'
-import { MoreHorizontalIcon, RotateCcwIcon } from 'lucide-react'
+import {
+  ChevronsDownUpIcon,
+  ChevronsUpDownIcon,
+  MoreHorizontalIcon,
+  RotateCcwIcon,
+} from 'lucide-react'
 import { useStudio } from '../data/context.tsx'
+import { CollapseProvider, useCollapseControl } from '../data/field-collapse.tsx'
 import { DocumentProvider } from '../data/document.tsx'
 import {
   useDocument,
+  useDocumentSelect,
   usePublishDocument,
   useResetDraft,
 } from '../data/hooks.ts'
@@ -26,7 +35,7 @@ import { UnknownField } from '../fields/AnomalousField.tsx'
 import { FieldInput } from '../fields/FieldInput.tsx'
 import { useDocumentMenu } from './document-menu.tsx'
 import { CustomForm, type FormProps } from './form.tsx'
-import { IssueBadge } from './IssueBadge.tsx'
+import { DocumentStatePanel } from './DocumentStatePanel.tsx'
 
 /** Статус черновика: новый документ (ещё не публиковали) или есть несохранённые правки относительно published. */
 function draftState(
@@ -54,13 +63,14 @@ function DocumentActions({
   const doc = useDocument(id)
   const publish = usePublishDocument(id)
   const reset = useResetDraft(id)
-  const { issues, hasError } = useDocumentValidation()
+  const { hasError } = useDocumentValidation()
   const { items, dialog } = useDocumentMenu(id, onDeleted)
+  const control = useCollapseControl()
 
   const state = draftState(doc.data?.draft, doc.data?.published)
 
   return (
-    <div className="flex flex-col gap-1 border-t p-3">
+    <div className="diagonal-stripes flex flex-col gap-1 border-t p-3">
       <div className="flex items-center gap-2">
         <Button
           size="sm"
@@ -80,7 +90,7 @@ function DocumentActions({
             {reset.isPending ? 'Сбрасываем…' : 'Сбросить черновик'}
           </Button>
         )}
-        <IssueBadge issues={issues} />
+        <DocumentStatePanel />
 
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -95,7 +105,18 @@ function DocumentActions({
           >
             <MoreHorizontalIcon />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">{items}</DropdownMenuContent>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => control?.setAll(true)}>
+              <ChevronsDownUpIcon />
+              Свернуть все поля
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => control?.setAll(false)}>
+              <ChevronsUpDownIcon />
+              Развернуть все поля
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {items}
+          </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
@@ -108,6 +129,17 @@ function DocumentActions({
       {dialog}
     </div>
   )
+}
+
+/** Лишние ключи черновика, которых нет в схеме (аномальные поля). Вынесено в отдельный компонент с узкой подпиской, чтобы пересчёт ключей не перерисовывал весь редактор: структурное разделение React Query сохраняет идентичность массива ключей, пока их набор не меняется, поэтому правки значений полей сюда не доходят. */
+function UnknownFields({ id, fields }: { id: string; fields: FieldMap }) {
+  const keys =
+    useDocumentSelect(id, (data) =>
+      unknownObjectKeys({ kind: 'object', fields }, data.draft),
+    ).data ?? []
+  return keys.map((key) => (
+    <UnknownField key={key} objectPath={[]} fieldKey={key} />
+  ))
 }
 
 /** Дефолтный редактор документа: рисует FieldInput по полям типа внутри DocumentProvider (нужен useField). `variant='column'` заполняет колонку сегмента со своим скроллом; `variant='inline'` растёт по контенту (для разворота под превью поля ссылки). */
@@ -123,7 +155,8 @@ export function DocumentEditor({
   variant?: 'column' | 'inline'
 }) {
   const { config } = useStudio()
-  const doc = useDocument(id)
+  // Подписка узкая: select возвращает стабильный null, поэтому правки черновика не перерисовывают редактор и не пересоздают поддерево полей; меняется только при переходе загрузки.
+  const isLoading = useDocumentSelect(id, () => null).isLoading
   const definition = config.documents[type]
 
   if (!definition) {
@@ -141,14 +174,17 @@ export function DocumentEditor({
   return (
     <DocumentProvider id={id} type={type}>
       <DocumentValidationProvider id={id} type={type}>
+        <CollapseProvider>
         <div className={cn('flex flex-col', inline ? 'min-h-0' : 'h-full')}>
           <div
             className={cn(
               'flex flex-col gap-5 p-4',
-              inline ? '' : 'flex-1 overflow-y-auto',
+              inline
+                ? ''
+                : 'thin-scrollbar flex-1 overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable]',
             )}
           >
-            {doc.isLoading ? (
+            {isLoading ? (
               <span className="text-sm text-muted-foreground">Загрузка…</span>
             ) : null}
             {Form ? (
@@ -158,17 +194,13 @@ export function DocumentEditor({
                 {Object.entries(definition.fields).map(([key, field]) => (
                   <FieldInput key={key} path={[key]} field={field} />
                 ))}
-                {unknownObjectKeys(
-                  { kind: 'object', fields: definition.fields },
-                  doc.data?.draft,
-                ).map((key) => (
-                  <UnknownField key={key} objectPath={[]} fieldKey={key} />
-                ))}
+                <UnknownFields id={id} fields={definition.fields} />
               </>
             )}
           </div>
           <DocumentActions id={id} onDeleted={onDeleted} />
         </div>
+        </CollapseProvider>
       </DocumentValidationProvider>
     </DocumentProvider>
   )

@@ -34,3 +34,49 @@ export function asComponent<P>(
     ? (component as (props: P) => ReactNode)
     : undefined
 }
+
+/**
+ * Тонкий слот: рендерит переданный компонент как обычный JSX. Динамический
+ * компонент из конфига (иконка, заголовок, превью, бейдж) приходит сюда готовым
+ * пропом `as`, поэтому правило react-hooks/static-components — оно запрещает
+ * рендерить компонент, выведенный внутри текущего рендера, — не срабатывает: на
+ * месте использования остаётся идиоматичный JSX, без createElement.
+ */
+export function Slot<P extends object>({
+  as: Component,
+  props,
+}: {
+  as: ComponentType<P>
+  props: P
+}): ReactNode {
+  return <Component {...props} />
+}
+
+/** Иконка студии из конфига (FieldIcon = unknown) с необязательным фолбэком, отрисованная обычным JSX. Если ни иконки, ни фолбэка нет — ничего не рисует. */
+export function DynamicIcon({
+  icon,
+  fallback,
+  className,
+}: {
+  icon: unknown
+  fallback?: IconComponent
+  className?: string
+}): ReactNode {
+  const resolved = asIcon(icon) ?? fallback
+  return resolved ? <Slot as={resolved} props={{ className }} /> : null
+}
+
+/** Динамический компонент студии из конфига (заголовок/превью/бейдж) с пропами P и необязательным фолбэком, отрисованный обычным JSX. */
+export function Dynamic<P extends object>({
+  component,
+  fallback,
+  props,
+}: {
+  component: unknown
+  fallback?: ComponentType<P>
+  props: P
+}): ReactNode {
+  const resolved =
+    (asComponent<P>(component) as ComponentType<P> | undefined) ?? fallback
+  return resolved ? <Slot as={resolved} props={props} /> : null
+}

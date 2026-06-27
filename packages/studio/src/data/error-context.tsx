@@ -16,14 +16,7 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 import { errorToJson, normalizeError, type StudioError } from './errors.ts'
 import { useStudioDark } from './theme.tsx'
 
@@ -53,11 +46,8 @@ export function useStudioErrors(): ErrorContextValue {
 export function StudioErrorProvider({ children }: { children: ReactNode }) {
   const [detail, setDetail] = useState<StudioError | null>(null)
 
-  // openDetails стабилен (setState), держим в ref, чтобы тост из кэша мог открыть диалог, не пересоздавая QueryClient.
-  const openDetailsRef = useRef((error: StudioError) => setDetail(error))
-
-  // Тост на ошибку: висит до закрытия (duration Infinity), кнопка «Подробнее» открывает диалог. id по тегу — чтобы одинаковые ошибки не плодили дубли.
-  const report = useRef((error: unknown) => {
+  // Тост на ошибку: висит до закрытия (duration Infinity), кнопка «Подробнее» открывает диалог. id по тегу — чтобы одинаковые ошибки не плодили дубли. Стабильность report/value обеспечивает компилятор React (ручные ref'ы убраны): зависимости — только стабильный setDetail и модульные хелперы.
+  const report = (error: unknown) => {
     const normalized = normalizeError(error)
     toast.error(normalized.title, {
       id: `studio-error-${normalized.tag}`,
@@ -65,13 +55,13 @@ export function StudioErrorProvider({ children }: { children: ReactNode }) {
       duration: Infinity,
       action: {
         label: 'Подробнее',
-        onClick: () => openDetailsRef.current(normalized),
+        onClick: () => setDetail(normalized),
       },
     })
-  }).current
+  }
 
-  // QueryClient с перехватом ошибок в кэшах. Создаётся один раз: report/openDetails стабильны (ref'ы), поэтому замыкание не устаревает.
-  const queryClient = useMemo(
+  // QueryClient создаётся один раз (ленивый useState): перехват ошибок в кэшах зовёт report. Захват report первого рендера безопасен — его поведение от рендера не зависит.
+  const [queryClient] = useState(
     () =>
       new QueryClient({
         queryCache: new QueryCache({
@@ -87,13 +77,9 @@ export function StudioErrorProvider({ children }: { children: ReactNode }) {
           },
         }),
       }),
-    [report],
   )
 
-  const value = useMemo<ErrorContextValue>(
-    () => ({ report, openDetails: (e) => openDetailsRef.current(e) }),
-    [report],
-  )
+  const value: ErrorContextValue = { report, openDetails: setDetail }
 
   return (
     <ErrorContext.Provider value={value}>

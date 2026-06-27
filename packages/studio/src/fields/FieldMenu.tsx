@@ -34,7 +34,7 @@ import { useStudio } from '../data/context.tsx'
 import { createAsyncClient } from '../data/createStudio.tsx'
 import { useDocumentContext } from '../data/document.tsx'
 import { useField } from '../data/field.ts'
-import { useDocument } from '../data/hooks.ts'
+import { useDocumentSelect } from '../data/hooks.ts'
 import { jsonEqual } from '../data/json-equal.ts'
 import { getAtPath } from '../data/path.ts'
 import type { FieldComponentProps } from './registry.tsx'
@@ -65,7 +65,11 @@ export function FieldMenu({ path, field }: FieldComponentProps) {
   const handle = useField(path)
   const clipboard = useFieldClipboard()
   const { id } = useDocumentContext()
-  const doc = useDocument(id)
+  // Подписка точечная: меню нужно лишь опубликованное значение по своему пути (для «Сбросить черновик»), а не весь документ, иначе любая правка будила бы все меню разом.
+  const publishedAtPath = useDocumentSelect(id, (data) => ({
+    published: data.published != null,
+    value: getAtPath(data.published, path),
+  })).data ?? { published: false, value: undefined }
   const { projectId, client, run, config } = useStudio()
   const [detailOpen, setDetailOpen] = useState(false)
   // Шаблон в процессе применения (загрузка/готов/ошибка); null — диалог закрыт.
@@ -104,10 +108,9 @@ export function FieldMenu({ path, field }: FieldComponentProps) {
 
   // Сброс черновика поля доступен, только если документ уже публиковали и значение
   // этого поля в черновике отличается от опубликованного; иначе сбрасывать нечего.
-  const published = doc.data?.published
-  const publishedValue = getAtPath(published, path)
+  const publishedValue = publishedAtPath.value
   const canResetDraft =
-    published != null && !jsonEqual(handle.value, publishedValue)
+    publishedAtPath.published && !jsonEqual(handle.value, publishedValue)
 
   return (
     <>

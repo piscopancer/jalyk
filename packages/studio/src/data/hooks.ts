@@ -24,6 +24,19 @@ export function useDocument(id: string) {
   })
 }
 
+/** Срез открытого документа: тот же запрос и кэш, что и useDocument, но наблюдатель подписан только на результат `select`. Благодаря структурному разделению React Query при оптимистичном патче одного поля сохраняет идентичность нетронутых поддеревьев, поэтому поля, чей срез не изменился, не уведомляются и не перерисовываются. Через это useField/useFieldStatus читают лишь свой кусочек документа, а не весь объект. */
+export function useDocumentSelect<T>(
+  id: string,
+  select: (data: { draft: unknown; published: unknown } & Record<string, unknown>) => T,
+) {
+  const { projectId, client, run } = useStudio()
+  return useQuery({
+    queryKey: studioKeys.document(projectId, id),
+    queryFn: () => run(client.documents.get({ path: { projectId, id } })),
+    select: select as (data: unknown) => T,
+  })
+}
+
 /** Количество документов по каждому типу — для <AllDocumentTypes/>. */
 export function useDocumentCounts() {
   const { projectId, client, run } = useStudio()

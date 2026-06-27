@@ -30,7 +30,7 @@ import {
   cn,
 } from '@jalyk/ui'
 import { GripVerticalIcon, MinusIcon, PlusIcon, SearchIcon } from 'lucide-react'
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import { useField } from '../data/field.ts'
 import { FieldEditor } from './FieldInput.tsx'
 import type { FieldComponentProps } from './registry.tsx'
@@ -157,14 +157,18 @@ export function ArrayField({ path, field }: FieldComponentProps) {
   // из-за чего соседняя заполненная ссылка и пустая «прыгали» местами. Длину
   // синхронизируем с items (добавление/удаление откуда угодно), порядок ведём сами.
   const [keys, setKeys] = useState<string[]>(() => items.map(() => newKey()))
-  useEffect(() => {
+  // Длину набора ключей подгоняем под items во время рендера, отслеживая
+  // предыдущую длину: добавление/удаление откуда угодно меняет число строк, а
+  // порядок ведём сами (dnd). Замена useEffect+setState (set-state-in-effect).
+  const [syncedLength, setSyncedLength] = useState(items.length)
+  if (syncedLength !== items.length) {
+    setSyncedLength(items.length)
     setKeys((prev) => {
-      if (prev.length === items.length) return prev
       const next = prev.slice(0, items.length)
       while (next.length < items.length) next.push(newKey())
       return next
     })
-  }, [items.length])
+  }
   const ids = keys
 
   const sensors = useSensors(

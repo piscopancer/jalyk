@@ -11,7 +11,7 @@ import {
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { CalendarIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useField } from '../data/field.ts'
 import type { FieldComponentProps } from './registry.tsx'
 
@@ -226,7 +226,13 @@ export function DateRangeField({ path, field, invalid }: FieldComponentProps) {
   const [range, setRange] = useState<DateRange | undefined>(() =>
     toRange(handle.value),
   )
-  useEffect(() => setRange(toRange(handle.value)), [handle.value])
+  // Внешнее значение синхронизируем в локальный range во время рендера,
+  // отслеживая предыдущее (замена useEffect+setState, set-state-in-effect).
+  const [synced, setSynced] = useState(handle.value)
+  if (synced !== handle.value) {
+    setSynced(handle.value)
+    setRange(toRange(handle.value))
+  }
 
   const commit = (next: DateRange | undefined) => {
     setRange(next)

@@ -16,7 +16,10 @@ export default defineConfig({
   // из файлов в src/routes.
   plugins: [
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),
-    viteReact(),
+    // React Compiler автоматически мемоизирует рендеры; workspace-пакеты
+    // (@jalyk/studio, @jalyk/ui) экспортируют сырой src и резолвятся в реальные
+    // пути вне node_modules, поэтому Babel этого плагина покрывает и их.
+    viteReact({ babel: { plugins: [['babel-plugin-react-compiler', {}]] } }),
     tailwindcss(),
   ],
 })

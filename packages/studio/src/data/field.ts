@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { useStudio } from './context.tsx'
 import { useDocumentContext } from './document.tsx'
 import { useFieldSource } from './field-source.tsx'
-import { useDocument, useSetField } from './hooks.ts'
+import { useDocumentSelect, useSetField } from './hooks.ts'
 import { studioKeys } from './keys.ts'
 import { deepEqual, getAtPath, samePath, setAtPath } from './path.ts'
 
@@ -29,7 +29,8 @@ export function useField<T = unknown>(path: readonly string[]): FieldHandle<T> {
   const { id } = useDocumentContext()
   const { projectId, subscribeEvents } = useStudio()
   const qc = useQueryClient()
-  const doc = useDocument(id)
+  // Подписка точечная: наблюдатель уведомляется только когда меняется значение по этому пути, а не при любой правке документа.
+  const valueQuery = useDocumentSelect(id, (data) => getAtPath(data.draft, path))
   const setField = useSetField(id)
   const source = useFieldSource()
 
@@ -73,10 +74,10 @@ export function useField<T = unknown>(path: readonly string[]): FieldHandle<T> {
   }
 
   return {
-    value: getAtPath(doc.data?.draft, path) as T | undefined,
+    value: valueQuery.data as T | undefined,
     set: (value: T | null) => setField.mutate({ path, value }),
     status: setField.status,
     error: setField.error,
-    isLoading: doc.isLoading,
+    isLoading: valueQuery.isLoading,
   }
 }

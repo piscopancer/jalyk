@@ -5,13 +5,20 @@ import {
   type FieldKind,
 } from '@jalyk/schema'
 import { cn } from '@jalyk/ui'
+import { type ReactNode } from 'react'
+import { useFieldCollapsed } from '../data/field-collapse.tsx'
 import { useDocumentContext } from '../data/document.tsx'
 import { useField } from '../data/field.ts'
-import { useDocument } from '../data/hooks.ts'
+import { useDocumentSelect } from '../data/hooks.ts'
 import { jsonEqual } from '../data/json-equal.ts'
 import { getAtPath } from '../data/path.ts'
 import { BrokenFieldEditor } from './AnomalousField.tsx'
-import { asComponent, type HeaderProps } from '../data/react-bridge.tsx'
+import {
+  asComponent,
+  Dynamic,
+  Slot,
+  type HeaderProps,
+} from '../data/react-bridge.tsx'
 import { statusColor, type FieldStatus } from '../data/status-color.ts'
 import { useFieldIssues } from '../data/validation.tsx'
 import { ArrayField } from './array.tsx'
@@ -35,7 +42,6 @@ import {
 /** Статус поля по двум независимым осям: есть ли неопубликованные правки (черновик) и худшее замечание валидации (ошибка/предупреждение). Это разные состояния, поэтому возвращаем оба, а не приоритетом. */
 function useFieldStatus(path: readonly string[]) {
   const { id } = useDocumentContext()
-  const doc = useDocument(id)
   const issues = useFieldIssues(path)
   const issue: Exclude<FieldStatus, 'changed'> | null = issues.some(
     (issue) => issue.severity === 'error',
@@ -44,11 +50,13 @@ function useFieldStatus(path: readonly string[]) {
     : issues.some((issue) => issue.severity === 'warning')
       ? 'warning'
       : null
-  const published = doc.data?.published
-  // Документ ещё не публиковали — весь черновик считается изменённым.
+  // Подписка точечная: булев флаг меняется только когда правка касается этого пути, поэтому полоска статуса не реагирует на правки других полей.
   const changed =
-    published == null ||
-    !jsonEqual(getAtPath(doc.data?.draft, path), getAtPath(published, path))
+    useDocumentSelect(id, (data) =>
+      // Документ ещё не публиковали — весь черновик считается изменённым.
+      data.published == null ||
+      !jsonEqual(getAtPath(data.draft, path), getAtPath(data.published, path)),
+    ).data ?? false
   return { changed, issue }
 }
 
@@ -95,8 +103,15 @@ export function FieldEditor({ path, field }: FieldComponentProps) {
         <FieldEditor path={path} field={field} />
       </BrokenFieldEditor>
     )
-  const Component = override ?? defaults[field.kind] ?? FallbackField
-  return <Component path={path} field={field} invalid={fit === 'type'} />
+  // Компонент выбирается в рендере (реестр → дефолт → фолбэк), поэтому рисуем
+  // его через Slot: он приходит туда готовым пропом, и static-components не
+  // срабатывает на «компонент, выведенный внутри рендера».
+  return (
+    <Slot
+      as={override ?? defaults[field.kind] ?? FallbackField}
+      props={{ path, field, invalid: fit === 'type' }}
+    />
+  )
 }
 
 /** Собирает DefaultHeaderData из `source` (header поля или переопределение), с фолбэком на поля field и последний сегмент пути. */
@@ -128,7 +143,7 @@ export type FieldInputProps = FieldComponentProps & {
   className?: string
 }
 
-/** Рисует поле: заголовок (из `header`/field.header, false/null скрывает) плюс FieldEditor. */
+/** Рисует поле: заголовок (из `header`/field.header, false/null скрывает) плюс FieldEditor. Поле можно свернуть шевроном в дефолтном заголовке; начальное состояние берётся из CollapseDefault (раскрыто в форме, свёрнуто в панели состояния). */
 export function FieldInput({
   path,
   field,
@@ -138,14 +153,20 @@ export function FieldInput({
 }: FieldInputProps) {
   const source = header === undefined ? field.header : header
   const hidden = source === false || source === null
-  const Custom = asComponent<HeaderProps>(
-    headerComponent ?? field.headerComponent,
-  )
+  const customHeader = headerComponent ?? field.headerComponent
+  const hasCustomHeader = asComponent<HeaderProps>(customHeader) != null
+  // Шеврон живёт только в дефолтном заголовке: без него поле несворачиваемо, поэтому и тело не прячем.
+  const collapsible = !hidden && !hasCustomHeader
+  // Редактор создаётся один раз и передаётся в тело готовым элементом: при сворачивании перерисовывается только обёртка тела, а не всё его поддерево.
+  const editor = <FieldEditor path={path} field={field} />
   return (
     <div className={cn('relative flex flex-col gap-1.5 pl-3', className)}>
       <FieldStatusStrip path={path} />
-      {hidden ? null : Custom ? (
-        <Custom path={path} field={field} header={source} />
+      {hidden ? null : hasCustomHeader ? (
+        <Dynamic
+          component={customHeader}
+          props={{ path, field, header: source }}
+        />
       ) : (
         <DefaultHeader
           path={path}
@@ -153,7 +174,32 @@ export function FieldInput({
           header={defaultHeaderData(field, path, source)}
         />
       )}
-      <FieldEditor path={path} field={field} />
+      {collapsible ? (
+        <CollapsibleBody path={path}>{editor}</CollapsibleBody>
+      ) : (
+        editor
+      )}
+    </div>
+  )
+}
+
+/** Сворачиваемое тело поля: подписано на состояние своего пути и анимирует высоту, не перерисовывая сам редактор — он приходит готовым элементом через children. */
+function CollapsibleBody({
+  path,
+  children,
+}: {
+  path: readonly string[]
+  children: ReactNode
+}) {
+  const collapsed = useFieldCollapsed(path)
+  return (
+    <div
+      className={cn(
+        'grid transition-all duration-200',
+        collapsed ? 'grid-rows-[0fr] opacity-50' : 'grid-rows-[1fr] opacity-100',
+      )}
+    >
+      <div className="overflow-hidden">{children}</div>
     </div>
   )
 }

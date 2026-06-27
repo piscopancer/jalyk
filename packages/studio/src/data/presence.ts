@@ -15,6 +15,8 @@ export type PresenceUser = {
   joinedAt: string
   /** Сколько документов создал в проекте. */
   documentsCreated: number
+  /** Сейчас в студии онлайн. Оффлайн-участники показываются приглушённо в конце списка. */
+  online: boolean
 }
 
 /** Детерминированный приглушённый HSL-цвет из id: один id всегда даёт один цвет — фон плейсхолдера аватарки либо обводку, если аватарка есть. */
@@ -38,6 +40,7 @@ function makeUser() {
     image: faker.datatype.boolean() ? faker.image.avatar() : undefined,
     joinedAt: faker.date.past({ years: 1 }).toISOString(),
     documentsCreated: faker.number.int({ min: 0, max: 150 }),
+    online: faker.datatype.boolean(),
   } satisfies PresenceUser
 }
 
@@ -46,11 +49,16 @@ const ME = {
   name: 'Игорь',
   joinedAt: faker.date.past({ years: 1 }).toISOString(),
   documentsCreated: faker.number.int({ min: 50, max: 200 }),
+  online: true,
 } satisfies PresenceUser
 
-const MOCK_USERS = [ME, ...Array.from({ length: 6 }, makeUser)]
+// Онлайн сначала («я» — всегда первый), оффлайн — в конце; внутри групп порядок
+// стабилен (faker с фиксированным сидом).
+const MOCK_USERS = [ME, ...Array.from({ length: 6 }, makeUser)].sort(
+  (a, b) => Number(b.online) - Number(a.online),
+)
 
-/** Заглушка присутствия: тестовые участники онлайн и id текущего пользователя. «Я» — первый элемент users, помеченный meId. */
+/** Заглушка присутствия: тестовые участники (онлайн и оффлайн) и id текущего пользователя. «Я» — первый онлайн-участник, помеченный meId. */
 export function usePresence() {
   return { users: MOCK_USERS, meId: ME.id }
 }

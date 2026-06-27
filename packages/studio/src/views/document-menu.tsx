@@ -10,9 +10,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@jalyk/ui'
-import { Code2Icon, Trash2Icon } from 'lucide-react'
+import { Code2Icon, CopyIcon, Trash2Icon } from 'lucide-react'
 import { useState, type ReactElement } from 'react'
-import { useDeleteDocument, useDocument } from '../data/hooks.ts'
+import {
+  useCreateDocument,
+  useDeleteDocument,
+  useDocument,
+} from '../data/hooks.ts'
+import { useSegmentNav } from '../data/navigation.tsx'
 import { DocumentJsonView } from './DocumentJsonView.tsx'
 
 /**
@@ -25,13 +30,38 @@ import { DocumentJsonView } from './DocumentJsonView.tsx'
 export function useDocumentMenu(id: string, onDeleted?: () => void) {
   const doc = useDocument(id)
   const remove = useDeleteDocument(id)
+  const duplicate = useCreateDocument()
+  const nav = useSegmentNav()
   const [jsonOpen, setJsonOpen] = useState(false)
+
+  // Дублирование целиком на клиенте: создаём новый черновик того же типа с копией
+  // текущего draft и, если сегмент умеет открывать документ, сразу переходим в него.
+  const onDuplicate = () => {
+    const current = doc.data
+    if (!current) return
+    duplicate.mutate(
+      { type: current.type, draft: current.draft },
+      {
+        onSuccess: (created) => {
+          const openDocument = nav?.openDocument
+          if (openDocument) nav?.go(openDocument(created.type, created.id))
+        },
+      },
+    )
+  }
 
   const items = (
     <>
       <DropdownMenuItem onClick={() => setJsonOpen(true)}>
         <Code2Icon />
         Просмотреть JSON
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        disabled={!doc.data || duplicate.isPending}
+        onClick={onDuplicate}
+      >
+        <CopyIcon />
+        {duplicate.isPending ? 'Дублируем…' : 'Дублировать'}
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuItem

@@ -34,11 +34,7 @@ import {
 import { jsonEqual } from '../data/json-equal.ts'
 import { getAtPath } from '../data/path.ts'
 import { PreviewStateProvider } from '../data/preview-state.tsx'
-import {
-  asComponent,
-  asIcon,
-  type PreviewProps,
-} from '../data/react-bridge.tsx'
+import { Dynamic, DynamicIcon } from '../data/react-bridge.tsx'
 import { validateDraft } from '../data/validation.tsx'
 import { DefaultPreview } from './DefaultPreview.tsx'
 import { DocumentContextMenu } from './document-menu.tsx'
@@ -114,21 +110,18 @@ export function DocumentRow({
     doc.draft,
     previewFieldKey(def?.preview, 'description'),
   )
-  const Icon = asIcon(getAtPath(def?.preview, ['icon']) ?? def?.icon)
-  const icon = Icon ? (
-    <Icon className="size-4" />
-  ) : (
-    <FileTextIcon className="size-4" />
+  const icon = (
+    <DynamicIcon
+      icon={getAtPath(def?.preview, ['icon']) ?? def?.icon}
+      fallback={FileTextIcon}
+      className="size-4"
+    />
   )
   const preview: DefaultPreviewData = {
     title: previewFieldKey(def?.preview, 'title'),
     description: previewFieldKey(def?.preview, 'description'),
     icon: getAtPath(def?.preview, ['icon']),
   }
-  const Preview =
-    asComponent<PreviewProps<unknown, DefaultPreviewData>>(
-      def?.previewComponent,
-    ) ?? DefaultPreview
   const validation = validateDraft(def, doc.draft)
   const hasDraft = doc.published == null || !jsonEqual(doc.draft, doc.published)
   const state: DocumentPreviewState = {
@@ -153,13 +146,17 @@ export function DocumentRow({
           >
             <span className="min-w-0 flex-1">
               <PreviewStateProvider value={state}>
-                <Preview
-                  document={doc}
-                  icon={icon}
-                  title={title}
-                  description={description}
-                  preview={preview}
-                  state={state}
+                <Dynamic
+                  component={def?.previewComponent}
+                  fallback={DefaultPreview}
+                  props={{
+                    document: doc,
+                    icon,
+                    title,
+                    description,
+                    preview,
+                    state,
+                  }}
                 />
               </PreviewStateProvider>
             </span>
