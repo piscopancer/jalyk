@@ -1,4 +1,5 @@
 import type { HeaderComponentProps, PreviewComponentProps } from '@jalyk/schema'
+import { isDocumentImage } from '@jalyk/schema'
 import type { ComponentType, ReactNode } from 'react'
 
 // Единственная граница между React-агностичной схемой и React-студией. Схема типизирует иконки и компоненты заголовка/превью намеренно широко (FieldIcon = unknown, возврат компонентов — unknown), потому что не зависит от React. Структурно проверить в рантайме «это React-компонент» нельзя, поэтому здесь собраны сознательные приведения на этой границе; вся остальная студия берёт иконки и компоненты только отсюда и потому обходится без приведений.
@@ -18,8 +19,9 @@ export type PreviewProps<
 /** Пропсы заголовка поля со стороны студии. */
 export type HeaderProps<Data = unknown> = HeaderComponentProps<Data>
 
-/** Приводит иконку из схемы (FieldIcon = unknown) к React-компоненту. Компонент — это функция либо объект (forwardRef/memo, как у иконок lucide), поэтому принимаем оба; приведение к IconComponent — сознательное, на границе со схемой. */
+/** Приводит иконку из схемы (FieldIcon = unknown) к React-компоненту. Компонент — это функция либо объект (forwardRef/memo, как у иконок lucide), поэтому принимаем оба; приведение к IconComponent — сознательное, на границе со схемой. Спецификация картинки документа (defineDocumentImage) — это объект, который сам по себе не компонент: для обычных мест (колонка типов, навигация) отдаём её фолбэк-глиф; саму картинку рисует только превью строки документа через isDocumentImage. */
 export function asIcon(icon: unknown): IconComponent | undefined {
+  if (isDocumentImage(icon)) return asIcon(icon.fallback)
   return typeof icon === 'function' ||
     (typeof icon === 'object' && icon !== null)
     ? (icon as IconComponent)

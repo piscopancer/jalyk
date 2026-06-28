@@ -24,7 +24,7 @@ import { Schema } from 'effect'
 import { useStudio } from './context.tsx'
 import { studioKeys } from './keys.ts'
 
-// Типизированный клиент запросов в духе Prisma: createStudio(config) собирает по конфигу объект studio.<type>.{findMany,findUnique,count,create,update,delete, publish}. Методы — хуки (внутри useQuery/useMutation), их зовут на верхнем уровне компонента. Сейчас where/select/join исполняются на клиенте поверх загруженных по type документов; типы и сигнатуры от этого не зависят, поэтому переезд на серверный SQL потом не затронет места вызова.
+// Типизированный клиент запросов в духе Prisma: createStudio(config) собирает по конфигу объект studio.<type>.{useFindMany,useFindUnique,useCount,useCreate,useUpdate,useDelete,usePublish}. Методы — хуки (внутри useQuery/useMutation), их зовут на верхнем уровне компонента; префикс use обязателен, чтобы их распознавали react-hooks и React Compiler (иначе компилятор заморозит результат useQuery на первом рендере). Сейчас where/select/join исполняются на клиенте поверх загруженных по type документов; типы и сигнатуры от этого не зависят, поэтому переезд на серверный SQL потом не затронет места вызова.
 
 /** Документ на проводе — выводим из схемы контракта (не дублируем форму). */
 type DocItem = Schema.Schema.Type<typeof DocumentInfo>
@@ -212,26 +212,30 @@ type UpdateData<C extends AnyConfig, T extends DocumentType<C>> = Partial<
   InferFields<FieldsOf<C, T>>
 >
 
+// Методы — хуки, поэтому имена с префиксом use: так их распознаёт и плагин
+// react-hooks, и React Compiler (он определяет хуки по имени вызова). Без use
+// компилятор считает вызов чистой функцией и замораживает результат useQuery на
+// первом рендере — данные, приехавшие позже, теряются до перемонтирования.
 type DocumentApi<C extends AnyConfig, T extends DocumentType<C>> = {
-  findMany: <const A extends FindManyArgs<C, T>>(
+  useFindMany: <const A extends FindManyArgs<C, T>>(
     args?: A,
   ) => UseQueryResult<QueryResult<C, T, A>[]>
-  findUnique: <const A extends FindUniqueArgs<C, T>>(
+  useFindUnique: <const A extends FindUniqueArgs<C, T>>(
     args: A,
   ) => UseQueryResult<QueryResult<C, T, A> | null>
-  count: (args?: { where?: Where<C, T> }) => UseQueryResult<number>
-  create: () => UseMutationResult<
+  useCount: (args?: { where?: Where<C, T> }) => UseQueryResult<number>
+  useCreate: () => UseMutationResult<
     { id: string },
     unknown,
     { data: CreateData<C, T> }
   >
-  update: () => UseMutationResult<
+  useUpdate: () => UseMutationResult<
     void,
     unknown,
     { id: string; data: UpdateData<C, T> }
   >
-  delete: () => UseMutationResult<void, unknown, { id: string }>
-  publish: () => UseMutationResult<{ id: string }, unknown, { id: string }>
+  useDelete: () => UseMutationResult<void, unknown, { id: string }>
+  usePublish: () => UseMutationResult<{ id: string }, unknown, { id: string }>
 }
 
 export type StudioClient<C extends AnyConfig> = {
@@ -284,7 +288,7 @@ export function createAsyncClient<const C extends AnyConfig>(
 /** Хуки одного типа. Замыкаются на type (строка) и config; типы наводятся при финальном приведении объекта к Studio<C>. */
 function makeApi(config: AnyConfig, type: string) {
   return {
-    findMany: (args: FindManyArgs<AnyConfig, never> = {}) => {
+    useFindMany: (args: FindManyArgs<AnyConfig, never> = {}) => {
       const { projectId, client, run } = useStudio()
       return useQuery({
         queryKey: studioKeys.query(projectId, type, args),
@@ -292,7 +296,7 @@ function makeApi(config: AnyConfig, type: string) {
           runFindMany({ projectId, client, run }, config, type, args),
       })
     },
-    findUnique: (args: { id: string; select?: unknown }) => {
+    useFindUnique: (args: { id: string; select?: unknown }) => {
       const { projectId, client, run } = useStudio()
       return useQuery({
         queryKey: studioKeys.query(projectId, type, args),
@@ -307,7 +311,7 @@ function makeApi(config: AnyConfig, type: string) {
         },
       })
     },
-    count: (args: { where?: Record<string, unknown> } = {}) => {
+    useCount: (args: { where?: Record<string, unknown> } = {}) => {
       const { projectId, client, run } = useStudio()
       return useQuery({
         queryKey: [...studioKeys.query(projectId, type, args), 'count'],
@@ -325,7 +329,7 @@ function makeApi(config: AnyConfig, type: string) {
         },
       })
     },
-    create: () => {
+    useCreate: () => {
       const { projectId, client, run } = useStudio()
       const qc = useQueryClient()
       return useMutation({
@@ -344,7 +348,7 @@ function makeApi(config: AnyConfig, type: string) {
         },
       })
     },
-    update: () => {
+    useUpdate: () => {
       const { projectId, client, run } = useStudio()
       const qc = useQueryClient()
       return useMutation({
@@ -372,7 +376,7 @@ function makeApi(config: AnyConfig, type: string) {
         },
       })
     },
-    delete: () => {
+    useDelete: () => {
       const { projectId, client, run } = useStudio()
       const qc = useQueryClient()
       return useMutation({
@@ -382,7 +386,7 @@ function makeApi(config: AnyConfig, type: string) {
           qc.invalidateQueries({ queryKey: studioKeys.all(projectId) }),
       })
     },
-    publish: () => {
+    usePublish: () => {
       const { projectId, client, run } = useStudio()
       const qc = useQueryClient()
       return useMutation({

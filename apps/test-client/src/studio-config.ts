@@ -5,6 +5,7 @@ import {
   defineConfig,
   defineDate,
   defineDocument,
+  defineDocumentImage,
   defineObject,
   defineProjectBadge,
   defineReference,
@@ -12,6 +13,7 @@ import {
   defineTemplate,
   index,
   rules,
+  type AssetValue,
 } from '@jalyk/schema'
 import { audioAssetPreset, createStudio, imageAssetPreset } from '@jalyk/studio'
 import {
@@ -33,6 +35,11 @@ import {
 } from 'lucide-react'
 import { AlbumForm } from './album-form.tsx'
 import { AlbumPreview } from './album-preview.tsx'
+import {
+  OriginalLyricsField,
+  TranslationField,
+} from './original-lyrics-field.tsx'
+import { TrackPreview } from './track-preview.tsx'
 
 /** Языки переводов лирики: value — код языка, title — подпись для select. */
 export const languages = [
@@ -90,6 +97,49 @@ const albumFields = {
 
 /** Карта полей альбома для типизации кастомной формы (FormProps<AlbumFields>). */
 export type AlbumFields = typeof albumFields
+
+/** Поля оригинальной лирики вынесены отдельно, чтобы типизировать её кастомный компонент по `typeof originalLyricsFields` (FormProps<OriginalLyricsFields>), как и поля альбома для AlbumForm. */
+const originalLyricsFields = {
+  language: defineString({
+    title: 'Язык оригинала',
+    icon: LanguagesIcon,
+    input: { type: 'select', predefined: languages },
+  }),
+  authors: defineArray({
+    title: 'Авторы текста',
+    icon: PenLineIcon,
+    of: defineString({}),
+  }),
+  text: defineString({
+    title: 'Текст оригинала',
+    icon: TypeIcon,
+    input: { type: 'multiline' },
+  }),
+}
+
+/** Карта полей оригинальной лирики для типизации её кастомного компонента. */
+export type OriginalLyricsFields = typeof originalLyricsFields
+
+/** Поля одного перевода вынесены отдельно — чтобы типизировать кастомный компонент элемента массива лирики (FormProps<TranslationFields>). */
+const translationFields = {
+  language: defineString({
+    title: 'Язык',
+    icon: LanguagesIcon,
+    input: { type: 'select', predefined: languages },
+  }),
+  translator: defineString({
+    title: 'Автор перевода',
+    icon: PenLineIcon,
+  }),
+  text: defineString({
+    title: 'Текст',
+    icon: TypeIcon,
+    input: { type: 'multiline' },
+  }),
+}
+
+/** Карта полей перевода для типизации его кастомного компонента. */
+export type TranslationFields = typeof translationFields
 
 /** Музыкальная схема: группа, исполнитель, альбом, трек. Документы — отдельные переменные, `documents` лишь собирает их; `to` типизирует реестр (ниже). */
 const bandDoc = defineDocument({
@@ -149,7 +199,15 @@ const artistDoc = defineDocument({
 
 const albumDoc = defineDocument({
   title: 'Альбом',
-  icon: Disc3Icon,
+  // Иконка альбома — квадратная обложка из поля cover: резолвер читает assetId
+  // черновика и отдаёт публичный URL ассета; пока обложки нет — фолбэк Disc3Icon.
+  icon: defineDocumentImage<{ cover?: AssetValue }>(
+    ({ document, assetUrl }) => {
+      const assetId = document.draft.cover?.assetId
+      return assetId ? assetUrl(assetId) : undefined
+    },
+    { fallback: Disc3Icon },
+  ),
   preview: { title: 'title' },
   previewComponent: AlbumPreview,
   formComponent: AlbumForm,
@@ -177,6 +235,7 @@ const trackDoc = defineDocument({
   title: 'Трек',
   icon: Music2Icon,
   preview: { title: 'title' },
+  previewComponent: TrackPreview,
   list: { search: ['title'], sort: ['title'] },
   fields: {
     title: defineString({ title: 'Название', icon: TagIcon }),
@@ -186,13 +245,6 @@ const trackDoc = defineDocument({
       icon: ShieldAlertIcon,
       input: { type: 'switch' },
     }),
-    albums: defineArray({
-      title: 'Альбомы',
-      icon: Disc3Icon,
-      of: defineReference({
-        to: [{ to: 'album', previewComponent: AlbumPreview }],
-      }),
-    }),
     performers: defineArray({
       title: 'Группы и исполнители',
       icon: UsersIcon,
@@ -201,45 +253,16 @@ const trackDoc = defineDocument({
     originalLyrics: defineObject({
       title: 'Оригинальная лирика',
       icon: FileTextIcon,
-      fields: {
-        language: defineString({
-          title: 'Язык оригинала',
-          icon: LanguagesIcon,
-          input: { type: 'select', predefined: languages },
-        }),
-        text: defineString({
-          title: 'Текст оригинала',
-          icon: TypeIcon,
-          input: { type: 'multiline' },
-        }),
-        authors: defineArray({
-          title: 'Авторы текста',
-          icon: PenLineIcon,
-          of: defineString({}),
-        }),
-      },
+      fields: originalLyricsFields,
+      component: OriginalLyricsField,
     }),
     lyrics: defineArray({
       title: 'Лирика',
       icon: LanguagesIcon,
       of: defineObject({
         title: 'Перевод',
-        fields: {
-          language: defineString({
-            title: 'Язык',
-            icon: LanguagesIcon,
-            input: { type: 'select', predefined: languages },
-          }),
-          text: defineString({
-            title: 'Текст',
-            icon: TypeIcon,
-            input: { type: 'multiline' },
-          }),
-          translator: defineString({
-            title: 'Автор перевода',
-            icon: PenLineIcon,
-          }),
-        },
+        fields: translationFields,
+        component: TranslationField,
       }),
     }),
   },

@@ -1,5 +1,6 @@
 import type { AnyConfig, DocumentType } from './config.ts'
 import type {
+  FieldIcon,
   FieldMap,
   FieldValue,
   InferFields,
@@ -321,6 +322,41 @@ export function defineTemplate<V>(template: FieldTemplate<V>): FieldTemplate<V> 
   return template
 }
 
+/**
+ * Контекст колбэка кастомного действия поля. Расширяет TemplateContext текущим
+ * значением поля (`value`) и типизированным сеттером (`set`), поэтому действие
+ * может и читать значение, и записывать его, и ходить в другие документы.
+ */
+export type FieldActionContext<V> = TemplateContext & {
+  value: V
+  set: (value: V) => void
+}
+
+/**
+ * Кастомное действие в меню поля, добавляемое разработчиком через опцию `actions`
+ * фабрики. `key` — стабильный идентификатор пункта (по нему студия может скрывать
+ * действие в отдельных окружениях, например в диалоге «Открыть полностью»).
+ * `label`/`icon` задают вид пункта, `variant: 'destructive'` рисует его опасным.
+ * `onSelect` исполняется на клиенте в момент клика с FieldActionContext и может
+ * быть async (тип значения `V` приходит сверху из фабрики, как у FieldTemplate).
+ */
+export type FieldAction<V> = {
+  key: string
+  label: string
+  icon?: FieldIcon
+  variant?: 'default' | 'destructive'
+  onSelect: (ctx: FieldActionContext<V>) => void | Promise<void>
+}
+
+/**
+ * Фабрика кастомного действия — обычная функция без хуков, нужна лишь чтобы
+ * типизировать `ctx` колбэка. Статические действия её не требуют: пиши объект
+ * прямо в `actions`. Тип `V` приходит сверху из опции `actions` фабрики поля.
+ */
+export function defineAction<V>(action: FieldAction<V>): FieldAction<V> {
+  return action
+}
+
 // --- where: рантайм-предикат (чистый, без IO) --------------------------------
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -399,6 +435,15 @@ function matchesFilter(value: unknown, filter: unknown): boolean {
  * вложенный объект — рекурсивная проверка подполей; скаляр/ссылка — matchesFilter.
  */
 function matchesField(value: unknown, filter: unknown): boolean {
+  // Массив ссылок с ref-фильтром (строка/equals/in): достаточно совпадения одного
+  // элемента (семантика Prisma «has»). Массивы объектов сюда не попадают — у них
+  // ключи some/every/none, не входящие в SCALAR_OPS, поэтому идут ниже.
+  if (
+    Array.isArray(value) &&
+    (!isRecord(filter) || Object.keys(filter).every((k) => SCALAR_OPS.has(k)))
+  ) {
+    return value.some((el) => matchesFilter(refValue(el), filter))
+  }
   if (!isRecord(filter)) return refValue(value) === filter
   const keys = Object.keys(filter)
   // Фильтр массива объектов: хотя бы один / все / ни одного элемента.

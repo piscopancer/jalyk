@@ -5,10 +5,10 @@
 // фантомное `__value`, несущее тип значения поля для последующего вывода.
 
 import type { Brand } from 'effect'
-import type { DefaultPreviewData } from './document.ts'
+import type { DefaultPreviewData, FormComponent } from './document.ts'
 // Тип шаблона живёт в query.ts (рядом с async-клиентом, который типизирует ctx);
 // импорт только типовой, поэтому встречный цикл query.ts → field.ts безопасен.
-import type { FieldTemplate } from './query.ts'
+import type { FieldAction, FieldTemplate } from './query.ts'
 
 /** Утилита: «расплющивает» пересечения типов в один читаемый объект. */
 export type Prettify<T> = { [K in keyof T]: T[K] } & {}
@@ -172,6 +172,8 @@ export type AnyField = FieldMeta & {
   default?: unknown
   /** Шаблоны значения поля — заготовки для подстановки одним кликом, см. FieldTemplate. */
   templates?: readonly FieldTemplate<unknown>[]
+  /** Кастомные действия в меню поля, добавленные разработчиком, см. FieldAction. */
+  actions?: readonly FieldAction<unknown>[]
   // Возможные специфичные свойства разных видов полей — нужны для рантайм-обхода
   // (валидация, снапшот), при описании заполняются только релевантные.
   fields?: FieldMap
@@ -292,6 +294,7 @@ export function defineString<
   options: O &
     HeaderOptions<H> & {
       templates?: readonly FieldTemplate<StringValue<O>>[]
+      actions?: readonly FieldAction<StringValue<O>>[]
     } = {} as O & HeaderOptions<H>,
 ) {
   return { kind: 'string', ...options } as { kind: 'string' } & O &
@@ -310,8 +313,10 @@ export function defineNumber<
   H = DefaultHeaderData,
 >(
   options: O &
-    HeaderOptions<H> & { templates?: readonly FieldTemplate<number>[] } = {} as O &
-    HeaderOptions<H>,
+    HeaderOptions<H> & {
+      templates?: readonly FieldTemplate<number>[]
+      actions?: readonly FieldAction<number>[]
+    } = {} as O & HeaderOptions<H>,
 ) {
   return { kind: 'number', ...options } as { kind: 'number' } & O &
     HeaderOptions<H> & { __value?: number }
@@ -329,8 +334,10 @@ export function defineBoolean<
   H = DefaultHeaderData,
 >(
   options: O &
-    HeaderOptions<H> & { templates?: readonly FieldTemplate<boolean>[] } = {} as O &
-    HeaderOptions<H>,
+    HeaderOptions<H> & {
+      templates?: readonly FieldTemplate<boolean>[]
+      actions?: readonly FieldAction<boolean>[]
+    } = {} as O & HeaderOptions<H>,
 ) {
   return { kind: 'boolean', ...options } as { kind: 'boolean' } & O &
     HeaderOptions<H> & { __value?: boolean }
@@ -344,6 +351,7 @@ export function defineRichText<
   options: O &
     HeaderOptions<H> & {
       templates?: readonly FieldTemplate<RichTextValue>[]
+      actions?: readonly FieldAction<RichTextValue>[]
     } = {} as O & HeaderOptions<H>,
 ) {
   return { kind: 'richText', ...options } as { kind: 'richText' } & O &
@@ -360,8 +368,10 @@ export function defineAsset<
   H = DefaultHeaderData,
 >(
   options: O &
-    HeaderOptions<H> & { templates?: readonly FieldTemplate<AssetValue>[] } = {} as O &
-    HeaderOptions<H>,
+    HeaderOptions<H> & {
+      templates?: readonly FieldTemplate<AssetValue>[]
+      actions?: readonly FieldAction<AssetValue>[]
+    } = {} as O & HeaderOptions<H>,
 ) {
   return { kind: 'asset', ...options } as { kind: 'asset' } & O &
     HeaderOptions<H> & { __value?: AssetValue }
@@ -380,8 +390,10 @@ export function defineDate<
   H = DefaultHeaderData,
 >(
   options: O &
-    HeaderOptions<H> & { templates?: readonly FieldTemplate<DateValue>[] } = {} as O &
-    HeaderOptions<H>,
+    HeaderOptions<H> & {
+      templates?: readonly FieldTemplate<DateValue>[]
+      actions?: readonly FieldAction<DateValue>[]
+    } = {} as O & HeaderOptions<H>,
 ) {
   return { kind: 'date', ...options } as { kind: 'date' } & O &
     HeaderOptions<H> & { __value?: DateValue }
@@ -395,6 +407,7 @@ export function defineDateRange<
   options: O &
     HeaderOptions<H> & {
       templates?: readonly FieldTemplate<DateRangeValue>[]
+      actions?: readonly FieldAction<DateRangeValue>[]
     } = {} as O & HeaderOptions<H>,
 ) {
   return { kind: 'dateRange', ...options } as { kind: 'dateRange' } & O &
@@ -447,6 +460,7 @@ export function defineReference<
   options: O &
     HeaderOptions<H> & { to: To } & {
       templates?: readonly FieldTemplate<ReferenceValue<To[number]['to']>>[]
+      actions?: readonly FieldAction<ReferenceValue<To[number]['to']>>[]
     },
 ) {
   return { kind: 'reference', ...options } as { kind: 'reference' } & O &
@@ -458,15 +472,18 @@ type ObjectOptions = FieldMeta & {
   default?: Record<string, unknown>
 }
 
-/** Вложенный объект со своей картой полей. Карта полей выводится в отдельный дженерик `F` прямо из `fields`, поэтому `templates` контекстно типизируется значением объекта (`InferFields<F>`) уже в момент набора — редактор подсказывает форму. Будь тип значения завязан на общий `O` (выводимый из всего объекта опций, включая сам `templates`), вывод замкнулся бы и подсказок внутри `value` не было бы. */
+/** Вложенный объект со своей картой полей. Карта полей выводится в отдельный дженерик `F` прямо из `fields`, поэтому `templates` контекстно типизируется значением объекта (`InferFields<F>`) уже в момент набора — редактор подсказывает форму. Будь тип значения завязан на общий `O` (выводимый из всего объекта опций, включая сам `templates`), вывод замкнулся бы и подсказок внутри `value` не было бы. `component` задаёт свой layout редактора объекта: получает тот же API, что кастомная форма документа (Field по имени подполя и fields-хэндлы, типизированные `F`), но областью — подполя объекта. Объявляется один раз и едет вместе с определением поля, поэтому рисуется везде, где это поле подставлено. */
 export function defineObject<
   const O extends ObjectOptions,
   const F extends FieldMap,
   H = DefaultHeaderData,
+  CNode = unknown,
 >(
   options: O &
     HeaderOptions<H> & { fields: F } & {
       templates?: readonly FieldTemplate<InferFields<F>>[]
+      actions?: readonly FieldAction<InferFields<F>>[]
+      component?: FormComponent<F, CNode>
     },
 ) {
   return { kind: 'object', ...options } as { kind: 'object' } & O &
@@ -518,6 +535,7 @@ export function defineArray<
   options: O &
     HeaderOptions<H> & { of: Of } & {
       templates?: readonly FieldTemplate<ArrayFieldValueOf<Of>>[]
+      actions?: readonly FieldAction<ArrayFieldValueOf<Of>>[]
     },
 ) {
   return { kind: 'array', ...options } as { kind: 'array' } & O &

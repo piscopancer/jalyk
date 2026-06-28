@@ -31,13 +31,56 @@ import {
 } from '@jalyk/ui'
 import { GripVerticalIcon, MinusIcon, PlusIcon, SearchIcon } from 'lucide-react'
 import { useState, type CSSProperties, type ReactNode } from 'react'
+import type { AnyConfig } from '@jalyk/schema'
+import { useStudio } from '../data/context.tsx'
 import { useField } from '../data/field.ts'
-import { FieldEditor } from './FieldInput.tsx'
+import { FieldInput } from './FieldInput.tsx'
 import type { FieldComponentProps } from './registry.tsx'
 
 /** Имя члена — то, что пишется в служебное `_type` элемента разнотипного массива (для выбора редактора). По умолчанию это kind члена. */
 function memberName(member: AnyField): string {
   return member.name ?? member.kind
+}
+
+/** Подпись типа члена для заголовка элемента массива. Для ссылки берём title(ы) целевых документов из реестра (track → «Трек»), несколько целей соединяем через « / »; для прочих видов — memberName. */
+function memberTypeLabel(member: AnyField, config: AnyConfig): string {
+  if (member.kind === 'reference') {
+    const targets = Array.isArray(member.to) ? member.to : []
+    const labels = targets.map(
+      (target) => config.documents[target.to]?.title ?? target.to,
+    )
+    if (labels.length > 0) return labels.join(' / ')
+  }
+  return memberName(member)
+}
+
+/** Иконка типа члена для заголовка элемента массива: у ссылки своей иконки нет, поэтому берём иконку первого целевого типа документа из реестра. */
+function memberTypeIcon(member: AnyField, config: AnyConfig): unknown {
+  if (member.kind === 'reference') {
+    const targets = Array.isArray(member.to) ? member.to : []
+    for (const target of targets) {
+      const icon = config.documents[target.to]?.icon
+      if (icon) return icon
+    }
+  }
+  return undefined
+}
+
+/** Заголовок элемента массива: у элемента нет своего пути-имени (последний сегмент — индекс), поэтому подсовываем title члена с фолбэком на подпись типа, сохраняя описание/иконку из header члена, если они заданы. */
+function memberHeader(
+  member: AnyField,
+  config: AnyConfig,
+): Record<string, unknown> {
+  const base =
+    member.header && typeof member.header === 'object'
+      ? (member.header as Record<string, unknown>)
+      : {}
+  const title =
+    typeof base.title === 'string'
+      ? base.title
+      : (member.title ?? memberTypeLabel(member, config))
+  const icon = base.icon ?? member.icon ?? memberTypeIcon(member, config)
+  return { ...base, title, icon }
 }
 
 /** Список членов массива: однородный (of — одно описание) или разнотипный (of — массив описаний). */
@@ -123,6 +166,7 @@ function SortableRow({
 
 /** Редактор массива. Правки полей внутри элементов идут точечно по пути [...path, индекс, …] через дочерние редакторы (FieldEditor), а структурные операции (добавить/удалить/переставить) переписывают массив целиком. В разнотипном массиве элементы получают _type (имя члена) и _key; редактор элемента выбирается по _type. В однородном массиве член один и служебные поля не добавляются. */
 export function ArrayField({ path, field }: FieldComponentProps) {
+  const { config } = useStudio()
   const handle = useField<unknown[]>(path)
   const items = Array.isArray(handle.value) ? handle.value : []
   const members = membersOf(field)
@@ -225,9 +269,10 @@ export function ArrayField({ path, field }: FieldComponentProps) {
                   onRemove={() => removeAt(index)}
                 >
                   {member ? (
-                    <FieldEditor
+                    <FieldInput
                       path={[...path, String(index)]}
                       field={member}
+                      header={memberHeader(member, config)}
                     />
                   ) : null}
                 </SortableRow>

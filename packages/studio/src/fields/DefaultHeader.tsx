@@ -2,6 +2,7 @@ import type { DefaultHeaderData } from '@jalyk/schema'
 import { cn } from '@jalyk/ui'
 import { ChevronRightIcon } from 'lucide-react'
 import { useFieldCollapsed, useToggleCollapse } from '../data/field-collapse.tsx'
+import { useFieldsCollapsible } from '../data/field-dialog.tsx'
 import { DynamicIcon, type HeaderProps } from '../data/react-bridge.tsx'
 import { useFieldIssues } from '../data/validation.tsx'
 import { IssueBadge } from '../views/IssueBadge.tsx'
@@ -41,6 +42,9 @@ export function DefaultHeader({
 function CollapseChevron({ path }: { path: readonly string[] }) {
   const collapsed = useFieldCollapsed(path)
   const toggle = useToggleCollapse(path)
+  const collapsible = useFieldsCollapsible()
+  // В диалоге «Открыть полностью» поле несворачиваемо — шеврон не нужен.
+  if (!collapsible) return null
   return (
     <button
       type="button"

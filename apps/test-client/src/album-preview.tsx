@@ -1,6 +1,5 @@
 import type { DefaultPreviewData, ReferenceValue } from '@jalyk/schema'
 import { DefaultPreviewIndicators, type PreviewProps } from '@jalyk/studio'
-import { Disc3Icon } from 'lucide-react'
 import { studio } from './studio-config.ts'
 
 /** Черновик альбома в части, нужной превью; тип ссылки из схемы, пустые ссылки приходят как null. */
@@ -8,12 +7,13 @@ type AlbumDraft = { tracks?: (ReferenceValue<'track'> | null)[] }
 
 export function AlbumPreview({
   document,
+  icon,
   title,
 }: PreviewProps<AlbumDraft, DefaultPreviewData>) {
   const refs = (document.draft?.tracks ?? [])
     .filter((ref): ref is ReferenceValue<'track'> => ref != null)
     .slice(0, 5)
-  const tracks = studio.track.findMany({
+  const tracks = studio.track.useFindMany({
     select: {
       id: true,
       title: true,
@@ -25,7 +25,8 @@ export function AlbumPreview({
 
   return (
     <div className="flex items-start gap-2.5">
-      <Disc3Icon className="size-4 shrink-0 text-muted-foreground" />
+      {/* Обложка из конфига типа (defineDocumentImage): тот же узел, что и в дефолтном превью. */}
+      {icon}
       <DefaultPreviewIndicators className="order-last ml-auto pl-2" />
       <div className="flex min-w-0 flex-col gap-1">
         <span className="truncate font-medium">{title}</span>

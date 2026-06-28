@@ -4,6 +4,7 @@ import type {
   ReferenceTarget,
   ReferenceValue,
 } from '@jalyk/schema'
+import { isDocumentImage } from '@jalyk/schema'
 import {
   Button,
   Command,
@@ -41,6 +42,7 @@ import { PreviewStateProvider } from '../data/preview-state.tsx'
 import { Dynamic, DynamicIcon } from '../data/react-bridge.tsx'
 import { validateDraft } from '../data/validation.tsx'
 import { DefaultPreview } from '../views/DefaultPreview.tsx'
+import { DocumentImageIcon } from '../views/DocumentImage.tsx'
 import { DocumentEditor } from '../views/DocumentEditor.tsx'
 import type { FieldComponentProps } from './registry.tsx'
 
@@ -87,16 +89,14 @@ function RefPreview({
     previewKey(def?.preview, 'description')
   const title = draftString(draft, titleKey) ?? id
   const description = draftString(draft, descriptionKey)
-  const icon = (
-    <DynamicIcon
-      icon={
-        getAtPath(target?.preview, ['icon']) ??
-        getAtPath(def?.preview, ['icon']) ??
-        def?.icon
-      }
-      fallback={FileTextIcon}
-      className="size-4"
-    />
+  const iconValue =
+    getAtPath(target?.preview, ['icon']) ??
+    getAtPath(def?.preview, ['icon']) ??
+    def?.icon
+  const icon = isDocumentImage(iconValue) ? (
+    <DocumentImageIcon spec={iconValue} document={{ id, type, draft }} />
+  ) : (
+    <DynamicIcon icon={iconValue} fallback={FileTextIcon} className="size-4" />
   )
   const preview: DefaultPreviewData = {
     title: titleKey,

@@ -18,12 +18,17 @@ import {
   DropdownMenuTrigger,
   toast,
 } from '@jalyk/ui'
-import type { FieldTemplate, TemplateContext } from '@jalyk/schema'
+import type {
+  FieldAction,
+  FieldTemplate,
+  TemplateContext,
+} from '@jalyk/schema'
 import {
   ClipboardPasteIcon,
   CopyIcon,
   FileJson2Icon,
   Loader2Icon,
+  Maximize2Icon,
   MoreHorizontalIcon,
   RotateCcwIcon,
   SparklesIcon,
@@ -34,9 +39,12 @@ import { useStudio } from '../data/context.tsx'
 import { createAsyncClient } from '../data/createStudio.tsx'
 import { useDocumentContext } from '../data/document.tsx'
 import { useField } from '../data/field.ts'
+import { FieldDialogProvider, useHiddenActions } from '../data/field-dialog.tsx'
 import { useDocumentSelect } from '../data/hooks.ts'
 import { jsonEqual } from '../data/json-equal.ts'
 import { getAtPath } from '../data/path.ts'
+import { DynamicIcon } from '../data/react-bridge.tsx'
+import { FieldInput } from './FieldInput.tsx'
 import type { FieldComponentProps } from './registry.tsx'
 
 /**
@@ -71,7 +79,10 @@ export function FieldMenu({ path, field }: FieldComponentProps) {
     value: getAtPath(data.published, path),
   })).data ?? { published: false, value: undefined }
   const { projectId, client, run, config } = useStudio()
+  const hiddenActions = useHiddenActions()
   const [detailOpen, setDetailOpen] = useState(false)
+  // Открыт ли диалог «Открыть полностью» для этого поля.
+  const [fullOpen, setFullOpen] = useState(false)
   // Шаблон в процессе применения (загрузка/готов/ошибка); null — диалог закрыт.
   const [pending, setPending] = useState<Pending | null>(null)
 
@@ -102,6 +113,22 @@ export function FieldMenu({ path, field }: FieldComponentProps) {
     }
   }
 
+  // Кастомные действия разработчика: колбэк исполняется на клиенте при клике с
+  // FieldActionContext (как у шаблонов, может быть async); ошибки показываем тостом.
+  const actions = field.actions ?? []
+  const runAction = (action: FieldAction<unknown>) => {
+    void Promise.resolve(
+      action.onSelect({
+        value: handle.value,
+        set: handle.set,
+        documentId: id,
+        client: asyncClient as unknown as TemplateContext['client'],
+      }),
+    ).catch((error) =>
+      toast(String(error instanceof Error ? error.message : error)),
+    )
+  }
+
   // Вставка доступна, если в буфере есть значение того же вида, что и это поле.
   const canPaste =
     clipboard.entry !== null && clipboard.entry.kind === field.kind
@@ -128,6 +155,16 @@ export function FieldMenu({ path, field }: FieldComponentProps) {
           <MoreHorizontalIcon />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-52">
+          {hiddenActions.has('open-fully') ? null : (
+            <>
+              <DropdownMenuItem onClick={() => setFullOpen(true)}>
+                <DropdownMenuItemRow icon={<Maximize2Icon />}>
+                  Открыть полностью
+                </DropdownMenuItemRow>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
           <DropdownMenuItem
             onClick={() => {
               clipboard.copy(field.kind, handle.value)
@@ -171,6 +208,30 @@ export function FieldMenu({ path, field }: FieldComponentProps) {
               Детальный просмотр
             </DropdownMenuItemRow>
           </DropdownMenuItem>
+          {actions.length > 0 ? (
+            <>
+              <DropdownMenuSeparator />
+              {actions
+                .filter((action) => !hiddenActions.has(action.key))
+                .map((action) => (
+                  <DropdownMenuItem
+                    key={action.key}
+                    variant={action.variant}
+                    onClick={() => runAction(action)}
+                  >
+                    <DropdownMenuItemRow
+                      icon={
+                        action.icon ? (
+                          <DynamicIcon icon={action.icon} />
+                        ) : undefined
+                      }
+                    >
+                      {action.label}
+                    </DropdownMenuItemRow>
+                  </DropdownMenuItem>
+                ))}
+            </>
+          ) : null}
           <DropdownMenuSeparator />
           {canResetDraft ? (
             <DropdownMenuItem
@@ -192,6 +253,28 @@ export function FieldMenu({ path, field }: FieldComponentProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Dialog open={fullOpen} onOpenChange={setFullOpen}>
+        <DialogContent className="grid h-[calc(100vh-2rem)] grid-rows-[auto_minmax(0,1fr)] sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              {field.title ?? path[path.length - 1] ?? 'Поле'}
+            </DialogTitle>
+            <DialogDescription>
+              {path.length > 0 ? path.join(' / ') : 'Поле документа'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-y-auto pr-1">
+            {/* В диалоге поле несворачиваемо и без пункта «Открыть полностью» — окружение прячет их по ключу. */}
+            <FieldDialogProvider
+              hiddenActions={new Set(['open-fully'])}
+              collapsible={false}
+            >
+              <FieldInput path={path} field={field} />
+            </FieldDialogProvider>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-2xl">

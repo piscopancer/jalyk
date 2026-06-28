@@ -7,6 +7,7 @@ import {
 import { cn } from '@jalyk/ui'
 import { type ReactNode } from 'react'
 import { useFieldCollapsed } from '../data/field-collapse.tsx'
+import { useFieldsCollapsible } from '../data/field-dialog.tsx'
 import { useDocumentContext } from '../data/document.tsx'
 import { useField } from '../data/field.ts'
 import { useDocumentSelect } from '../data/hooks.ts'
@@ -155,8 +156,10 @@ export function FieldInput({
   const hidden = source === false || source === null
   const customHeader = headerComponent ?? field.headerComponent
   const hasCustomHeader = asComponent<HeaderProps>(customHeader) != null
+  // Внутри диалога «Открыть полностью» поле несворачиваемо — окружение запрещает.
+  const dialogCollapsible = useFieldsCollapsible()
   // Шеврон живёт только в дефолтном заголовке: без него поле несворачиваемо, поэтому и тело не прячем.
-  const collapsible = !hidden && !hasCustomHeader
+  const collapsible = !hidden && !hasCustomHeader && dialogCollapsible
   // Редактор создаётся один раз и передаётся в тело готовым элементом: при сворачивании перерисовывается только обёртка тела, а не всё его поддерево.
   const editor = <FieldEditor path={path} field={field} />
   return (
@@ -196,7 +199,11 @@ function CollapsibleBody({
     <div
       className={cn(
         'grid transition-all duration-200',
-        collapsed ? 'grid-rows-[0fr] opacity-50' : 'grid-rows-[1fr] opacity-100',
+        // -mt-1.5 гасит родительский gap-1.5: при высоте 0 он остаётся фантомным
+        // отступом под хедером, поэтому сворачиваем его вместе с высотой (margin тоже под transition-all).
+        collapsed
+          ? '-mt-1.5 grid-rows-[0fr] opacity-50'
+          : 'grid-rows-[1fr] opacity-100',
       )}
     >
       <div className="overflow-hidden">{children}</div>

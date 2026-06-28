@@ -53,6 +53,7 @@ export {
   type FilterPredicate,
 } from './data/list-query.ts'
 export { DefaultPreview } from './views/DefaultPreview.tsx'
+export { DocumentImage } from './views/DocumentImage.tsx'
 export {
   DefaultDraftIndicator,
   DefaultIssueIndicators,

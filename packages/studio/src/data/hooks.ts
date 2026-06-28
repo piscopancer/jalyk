@@ -27,7 +27,9 @@ export function useDocument(id: string) {
 /** Срез открытого документа: тот же запрос и кэш, что и useDocument, но наблюдатель подписан только на результат `select`. Благодаря структурному разделению React Query при оптимистичном патче одного поля сохраняет идентичность нетронутых поддеревьев, поэтому поля, чей срез не изменился, не уведомляются и не перерисовываются. Через это useField/useFieldStatus читают лишь свой кусочек документа, а не весь объект. */
 export function useDocumentSelect<T>(
   id: string,
-  select: (data: { draft: unknown; published: unknown } & Record<string, unknown>) => T,
+  select: (
+    data: { draft: unknown; published: unknown } & Record<string, unknown>,
+  ) => T,
 ) {
   const { projectId, client, run } = useStudio()
   return useQuery({
@@ -98,10 +100,7 @@ export function useSetField(id: string, type: string) {
     },
     onError: (_error, _input, context) => {
       if (context?.previous !== undefined)
-        qc.setQueryData(
-          studioKeys.document(projectId, id),
-          context.previous,
-        )
+        qc.setQueryData(studioKeys.document(projectId, id), context.previous)
     },
     // Сам открытый документ намеренно НЕ инвалидируем: его кэш уже держат в актуальном
     // состоянии оптимистичный патч (onMutate) и SSE-эхо этой же правки (см. useField).

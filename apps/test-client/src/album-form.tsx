@@ -9,7 +9,7 @@ function BandSearchButton({
 }: {
   fields: FormProps<AlbumFields>['fields']
 }) {
-  const bands = studio.band.findMany({ select: { id: true, name: true } })
+  const bands = studio.band.useFindMany({ select: { id: true, name: true } })
   const bandRef = fields.band.value
   const bandName = bandRef
     ? bands.data?.find((b) => b.id === bandRef._ref)?.name

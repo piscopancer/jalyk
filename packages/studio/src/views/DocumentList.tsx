@@ -3,7 +3,7 @@ import type {
   DefaultPreviewData,
   DocumentPreviewState,
 } from '@jalyk/schema'
-import { matchesWhere } from '@jalyk/schema'
+import { isDocumentImage, matchesWhere } from '@jalyk/schema'
 import {
   Button,
   Input,
@@ -37,6 +37,7 @@ import { PreviewStateProvider } from '../data/preview-state.tsx'
 import { Dynamic, DynamicIcon } from '../data/react-bridge.tsx'
 import { validateDraft } from '../data/validation.tsx'
 import { DefaultPreview } from './DefaultPreview.tsx'
+import { DocumentImageIcon } from './DocumentImage.tsx'
 import { DocumentContextMenu } from './document-menu.tsx'
 import { FilterBuilder } from './FilterBuilder.tsx'
 import { SortMenu } from './SortMenu.tsx'
@@ -110,12 +111,13 @@ export function DocumentRow({
     doc.draft,
     previewFieldKey(def?.preview, 'description'),
   )
-  const icon = (
-    <DynamicIcon
-      icon={getAtPath(def?.preview, ['icon']) ?? def?.icon}
-      fallback={FileTextIcon}
-      className="size-4"
-    />
+  // Иконка документа: спецификация картинки (defineDocumentImage) рисуется
+  // квадратной обложкой с собственным запросом, иначе — статичная иконка lucide.
+  const iconValue = getAtPath(def?.preview, ['icon']) ?? def?.icon
+  const icon = isDocumentImage(iconValue) ? (
+    <DocumentImageIcon spec={iconValue} document={doc} />
+  ) : (
+    <DynamicIcon icon={iconValue} fallback={FileTextIcon} className="size-4" />
   )
   const preview: DefaultPreviewData = {
     title: previewFieldKey(def?.preview, 'title'),

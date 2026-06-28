@@ -1,3 +1,4 @@
+import type { AnyConfig } from './config.ts'
 import type {
   DefaultHeaderData,
   ErasedComponent,
@@ -7,6 +8,7 @@ import type {
   HeaderComponentProps,
   InferFields,
 } from './field.ts'
+import type { AsyncClientOf } from './query.ts'
 import type {
   DocumentValidate,
   ErasedValidate,
@@ -45,6 +47,42 @@ export type PreviewDocument<Draft = unknown> = {
   id: string
   type: string
   draft: Draft
+}
+
+/** Контекст резолвера картинки документа: типизированный черновик документа, `assetUrl` для ссылки на загруженный ассет (например обложку) и императивный клиент запросов `client` для дочитывания связанных документов. Колбек — обычная (возможно асинхронная) функция без хуков: студия исполняет его внутри своего запроса, поэтому здесь доступны и поля документа, и сеть. */
+export type DocumentImageContext<Draft = unknown> = {
+  document: PreviewDocument<Draft>
+  assetUrl: (assetId: string) => string
+  client: AsyncClientOf<AnyConfig>
+}
+
+/** Резолвер картинки документа: по контексту возвращает ссылку на ресурс (или `undefined`, если картинки нет). */
+export type DocumentImageResolve<Draft = unknown> = (
+  ctx: DocumentImageContext<Draft>,
+) => string | undefined | Promise<string | undefined>
+
+/** Спецификация иконки-документа в виде квадратной картинки: `resolve` добывает ссылку на ресурс, `fallback` — иконка-заглушка при пустой ссылке. Брендирована по `kind`, чтобы студия отличала её от статичной иконки lucide (обе — функции/объекты, структурно неразличимы). */
+export type DocumentImageSpec<Draft = unknown> = {
+  kind: 'document-image'
+  resolve: DocumentImageResolve<Draft>
+  fallback?: FieldIcon
+}
+
+/** Объявляет иконку документа как квадратную картинку (см. DocumentImageSpec): `resolve` читает черновик и/или связанные документы и возвращает ссылку на ресурс. Использовать в `defineDocument({ icon: defineDocumentImage(...) })`. `Draft` указывается явно для типизации `document.draft` (как и в кастомных превью). */
+export function defineDocumentImage<Draft = unknown>(
+  resolve: DocumentImageResolve<Draft>,
+  options?: { fallback?: FieldIcon },
+): DocumentImageSpec<Draft> {
+  return { kind: 'document-image', resolve, fallback: options?.fallback }
+}
+
+/** Сужает значение иконки до спецификации картинки документа по бренду `kind`. */
+export function isDocumentImage(icon: unknown): icon is DocumentImageSpec {
+  return (
+    typeof icon === 'object' &&
+    icon !== null &&
+    (icon as { kind?: unknown }).kind === 'document-image'
+  )
 }
 
 /** Состояние документа для превью: есть ли неопубликованный черновик (правки относительно published) и замечания валидации. Студия отдаёт его превью пропом `state` и хуком useDocumentPreviewState, чтобы кастомные превью могли отразить черновик/ошибки/предупреждения. */
