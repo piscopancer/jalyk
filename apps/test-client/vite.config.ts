@@ -1,6 +1,7 @@
+import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
-import viteReact from '@vitejs/plugin-react'
+import viteReact, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 
@@ -16,10 +17,15 @@ export default defineConfig({
   // из файлов в src/routes.
   plugins: [
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),
-    // React Compiler автоматически мемоизирует рендеры; workspace-пакеты
-    // (@jalyk/studio, @jalyk/ui) экспортируют сырой src и резолвятся в реальные
-    // пути вне node_modules, поэтому Babel этого плагина покрывает и их.
-    viteReact({ babel: { plugins: [['babel-plugin-react-compiler', {}]] } }),
+    viteReact(),
+    // React Compiler автоматически мемоизирует рендеры. В plugin-react v6 (oxc/
+    // rolldown) старый способ `viteReact({ babel: { plugins: [...] } })` не
+    // работает — babel-конвейера в плагине больше нет, и опция молча игнорируется.
+    // Компилятор подключается отдельным rolldown-babel плагином с пресетом из
+    // самого plugin-react. Workspace-пакеты (@jalyk/studio, @jalyk/ui) экспортируют
+    // сырой src и резолвятся в реальные пути вне node_modules, поэтому фильтр
+    // пресета (по умолчанию — все файлы вне node_modules) покрывает и их.
+    babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
   ],
 })

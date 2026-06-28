@@ -26,12 +26,12 @@ type CachedDocument = { draft: unknown } & Record<string, unknown>
 
 /** Доступ к полю текущего документа (из <DocumentProvider>) по пути. Дженерик T — ожидаемый тип значения; вызывающий редактор задаёт его из своей схемы. */
 export function useField<T = unknown>(path: readonly string[]): FieldHandle<T> {
-  const { id } = useDocumentContext()
+  const { id, type } = useDocumentContext()
   const { projectId, subscribeEvents } = useStudio()
   const qc = useQueryClient()
   // Подписка точечная: наблюдатель уведомляется только когда меняется значение по этому пути, а не при любой правке документа.
   const valueQuery = useDocumentSelect(id, (data) => getAtPath(data.draft, path))
-  const setField = useSetField(id)
+  const setField = useSetField(id, type)
   const source = useFieldSource()
 
   // Удалённые правки этого же поля: патчим кэш документа по пути из события, чтобы value обновилось без перезапроса. Своя правка тоже вернётся сюда эхом — но тогда значение уже совпадает с кэшем (его положил оптимистичный апдейт), и мы возвращаем prev без изменений: иначе setAtPath создал бы новый массив со свежими идентичностями объектов, давая лишний перерендер и видимую перестановку элементов (например, после dnd) спустя ~100мс round-trip.

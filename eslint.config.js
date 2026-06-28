@@ -1,25 +1,19 @@
 import js from '@eslint/js'
+import { defineConfig } from 'eslint/config'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
-// Единый flat-config на всю монорепу: ESLint запускается из корня и покрывает
-// apps/* и packages/*. Главная цель — правила React Compiler из
-// eslint-plugin-react-hooks (recommended-latest), которые подсвечивают то, что
-// мешает компилятору корректно мемоизировать (мутация в рендере, условные хуки).
-export default tseslint.config(
-  // Сгенерированное и собранное не линтуем.
+export default defineConfig(
   {
     ignores: [
       '**/dist/**',
       '**/*.gen.ts',
       '**/routeTree.gen.ts',
-      // Сгенерированный Prisma-клиент — не наш код, не линтуем.
       '**/generated/**',
     ],
   },
-  // База для всего TS/TSX-кода.
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],

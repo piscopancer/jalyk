@@ -3,11 +3,14 @@ import type {
   FormComponentProps,
   FormFieldRenderProps,
 } from '@jalyk/schema'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useStudio } from '../data/context.tsx'
 import { useDocumentContext } from '../data/document.tsx'
-import { useField, type FieldHandle } from '../data/field.ts'
-import { useDocument } from '../data/hooks.ts'
+import { type FieldHandle } from '../data/field.ts'
+import { useDocumentSelect, useSetField } from '../data/hooks.ts'
+import { studioKeys } from '../data/keys.ts'
+import { getAtPath } from '../data/path.ts'
 import { FieldInput } from '../fields/FieldInput.tsx'
 
 // Кастомная форма редактора (formComponent документа): студия рисует её вместо дефолтного перебора полей. Пропсы параметризованы картой полей F, а не всем конфигом — иначе конфиг сослался бы на себя через свой же компонент (цикл).
@@ -53,37 +56,80 @@ function FormField({
   )
 }
 
-/** Собирает пропсы формы; хэндлы строятся перебором ключей конфига — набор статичен, порядок useField стабилен. */
+/** Собирает пропсы формы. Ключевое отличие от прежней версии: форма не
+ * подписывается ни на весь документ, ни сразу на все поля. `<Field>` подписан
+ * точечно сам (это тот же FieldInput, что и в дефолтной форме), а `fields`
+ * ленив — доступ `fields.<имя>.value` подписывает форму только на это поле.
+ * Поэтому правка поля, которое форма не читает напрямую (например перестановка
+ * элементов внутри tracks), форму не перерисовывает — её будит только смена
+ * значения реально прочитанного поля. */
 function useFormProps(fields: Record<string, unknown>): {
-  document: { id: string; type: string; draft: Record<string, unknown> }
+  document: { id: string; type: string }
   Field: typeof FormField
   fields: Record<string, FieldHandle<unknown>>
 } {
   const { id, type } = useDocumentContext()
-  const doc = useDocument(id)
-  const handles: Record<string, FieldHandle<unknown>> = {}
-  for (const key of Object.keys(fields)) {
-    // Ключи статичны (из конфига) и для смонтированного типа документа
-    // неизменны, поэтому порядок вызовов useField стабилен между рендерами — по
-    // контракту React это корректно. Правило консервативно запрещает хуки в
-    // цикле; здесь это осознанное исключение, а не баг (публичный API формы
-    // требует собрать все хэндлы на этом уровне синхронно).
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    handles[key] = useField([key])
-  }
-  const draft = doc.data?.draft
-  return {
-    document: {
-      id,
-      type,
-      draft:
-        draft !== null && typeof draft === 'object'
-          ? (draft as Record<string, unknown>)
-          : {},
+  const { projectId } = useStudio()
+  const qc = useQueryClient()
+  const setField = useSetField(id, type)
+  const key = studioKeys.document(projectId, id)
+
+  // Набор полей, которые форма реально прочитала через fields.<имя>.value. Растёт
+  // монотонно и задаёт точечную подписку ниже.
+  const read = useRef<Set<string>>(new Set())
+  const subscribedSize = useRef(0)
+  const [, bump] = useState(0)
+
+  // Один селект на форму: срезы только прочитанных полей. React Query применяет
+  // структурное разделение к результату select, поэтому пока ни один прочитанный
+  // срез не сменил идентичность, ссылка прежняя и форма не перерисовывается;
+  // правка непрочитанного поля результат не меняет.
+  const query = useDocumentSelect(id, (data) => {
+    const draft = (data as { draft: unknown }).draft
+    const out: Record<string, unknown> = {}
+    for (const name of read.current) out[name] = getAtPath(draft, [name])
+    return out
+  })
+  const selected = query.data as Record<string, unknown> | undefined
+  const isLoading = query.isLoading
+
+  // Поле, прочитанное впервые, попадает в read уже после вызова селекта в этом
+  // рендере, поэтому реактивную подписку на него поднимаем со следующего рендера
+  // (значение в текущем берём напрямую из кэша — без мигания).
+  useEffect(() => {
+    if (read.current.size !== subscribedSize.current) {
+      subscribedSize.current = read.current.size
+      bump((n) => n + 1)
+    }
+  })
+
+  // Прокси-хэндлы: чтение value помечает поле прочитанным (подписка) и отдаёт его
+  // срез; запись и статус общие на форму (per-field статус прежняя версия тоже
+  // фактически не давала потребителям — формы пишут значения через <Field>).
+  const handles = new Proxy({} as Record<string, FieldHandle<unknown>>, {
+    ownKeys: () => Reflect.ownKeys(fields),
+    getOwnPropertyDescriptor: () => ({
+      enumerable: true,
+      configurable: true,
+    }),
+    get(_target, prop): FieldHandle<unknown> | undefined {
+      if (typeof prop !== 'string') return undefined
+      read.current.add(prop)
+      const value =
+        selected && prop in selected
+          ? selected[prop]
+          : getAtPath(qc.getQueryData<{ draft: unknown }>(key)?.draft, [prop])
+      return {
+        value,
+        set: (next) => setField.mutate({ path: [prop], value: next }),
+        status: setField.status,
+        error: setField.error,
+        isLoading,
+      }
     },
-    Field: FormField,
-    fields: handles,
-  }
+  })
+
+  return { document: { id, type }, Field: FormField, fields: handles }
 }
 
 /** Мост студия↔кастомная форма: собирает FormProps по полям типа; пропсы строятся динамически, потому приводятся к FormProps (внутри компонента типы уже точные). */

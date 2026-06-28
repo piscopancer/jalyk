@@ -106,9 +106,9 @@ export type FormFieldRenderProps<F extends FieldMap, Node> = {
   className?: string
 }
 
-/** Пропсы кастомной формы (карта полей F): `document` (id/тип/черновик), `Field` по ключу, `fields` — хэндлы всех полей. */
+/** Пропсы кастомной формы (карта полей F): `document` (id/тип), `Field` по ключу, `fields` — хэндлы полей. Самого черновика тут нет намеренно: подписка на весь draft перерисовывала бы форму на любую правку; значения читаются точечно через `fields.<имя>.value` (подписка только на прочитанные поля) или рисуются через `Field`. */
 export type FormComponentProps<F extends FieldMap, Node> = {
-  document: { id: string; type: string; draft: Partial<InferFields<F>> }
+  document: { id: string; type: string }
   Field: (props: FormFieldRenderProps<F, Node>) => Node
   fields: { [K in keyof F]: FormFieldHandle<FieldValue<F[K]>> }
 }
