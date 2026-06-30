@@ -30,6 +30,14 @@ export type ProjectEvent =
       readonly draft: unknown
     }
   | { readonly kind: 'delete'; readonly docId: string; readonly type: string }
+  | {
+      // Присутствие: участник проекта зашёл в студию или вышел из неё. Студия
+      // держит список членов (из /members) и переключает им online по этим
+      // событиям. userId совпадает с member.userId.
+      readonly kind: 'presence'
+      readonly userId: string
+      readonly online: boolean
+    }
 
 /** Вид события — совпадает с полем event: в SSE-кадре. */
 export type ProjectEventKind = ProjectEvent['kind']

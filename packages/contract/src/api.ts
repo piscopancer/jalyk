@@ -1,6 +1,6 @@
 import { HttpApi, HttpApiEndpoint, HttpApiGroup } from '@effect/platform'
 import { Schema } from 'effect'
-import { Forbidden, NotFound } from './errors.ts'
+import { FileTooLarge, Forbidden, NotFound, QuotaExceeded } from './errors.ts'
 import { Authentication, Authorization } from './middleware.ts'
 
 // Ответ healthcheck: статус сервиса и доступность БД. Растёт по мере добавления
@@ -25,9 +25,22 @@ export const CurrentUserInfo = Schema.Struct({
 })
 
 // Группа эндпоинтов аутентифицированного редактора. Защищена Authentication —
-// без действительной сессии ответ 401. Пока только /me для проверки.
+// без действительной сессии ответ 401. /me — текущий пользователь; updateProfile
+// меняет имя; uploadAvatar загружает аватарку (сырые байты, тип в query) в
+// хранилище и проставляет её URL в профиль. Все три про «себя» — без projectId.
 export const MeGroup = HttpApiGroup.make('me')
   .add(HttpApiEndpoint.get('me', '/me').addSuccess(CurrentUserInfo))
+  .add(
+    HttpApiEndpoint.patch('updateProfile', '/me')
+      .setPayload(Schema.Struct({ name: Schema.optional(Schema.String) }))
+      .addSuccess(CurrentUserInfo),
+  )
+  .add(
+    HttpApiEndpoint.post('uploadAvatar', '/me/avatar')
+      .setUrlParams(Schema.Struct({ contentType: Schema.String }))
+      .addSuccess(CurrentUserInfo)
+      .addError(FileTooLarge),
+  )
   .middleware(Authentication)
 
 // Доступ принципала к проекту — результат проверки изоляции. role есть только у
@@ -40,9 +53,21 @@ export const ProjectAccessInfo = Schema.Struct({
   scope: Schema.optional(Schema.Literal('read', 'write')),
 })
 
+// Участник проекта для presence: профиль (имя, аватарка), роль, дата входа и
+// флаг online на момент запроса. Онлайн дальше обновляется presence-событиями
+// SSE-потока. joinedAt — ISO-строка (обработчик приводит из Date).
+export const MemberInfo = Schema.Struct({
+  userId: Schema.String,
+  name: Schema.String,
+  image: Schema.NullOr(Schema.String),
+  role: Schema.Literal('owner', 'editor'),
+  joinedAt: Schema.String,
+  online: Schema.Boolean,
+})
+
 // Контентные эндпоинты вложены под /projects/:projectId и защищены единым
-// middleware Authorization. Пока только проверочный /access — отдаёт разрешённый
-// доступ, упадёт 404 для чужого проекта (изоляция) и 401 без принципала.
+// middleware Authorization. /access отдаёт разрешённый доступ (404 для чужого
+// проекта, 401 без принципала); /members — участников проекта для presence.
 export const ProjectsGroup = HttpApiGroup.make('projects')
   .add(
     HttpApiEndpoint.get('access', '/projects/:projectId/access')
@@ -50,6 +75,12 @@ export const ProjectsGroup = HttpApiGroup.make('projects')
       .addSuccess(ProjectAccessInfo)
       .addError(NotFound)
       .addError(Forbidden),
+  )
+  .add(
+    HttpApiEndpoint.get('members', '/projects/:projectId/members')
+      .setPath(Schema.Struct({ projectId: Schema.String }))
+      .addSuccess(Schema.Array(MemberInfo))
+      .addError(NotFound),
   )
   .middleware(Authorization)
 
@@ -242,7 +273,9 @@ export const AssetsGroup = HttpApiGroup.make('assets')
       )
       .addSuccess(AssetInfo)
       .addError(NotFound)
-      .addError(Forbidden),
+      .addError(Forbidden)
+      .addError(FileTooLarge)
+      .addError(QuotaExceeded),
   )
   .add(
     HttpApiEndpoint.get('list', '/projects/:projectId/assets')
@@ -272,6 +305,17 @@ export const AssetsPublicGroup = HttpApiGroup.make('assetsPublic').add(
     .addError(NotFound),
 )
 
+// Публичная раздача аватарки пользователя. Объект в хранилище один на пользователя
+// (ключ users/:id, перезаписывается при смене), поэтому отдельной записи в БД нет:
+// content-type аватарки едет в query (ct) того URL, что сохранён в User.image при
+// загрузке. Без middleware — как и ассеты, <img> ходит без заголовков.
+export const UsersPublicGroup = HttpApiGroup.make('usersPublic').add(
+  HttpApiEndpoint.get('avatar', '/users/:id/avatar')
+    .setPath(Schema.Struct({ id: Schema.String }))
+    .setUrlParams(Schema.Struct({ ct: Schema.optional(Schema.String) }))
+    .addError(NotFound),
+)
+
 // --- поток событий -------------------------------------------------------
 
 // SSE-поток изменений проекта: один на проект, раздаёт все дельты (field/create/
@@ -295,4 +339,5 @@ export class Api extends HttpApi.make('jalyk')
   .add(PublishedGroup)
   .add(AssetsGroup)
   .add(AssetsPublicGroup)
+  .add(UsersPublicGroup)
   .add(EventsGroup) {}

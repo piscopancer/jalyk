@@ -14,7 +14,7 @@ export const setRole = (
   Effect.gen(function* () {
     yield* requireOwner(projectId, actorId)
     const m = yield* query((db) =>
-      db.member.findUnique({ where: { id: memberId } }),
+      db.invited.findUnique({ where: { id: memberId } }),
     )
     if (!m || m.projectId !== projectId)
       return yield* Effect.fail(new NotFoundError({ what: 'member' }))
@@ -23,7 +23,7 @@ export const setRole = (
         new ForbiddenError({ reason: 'cant-change-owner' }),
       )
     return yield* query((db) =>
-      db.member.update({ where: { id: memberId }, data: { role } }),
+      db.invited.update({ where: { id: memberId }, data: { role } }),
     )
   })
 
@@ -32,7 +32,7 @@ export const remove = (projectId: string, actorId: string, memberId: string) =>
   Effect.gen(function* () {
     yield* requireOwner(projectId, actorId)
     const m = yield* query((db) =>
-      db.member.findUnique({ where: { id: memberId } }),
+      db.invited.findUnique({ where: { id: memberId } }),
     )
     if (!m || m.projectId !== projectId)
       return yield* Effect.fail(new NotFoundError({ what: 'member' }))
@@ -40,5 +40,5 @@ export const remove = (projectId: string, actorId: string, memberId: string) =>
       return yield* Effect.fail(
         new ForbiddenError({ reason: 'cant-remove-owner' }),
       )
-    return yield* query((db) => db.member.delete({ where: { id: memberId } }))
+    return yield* query((db) => db.invited.delete({ where: { id: memberId } }))
   })

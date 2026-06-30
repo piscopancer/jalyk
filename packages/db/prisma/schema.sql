@@ -73,6 +73,7 @@ CREATE TABLE "project" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "ownerId" TEXT NOT NULL,
+    "allowedOrigins" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -95,14 +96,14 @@ CREATE TABLE "api_key" (
 );
 
 -- CreateTable
-CREATE TABLE "member" (
+CREATE TABLE "invited" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'editor',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "member_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "invited_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -191,10 +192,10 @@ CREATE UNIQUE INDEX "api_key_hash_key" ON "api_key"("hash");
 CREATE INDEX "api_key_projectId_idx" ON "api_key"("projectId");
 
 -- CreateIndex
-CREATE INDEX "member_userId_idx" ON "member"("userId");
+CREATE INDEX "invited_userId_idx" ON "invited"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "member_projectId_userId_key" ON "member"("projectId", "userId");
+CREATE UNIQUE INDEX "invited_projectId_userId_key" ON "invited"("projectId", "userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "invitation_token_key" ON "invitation"("token");
@@ -224,10 +225,10 @@ ALTER TABLE "project" ADD CONSTRAINT "project_ownerId_fkey" FOREIGN KEY ("ownerI
 ALTER TABLE "api_key" ADD CONSTRAINT "api_key_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "member" ADD CONSTRAINT "member_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "invited" ADD CONSTRAINT "invited_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "member" ADD CONSTRAINT "member_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "invited" ADD CONSTRAINT "invited_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "invitation" ADD CONSTRAINT "invitation_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "project"("id") ON DELETE CASCADE ON UPDATE CASCADE;

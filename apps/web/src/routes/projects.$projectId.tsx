@@ -120,6 +120,24 @@ type Member = {
   user: { name: string; email: string; image: string | null }
 }
 
+/** Аватар участника: картинка провайдера, иначе первая буква имени/почты. */
+function MemberAvatar({ user }: { user: Member['user'] }) {
+  return (
+    <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-muted text-sm font-medium">
+      {user.image ? (
+        <img
+          src={user.image}
+          alt={user.name || user.email || 'avatar'}
+          className="size-full object-cover"
+          referrerPolicy="no-referrer"
+        />
+      ) : (
+        (user.name?.trim() || user.email?.trim() || '?').slice(0, 1).toUpperCase()
+      )}
+    </div>
+  )
+}
+
 function MembersCard({
   projectId,
   members,
@@ -156,15 +174,18 @@ function MembersCard({
             key={m.id}
             className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
           >
-            <div className="min-w-0">
-              <div className="truncate text-sm font-medium">
-                {m.user.name}{' '}
-                {m.userId === myId && (
-                  <span className="text-muted-foreground">(вы)</span>
-                )}
-              </div>
-              <div className="truncate text-xs text-muted-foreground">
-                {m.user.email}
+            <div className="flex min-w-0 items-center gap-3">
+              <MemberAvatar user={m.user} />
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium">
+                  {m.user.name}{' '}
+                  {m.userId === myId && (
+                    <span className="text-muted-foreground">(вы)</span>
+                  )}
+                </div>
+                <div className="truncate text-xs text-muted-foreground">
+                  {m.user.email}
+                </div>
               </div>
             </div>
             {m.role === 'owner' ? (

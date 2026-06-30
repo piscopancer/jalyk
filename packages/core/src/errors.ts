@@ -36,3 +36,16 @@ export class PlanLimitError extends Data.TaggedError('PlanLimitError')<{
 export class InvitationError extends Data.TaggedError('InvitationError')<{
   reason: 'not-found' | 'expired' | 'already-accepted' | 'already-member'
 }> {}
+
+/** Файл превышает лимит размера на один ассет (limit и size — в байтах). */
+export class FileTooLargeError extends Data.TaggedError('FileTooLargeError')<{
+  limit: number
+  size: number
+}> {}
+
+/** Загрузка не влезает в квоту хранилища проекта (всё в байтах). */
+export class QuotaExceededError extends Data.TaggedError('QuotaExceededError')<{
+  quota: number
+  used: number
+  size: number
+}> {}

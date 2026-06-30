@@ -4,13 +4,34 @@ import { Api } from '@jalyk/contract'
 import {
   DatabaseLive,
   LocalAssetStorageLive,
-  YandexAssetStorageLive,
+  S3AssetStorageLive,
 } from '@jalyk/core'
 import { Effect, Layer } from 'effect'
-import { createServer } from 'node:http'
+import fs from 'node:fs'
+import { createServer as createHttpServer } from 'node:http'
+import { createServer as createHttpsServer } from 'node:https'
+import { fileURLToPath } from 'node:url'
 import { port, storageDriver } from './config.ts'
+
+// Опциональный локальный https (как в vite web/test-client): когда заданы
+// HTTPS_CERT_FILE/HTTPS_KEY_FILE (относительно корня монорепы), api поднимается по
+// https — иначе студия по https не сможет звать его (mixed content). Без них —
+// обычный http (прод за внешним TLS).
+const tlsCert = process.env.HTTPS_CERT_FILE
+const tlsKey = process.env.HTTPS_KEY_FILE
+const tls =
+  tlsCert && tlsKey
+    ? {
+        cert: fs.readFileSync(
+          fileURLToPath(new URL(`../../../${tlsCert}`, import.meta.url)),
+        ),
+        key: fs.readFileSync(
+          fileURLToPath(new URL(`../../../${tlsKey}`, import.meta.url)),
+        ),
+      }
+    : undefined
 import { EventsLive } from './events.ts'
-import { AssetsLive, AssetsPublicLive } from './http/assets.ts'
+import { AssetsLive, AssetsPublicLive, UsersPublicLive } from './http/assets.ts'
 import { AuthorizationLive } from './http/authz.ts'
 import { DocumentsLive } from './http/documents.ts'
 import { EventsHttpLive } from './http/events.ts'
@@ -19,6 +40,8 @@ import { MeLive } from './http/me.ts'
 import { PublishedLive } from './http/published.ts'
 import { AuthenticationLive } from './http/middleware.ts'
 import { ProjectsLive } from './http/projects.ts'
+import { UploadGateLive } from './http/upload-gate.ts'
+import { PresenceLive } from './presence.ts'
 
 // Сборка реализации API: каждая группа эндпоинтов — свой Layer, все они
 // подкладываются под HttpApiBuilder.api. Доменные зависимости (БД, авторизация)
@@ -41,10 +64,10 @@ const CorsLive = HttpApiBuilder.middlewareCors({
   ],
 })
 
-// Хранилище ассетов выбирается по конфигу: local (файлы) или yandex (заглушка).
+// Хранилище ассетов выбирается по конфигу: local (файлы) или s3 (прод).
 const StorageLive = Layer.unwrapEffect(
   Effect.map(storageDriver, (driver) =>
-    driver === 'yandex' ? YandexAssetStorageLive : LocalAssetStorageLive,
+    driver === 's3' ? S3AssetStorageLive : LocalAssetStorageLive,
   ),
 )
 
@@ -56,12 +79,15 @@ const ApiLive = HttpApiBuilder.api(Api).pipe(
   Layer.provide(PublishedLive),
   Layer.provide(AssetsLive),
   Layer.provide(AssetsPublicLive),
+  Layer.provide(UsersPublicLive),
   Layer.provide(EventsHttpLive),
   Layer.provide(AuthenticationLive),
   Layer.provide(AuthorizationLive),
+  Layer.provide(PresenceLive),
   Layer.provide(EventsLive),
   Layer.provide(DatabaseLive),
   Layer.provide(StorageLive),
+  Layer.provide(UploadGateLive),
   Layer.provide(CorsLive),
 )
 
@@ -75,11 +101,15 @@ const program = Effect.gen(function* () {
     HttpServer.withLogAddress,
     // host задаём явно: без него Node на Windows биндится на `::` (IPv6-only,
     // т.к. dual-stack по умолчанию выключен), и localhost:3001 (IPv4) недоступен.
+    // ВАЖНО: NodeHttpServer.layer вызывает фабрику сервера БЕЗ аргументов и
+    // передаёт options только в server.listen(). Поэтому cert/key для https
+    // нельзя класть в options — их надо передать прямо в createHttpsServer
+    // через thunk, иначе сервер поднимется без сертификата и отвергнет TLS.
     Layer.provide(
-      NodeHttpServer.layer(createServer, {
-        port: resolvedPort,
-        host: '0.0.0.0',
-      }),
+      NodeHttpServer.layer(
+        tls ? () => createHttpsServer(tls) : createHttpServer,
+        { port: resolvedPort, host: '0.0.0.0' },
+      ),
     ),
   )
   yield* Layer.launch(ServerLive)

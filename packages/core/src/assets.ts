@@ -1,6 +1,10 @@
 import { Effect } from 'effect'
 import { query } from './db.ts'
-import { NotFoundError } from './errors.ts'
+import {
+  FileTooLargeError,
+  NotFoundError,
+  QuotaExceededError,
+} from './errors.ts'
 
 // Доменные операции над ассетами. Метаданные (имя, тип, размер, ключ хранилища)
 // лежат в БД, сами байты — в AssetStorage. Запись изолирована по projectId;
@@ -23,10 +27,13 @@ export const listAssets = (projectId: string) =>
     db.asset.findMany({ where: { projectId }, orderBy: { createdAt: 'desc' } }),
   )
 
-/** Лимит хранилища проекта в байтах. Пока единая константа (1 ГиБ); когда у
- * проектов появятся тарифы, значение переедет в запись проекта и будет читаться
- * из неё в getAssetUsage. */
-export const ASSET_QUOTA_BYTES = 1024 ** 3
+/** Лимит хранилища проекта в байтах. Пока единая константа (100 МБ) для всех
+ * планов; когда у проектов появятся тарифы, значение переедет в запись проекта и
+ * будет читаться из неё в getAssetUsage. */
+export const ASSET_QUOTA_BYTES = 100 * 1024 * 1024
+
+/** Лимит размера одного загружаемого файла в байтах (10 МБ, един для всех). */
+export const MAX_ASSET_FILE_BYTES = 10 * 1024 * 1024
 
 /** Использование хранилища проектом: суммарный вес ассетов (агрегат по БД,
  * изоляция по projectId) и текущий лимит. */
@@ -38,6 +45,28 @@ export const getAssetUsage = (projectId: string) =>
       used: result._sum.size ?? 0,
       quota: ASSET_QUOTA_BYTES,
     })),
+  )
+
+/** Проверка лимита размера файла. Падает FileTooLargeError, если size превышает
+ * MAX_ASSET_FILE_BYTES. Вызывается дважды: по Content-Length (до чтения тела) и по
+ * фактической длине (заголовок можно подделать). */
+export const assertFileSize = (size: number) =>
+  size > MAX_ASSET_FILE_BYTES
+    ? Effect.fail(
+        new FileTooLargeError({ limit: MAX_ASSET_FILE_BYTES, size }),
+      )
+    : Effect.void
+
+/** Проверка квоты проекта: суммирует уже занятое и падает QuotaExceededError,
+ * если used + size выходит за ASSET_QUOTA_BYTES. Вызывать под локом проекта, иначе
+ * параллельные загрузки могут оба пройти проверку и вместе перебрать квоту. */
+export const assertWithinQuota = (projectId: string, size: number) =>
+  getAssetUsage(projectId).pipe(
+    Effect.flatMap(({ used, quota }) =>
+      used + size > quota
+        ? Effect.fail(new QuotaExceededError({ quota, used, size }))
+        : Effect.void,
+    ),
   )
 
 /** Удалить ассет проекта. Возвращает удалённую запись (нужен key, чтобы стереть

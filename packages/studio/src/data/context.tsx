@@ -19,6 +19,26 @@ import {
 /** Слушатель событий проекта (см. SSE-поток ниже). Возвращаемая subscribe функция снимает подписку. */
 export type EventListener = (event: ProjectEvent) => void
 
+/** Размер в байтах → человекочитаемое «N МБ» (для сообщений о лимитах). */
+const formatMb = (bytes: number) => `${(bytes / (1024 * 1024)).toFixed(1)} МБ`
+
+/** Сообщение об ошибке загрузки ассета. Тело ответа HttpApi — tagged-ошибка
+ * (_tag + поля); для лимитов (FileTooLarge / QuotaExceeded) собираем понятный
+ * текст с мегабайтами, иначе — общий текст со статусом. */
+const uploadErrorMessage = async (res: Response): Promise<string> => {
+  const body = (await res.json().catch(() => null)) as
+    | { _tag?: string; limit?: number; quota?: number; used?: number; size?: number }
+    | null
+  switch (body?._tag) {
+    case 'FileTooLarge':
+      return `Файл слишком большой: ${formatMb(body.size ?? 0)}, лимит — ${formatMb(body.limit ?? 0)}.`
+    case 'QuotaExceeded':
+      return `Не хватает места в проекте: занято ${formatMb(body.used ?? 0)} из ${formatMb(body.quota ?? 0)}, файл — ${formatMb(body.size ?? 0)}.`
+    default:
+      return `Загрузка ассета не удалась: ${res.status}`
+  }
+}
+
 /** Метаданные загруженного ассета (ответ POST /projects/:id/assets). */
 export type UploadedAsset = {
   id: string
@@ -34,6 +54,9 @@ export type StudioContextValue = {
   projectId: string
   apiUrl: string
   apiKey: string
+  /** Bearer-токен сессии Jalyk-редактора (если хост его передал). Нужен для
+   * персональной идентичности: presence и редактирование своего профиля. */
+  token?: string
   /** Конфигурация схемы проекта (defineConfig) — реестр типов и полей. */
   config: AnyConfig
   client: StudioApiClient
@@ -46,6 +69,17 @@ export type StudioContextValue = {
   uploadAsset: (file: File) => Promise<UploadedAsset>
   /** Публичный URL байтов ассета по его id (для <img src>). */
   assetUrl: (assetId: string) => string
+  /** Загрузить новую аватарку текущего пользователя (требует token). Возвращает
+   * обновлённый профиль (с новым image). */
+  uploadAvatar: (file: File) => Promise<CurrentUserProfile>
+}
+
+/** Профиль текущего пользователя (ответ /me и /me-апдейтов). */
+export type CurrentUserProfile = {
+  id: string
+  email: string
+  name: string
+  image: string | null
 }
 
 const StudioContext = createContext<StudioContextValue | null>(null)
@@ -65,6 +99,9 @@ export type StudioProviderProps = {
   apiKey: string
   /** Адрес apps/api, например http://localhost:3001. */
   apiUrl: string
+  /** Bearer-токен сессии Jalyk-редактора. Когда передан — студия ходит ещё и от
+   * имени пользователя (presence, профиль). Без него presence не показывает «меня». */
+  token?: string
   /** Конфигурация схемы проекта (defineConfig). */
   config: AnyConfig
   children: ReactNode
@@ -90,13 +127,14 @@ export function StudioProvider({
   projectId,
   apiKey,
   apiUrl,
+  token,
   config,
   children,
 }: StudioProviderProps) {
   const runtime = useMemo(() => makeRuntime(), [])
   const client = useMemo(
-    () => runtime.runSync(makeClient({ apiUrl, apiKey })),
-    [runtime, apiUrl, apiKey],
+    () => runtime.runSync(makeClient({ apiUrl, apiKey, token })),
+    [runtime, apiUrl, apiKey, token],
   )
 
   // Реестр слушателей. Одно соединение раздаёт события всем подписчикам (field- редакторам, спискам) — фильтрацию по docId/type/path делает каждый сам.
@@ -111,7 +149,11 @@ export function StudioProvider({
       while (!stopped) {
         try {
           const res = await fetch(`${apiUrl}/projects/${projectId}/events`, {
-            headers: { 'x-api-key': apiKey, accept: 'text/event-stream' },
+            headers: {
+              'x-api-key': apiKey,
+              accept: 'text/event-stream',
+              ...(token ? { authorization: `Bearer ${token}` } : null),
+            },
             signal: controller.signal,
           })
           if (!res.ok || !res.body) throw new Error(`SSE ${res.status}`)
@@ -145,13 +187,14 @@ export function StudioProvider({
       stopped = true
       controller.abort()
     }
-  }, [apiUrl, apiKey, projectId])
+  }, [apiUrl, apiKey, token, projectId])
 
   const value = useMemo<StudioContextValue>(
     () => ({
       projectId,
       apiUrl,
       apiKey,
+      token,
       config,
       client,
       runtime,
@@ -179,17 +222,34 @@ export function StudioProvider({
             headers: {
               'x-api-key': apiKey,
               'content-type': file.type || 'application/octet-stream',
+              ...(token ? { authorization: `Bearer ${token}` } : null),
             },
             body: file,
           },
         )
-        if (!res.ok)
-          throw new Error(`Загрузка ассета не удалась: ${res.status}`)
+        if (!res.ok) throw new Error(await uploadErrorMessage(res))
         return (await res.json()) as UploadedAsset
       },
       assetUrl: (assetId) => `${apiUrl}/assets/${assetId}`,
+      // Загрузка аватарки: сырые байты, тип в query, авторизация bearer-токеном
+      // (эндпоинт /me/avatar требует принципала-пользователя). Ответ — профиль.
+      uploadAvatar: async (file) => {
+        const params = new URLSearchParams({
+          contentType: file.type || 'application/octet-stream',
+        })
+        const res = await fetch(`${apiUrl}/me/avatar?${params}`, {
+          method: 'POST',
+          headers: {
+            'content-type': file.type || 'application/octet-stream',
+            ...(token ? { authorization: `Bearer ${token}` } : null),
+          },
+          body: file,
+        })
+        if (!res.ok) throw new Error(await uploadErrorMessage(res))
+        return (await res.json()) as CurrentUserProfile
+      },
     }),
-    [projectId, apiUrl, apiKey, config, client, runtime],
+    [projectId, apiUrl, apiKey, token, config, client, runtime],
   )
 
   return (

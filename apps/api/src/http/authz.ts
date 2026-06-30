@@ -12,6 +12,16 @@ export const AuthorizationLive = Layer.effect(
   Effect.gen(function* () {
     return Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest
+      // Приоритет у сессии редактора: когда студия шлёт и X-Api-Key (контекст
+      // проекта от хоста), и Bearer (личность вошедшего), принципал — пользователь,
+      // а доступ даёт его членство в проекте. Ключ остаётся для headless-запросов
+      // (сервер потребителя без сессии), где сессии нет и мы падаем в ветку ключа.
+      const session = yield* Effect.promise(() =>
+        auth.api.getSession({ headers: new Headers(request.headers) }),
+      )
+      if (session) {
+        return { kind: 'user', userId: session.user.id } satisfies Principal
+      }
       const apiKey = request.headers['x-api-key']
       if (apiKey) {
         const key = yield* findApiKey(apiKey).pipe(
@@ -28,13 +38,7 @@ export const AuthorizationLive = Layer.effect(
           scope: key.scope,
         } satisfies Principal
       }
-      const session = yield* Effect.promise(() =>
-        auth.api.getSession({ headers: new Headers(request.headers) }),
-      )
-      if (!session) {
-        return yield* new Unauthorized()
-      }
-      return { kind: 'user', userId: session.user.id } satisfies Principal
+      return yield* new Unauthorized()
     })
   }),
 )

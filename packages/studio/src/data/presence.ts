@@ -1,20 +1,29 @@
-import { fakerRU as faker } from '@faker-js/faker'
+import { MemberInfo as MemberInfoSchema } from '@jalyk/contract'
+import { Schema } from 'effect'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useStudio } from './context.tsx'
+import { useProjectEvents } from './events-hooks.ts'
+import { studioKeys } from './keys.ts'
 
-// Присутствие в студии (кто сейчас онлайн). Пока тестовые данные генерит faker с
-// фиксированным сидом (стабильны между перезагрузками); позже подменим источником
-// сервера, не трогая компоненты. Текущий пользователь («я») — обычный участник
-// этого же списка, помеченный meId, и всегда стоит первым.
+// Присутствие в студии (кто сейчас онлайн). Источник — сервер: список участников
+// проекта (/members) с их профилем и стартовым online, дальше online уточняется
+// presence-событиями SSE-потока. Текущий пользователь («я») — обычный участник
+// этого же списка, помеченный meId; meId есть только когда хост передал token
+// (без него сервер не знает, кто именно смотрит).
 
-/** Участник студии для индикатора присутствия. Поля namespaced под профиль: дата входа и счётчик созданных документов. */
+/** Участник проекта с провода (декодированный MemberInfo из контракта). */
+type MemberInfo = Schema.Schema.Type<typeof MemberInfoSchema>
+
+/** Участник студии для индикатора присутствия. id — это userId участника. */
 export type PresenceUser = {
   id: string
   name: string
-  /** URL аватарки; если нет — рисуем кружок с первой буквой ника. */
+  /** URL аватарки; если нет — рисуем кружок с первой буквой имени. */
   image?: string
+  /** Роль в проекте. */
+  role: 'owner' | 'editor'
   /** Когда присоединился к проекту (ISO-строка). */
   joinedAt: string
-  /** Сколько документов создал в проекте. */
-  documentsCreated: number
   /** Сейчас в студии онлайн. Оффлайн-участники показываются приглушённо в конце списка. */
   online: boolean
 }
@@ -29,36 +38,78 @@ export function colorFromId(id: string) {
   return `hsl(${hue} 30% 55%)`
 }
 
-faker.seed(20260621)
-
-/** Один тестовый участник из faker: русское имя, у части — аватарка. */
-function makeUser() {
-  const sex = faker.person.sexType()
+/** MemberInfo с провода → PresenceUser (image null → undefined). */
+function toPresenceUser(m: MemberInfo): PresenceUser {
   return {
-    id: faker.string.uuid(),
-    name: faker.person.firstName(sex),
-    image: faker.datatype.boolean() ? faker.image.avatar() : undefined,
-    joinedAt: faker.date.past({ years: 1 }).toISOString(),
-    documentsCreated: faker.number.int({ min: 0, max: 150 }),
-    online: faker.datatype.boolean(),
-  } satisfies PresenceUser
+    id: m.userId,
+    name: m.name,
+    image: m.image ?? undefined,
+    role: m.role,
+    joinedAt: m.joinedAt,
+    online: m.online,
+  }
 }
 
-const ME = {
-  id: 'me',
-  name: 'Игорь',
-  joinedAt: faker.date.past({ years: 1 }).toISOString(),
-  documentsCreated: faker.number.int({ min: 50, max: 200 }),
-  online: true,
-} satisfies PresenceUser
-
-// Онлайн сначала («я» — всегда первый), оффлайн — в конце; внутри групп порядок
-// стабилен (faker с фиксированным сидом).
-const MOCK_USERS = [ME, ...Array.from({ length: 6 }, makeUser)].sort(
-  (a, b) => Number(b.online) - Number(a.online),
-)
-
-/** Заглушка присутствия: тестовые участники (онлайн и оффлайн) и id текущего пользователя. «Я» — первый онлайн-участник, помеченный meId. */
+/** Присутствие: участники проекта (онлайн и оффлайн) и id текущего пользователя.
+ * Онлайн сверху, оффлайн в конце; внутри групп — стабильный порядок по дате входа
+ * (как пришло с сервера). presence-события патчят online в кэше участников. */
 export function usePresence() {
-  return { users: MOCK_USERS, meId: ME.id }
+  const { projectId, client, run, token } = useStudio()
+  const qc = useQueryClient()
+
+  const membersQuery = useQuery({
+    queryKey: studioKeys.members(projectId),
+    queryFn: () => run(client.projects.members({ path: { projectId } })),
+  })
+
+  // «Я» — только при наличии токена (иначе сервер видит лишь ключ проекта).
+  const meQuery = useQuery({
+    queryKey: studioKeys.me(),
+    queryFn: () => run(client.me.me()),
+    enabled: Boolean(token),
+  })
+
+  // Живое присутствие: на presence-событие точечно правим online у участника в
+  // кэше /members, не перезапрашивая список.
+  useProjectEvents((event) => {
+    if (event.kind !== 'presence') return
+    qc.setQueryData<readonly MemberInfo[]>(
+      studioKeys.members(projectId),
+      (prev) =>
+        prev?.map((m) =>
+          m.userId === event.userId ? { ...m, online: event.online } : m,
+        ),
+    )
+  })
+
+  const users = (membersQuery.data ?? [])
+    .map(toPresenceUser)
+    .sort((a, b) => Number(b.online) - Number(a.online))
+
+  return { users, meId: meQuery.data?.id }
+}
+
+/** Редактирование своего профиля: смена имени и/или загрузка аватарки. После
+ * успеха обновляем кэш текущего пользователя и список участников (там лежит имя/
+ * аватарка для presence). Требует token (иначе сервер ответит 401). */
+export function useUpdateProfile() {
+  const { projectId, client, run, uploadAvatar } = useStudio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { name?: string; avatar?: File }) => {
+      const profile = input.avatar
+        ? await uploadAvatar(input.avatar)
+        : undefined
+      // Имя меняем отдельным запросом; если передано — его ответ свежее.
+      const named =
+        input.name !== undefined
+          ? await run(client.me.updateProfile({ payload: { name: input.name } }))
+          : undefined
+      return named ?? profile
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: studioKeys.me() })
+      qc.invalidateQueries({ queryKey: studioKeys.members(projectId) })
+    },
+  })
 }

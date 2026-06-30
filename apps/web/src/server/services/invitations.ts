@@ -62,7 +62,7 @@ export const accept = (token: string, userId: string) =>
       return yield* Effect.fail(new InvitationError({ reason: 'expired' }))
 
     const existing = yield* query((db) =>
-      db.member.findUnique({
+      db.invited.findUnique({
         where: { projectId_userId: { projectId: inv.projectId, userId } },
       }),
     )
@@ -73,7 +73,7 @@ export const accept = (token: string, userId: string) =>
 
     return yield* query((db) =>
       db.$transaction([
-        db.member.create({
+        db.invited.create({
           data: { projectId: inv.projectId, userId, role: inv.role },
         }),
         db.invitation.update({

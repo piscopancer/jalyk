@@ -6,7 +6,12 @@ export { LayerView } from './views/LayerView.tsx'
 export { Toolbar } from './views/Toolbar.tsx'
 export { Avatar, OnlineUsers } from './views/Presence.tsx'
 export { SettingsDialog } from './views/SettingsDialog.tsx'
-export { usePresence, colorFromId, type PresenceUser } from './data/presence.ts'
+export {
+  usePresence,
+  useUpdateProfile,
+  colorFromId,
+  type PresenceUser,
+} from './data/presence.ts'
 export {
   StudioPrefsProvider,
   useStudioLayout,
@@ -117,6 +122,7 @@ export {
   type StudioContextValue,
   type StudioProviderProps,
   type UploadedAsset,
+  type CurrentUserProfile,
 } from './data/context.tsx'
 export {
   DocumentProvider,

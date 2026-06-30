@@ -1,26 +1,28 @@
-import { getMembership } from '@jalyk/core'
+import { getUserProjectRole } from '@jalyk/core'
 import { PLAN_LIMITS } from '@jalyk/db'
 import { Effect } from 'effect'
 import { query } from '../db'
 import { ForbiddenError, NotFoundError, PlanLimitError } from '../errors'
 import { planOf } from './subscription'
 
-/** Проекты, в которых пользователь состоит (включая собственные). */
+/** Проекты, в которых пользователь состоит: собственные (ownerId) и те, куда он
+ * приглашён (invited). _count.invited — число приглашённых редакторов (без
+ * владельца). */
 export const listForUser = (userId: string) =>
   query((db) =>
     db.project.findMany({
-      where: { members: { some: { userId } } },
+      where: { OR: [{ ownerId: userId }, { invited: { some: { userId } } }] },
       orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { members: true } } },
+      include: { _count: { select: { invited: true } } },
     }),
   )
 
-/** Роль пользователя в проекте, либо ошибка доступа. */
+/** Роль пользователя в проекте, либо ошибка доступа (владелец или приглашённый). */
 export const requireMember = (projectId: string, userId: string) =>
-  getMembership(projectId, userId).pipe(
-    Effect.flatMap((m) =>
-      m
-        ? Effect.succeed(m)
+  getUserProjectRole(projectId, userId).pipe(
+    Effect.flatMap((role) =>
+      role
+        ? Effect.succeed(role)
         : Effect.fail(new NotFoundError({ what: 'project' })),
     ),
   )
@@ -28,14 +30,16 @@ export const requireMember = (projectId: string, userId: string) =>
 /** Только владелец может управлять участниками, настройками и удалением. */
 export const requireOwner = (projectId: string, userId: string) =>
   requireMember(projectId, userId).pipe(
-    Effect.flatMap((m) =>
-      m.role === 'owner'
-        ? Effect.succeed(m)
+    Effect.flatMap((role) =>
+      role === 'owner'
+        ? Effect.succeed(role)
         : Effect.fail(new ForbiddenError({ reason: 'owner-only' })),
     ),
   )
 
-/** Проект с участниками — для страницы проекта. Требует членства. */
+/** Проект с участниками — для страницы проекта. Требует членства. Владелец
+ * подмешивается в members первым (в таблице invited его нет) с синтетическим
+ * id 'owner'; над ним нет управляющих действий (роль owner их прячет). */
 export const getWithMembers = (projectId: string, userId: string) =>
   requireMember(projectId, userId).pipe(
     Effect.zipRight(
@@ -43,7 +47,8 @@ export const getWithMembers = (projectId: string, userId: string) =>
         db.project.findUniqueOrThrow({
           where: { id: projectId },
           include: {
-            members: { include: { user: true }, orderBy: { createdAt: 'asc' } },
+            owner: { select: { id: true, name: true, email: true, image: true } },
+            invited: { include: { user: true }, orderBy: { createdAt: 'asc' } },
             invitations: {
               where: { acceptedAt: null },
               orderBy: { createdAt: 'desc' },
@@ -52,6 +57,31 @@ export const getWithMembers = (projectId: string, userId: string) =>
         }),
       ),
     ),
+    Effect.map((project) => ({
+      ...project,
+      members: [
+        {
+          id: 'owner',
+          userId: project.owner.id,
+          role: 'owner' as const,
+          user: {
+            name: project.owner.name,
+            email: project.owner.email,
+            image: project.owner.image,
+          },
+        },
+        ...project.invited.map((m) => ({
+          id: m.id,
+          userId: m.userId,
+          role: m.role,
+          user: {
+            name: m.user.name,
+            email: m.user.email,
+            image: m.user.image,
+          },
+        })),
+      ],
+    })),
   )
 
 /** Создание проекта с проверкой лимита плана. Создатель становится owner. */
@@ -61,7 +91,7 @@ export const create = (userId: string, name: string) =>
     const max = PLAN_LIMITS[plan].projects
     if (max !== null) {
       const count = yield* query((db) =>
-        db.member.count({ where: { userId, role: 'owner' } }),
+        db.project.count({ where: { ownerId: userId } }),
       )
       if (count >= max)
         return yield* Effect.fail(
@@ -69,13 +99,7 @@ export const create = (userId: string, name: string) =>
         )
     }
     return yield* query((db) =>
-      db.project.create({
-        data: {
-          name,
-          ownerId: userId,
-          members: { create: { userId, role: 'owner' } },
-        },
-      }),
+      db.project.create({ data: { name, ownerId: userId } }),
     )
   })
 

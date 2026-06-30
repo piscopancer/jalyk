@@ -1,5 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg'
-import { databaseUrl } from './config.ts'
+import { runtimeUrl } from './config.ts'
 import { PrismaClient } from './generated/client.ts'
 
 // Один экземпляр на процесс. В dev TanStack/Vite перезапускает модули,
@@ -7,7 +7,7 @@ import { PrismaClient } from './generated/client.ts'
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient }
 
 // Prisma 7 работает через driver adapter; для Postgres берём pg.
-const adapter = new PrismaPg({ connectionString: databaseUrl })
+const adapter = new PrismaPg({ connectionString: runtimeUrl })
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
 

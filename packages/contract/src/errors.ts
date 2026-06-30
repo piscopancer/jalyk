@@ -26,3 +26,18 @@ export class Forbidden extends Schema.TaggedError<Forbidden>()(
   {},
   HttpApiSchema.annotations({ status: 403 }),
 ) {}
+
+/** Файл превышает лимит размера на один ассет. limit и size — в байтах. */
+export class FileTooLarge extends Schema.TaggedError<FileTooLarge>()(
+  'FileTooLarge',
+  { limit: Schema.Number, size: Schema.Number },
+  HttpApiSchema.annotations({ status: 413 }),
+) {}
+
+/** Загрузка не влезает в квоту хранилища проекта. Все поля — в байтах:
+ * quota — лимит проекта, used — уже занято, size — размер отклонённого файла. */
+export class QuotaExceeded extends Schema.TaggedError<QuotaExceeded>()(
+  'QuotaExceeded',
+  { quota: Schema.Number, used: Schema.Number, size: Schema.Number },
+  HttpApiSchema.annotations({ status: 409 }),
+) {}

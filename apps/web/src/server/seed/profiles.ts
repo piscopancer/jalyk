@@ -38,9 +38,6 @@ async function seedDemo(db: PrismaClient): Promise<void> {
       ownerId: SEED_IDS.bebrail,
     },
   })
-  await db.member.create({
-    data: { projectId, userId: SEED_IDS.bebrail, role: 'owner' },
-  })
   await db.subscription.create({
     data: { userId: SEED_IDS.bebrail, plan: 'free' },
   })

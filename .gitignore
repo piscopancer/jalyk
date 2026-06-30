@@ -21,3 +21,6 @@ routeTree.gen.ts
 apps/api/uploads/
 # Логи отладки tsx watch
 _watchtest.*
+
+# Локальные TLS-сертификаты mkcert для dev (jalyk.local.dev)
+certs/

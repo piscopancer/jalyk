@@ -74,7 +74,7 @@ function Projects() {
                   <CardTitle>{p.name}</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
-                  Участников: {p._count.members}
+                  Участников: {p._count.invited + 1}
                 </CardContent>
               </Card>
             </Link>

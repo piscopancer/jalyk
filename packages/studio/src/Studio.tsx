@@ -15,6 +15,7 @@ import {
   FieldComponentsProvider,
   type FieldComponents,
 } from './fields/registry.tsx'
+import { AuthGate } from './views/AuthGate.tsx'
 import { LayerView } from './views/LayerView.tsx'
 import { MillerView } from './views/MillerView.tsx'
 import { ProjectGate } from './views/ProjectGate.tsx'
@@ -32,6 +33,11 @@ export type StudioProps = {
   apiKey: string
   /** Адрес apps/api, например http://localhost:3001. */
   apiUrl: string
+  /** База центрального домена Jalyk (apps/web), куда студия уводит редактора на вход
+   * (GitHub/Google) и откуда получает bearer-токен. Например http://localhost:3000.
+   * Домены клиентов в OAuth-приложениях не регистрируются — вход всегда на этом
+   * домене, а возврат токена разрешён только на доверенные origin'ы проекта. */
+  authUrl?: string
   /** Конфигурация схемы проекта (defineConfig). */
   config: AnyConfig
   /** Переопределения редакторов полей по виду (kind). */
@@ -57,6 +63,7 @@ function StudioShell({
   projectId,
   apiKey,
   apiUrl,
+  authUrl,
   config,
   fieldComponents,
   navigation,
@@ -69,37 +76,45 @@ function StudioShell({
     <div ref={setRoot} className={dark ? 'dark h-full' : 'h-full'}>
       <PortalContainerProvider container={root}>
         <div className="h-full bg-background text-foreground">
-          <StudioProvider
-            projectId={projectId}
-            apiKey={apiKey}
-            apiUrl={apiUrl}
-            config={config}
-          >
-            <StudioErrorProvider>
-              <FieldClipboardProvider>
-                <FieldComponentsProvider components={fieldComponents ?? {}}>
-                  <NavigationProvider
-                    projectId={projectId}
-                    navKey={navigation?.key}
-                    root={navigation?.root ?? defaultRootSegment}
-                  >
-                    <ProjectGate>
-                      <div className="flex h-full min-h-0 flex-col">
-                        <Toolbar />
-                        <div className="min-h-0 flex-1">
-                          <StudioBody>{children}</StudioBody>
-                        </div>
-                      </div>
-                    </ProjectGate>
-                  </NavigationProvider>
-                </FieldComponentsProvider>
-                <Toaster
-                  position="bottom-right"
-                  theme={dark ? 'dark' : 'light'}
-                />
-              </FieldClipboardProvider>
-            </StudioErrorProvider>
-          </StudioProvider>
+          {/* Сначала вход редактора: без сессии — форма входа вместо студии;
+              с сессией — её bearer-токен уходит в StudioProvider (presence, профиль,
+              доступ по членству). */}
+          <AuthGate authUrl={authUrl} projectId={projectId}>
+            {({ token }) => (
+              <StudioProvider
+                projectId={projectId}
+                apiKey={apiKey}
+                apiUrl={apiUrl}
+                token={token}
+                config={config}
+              >
+                <StudioErrorProvider>
+                  <FieldClipboardProvider>
+                    <FieldComponentsProvider components={fieldComponents ?? {}}>
+                      <NavigationProvider
+                        projectId={projectId}
+                        navKey={navigation?.key}
+                        root={navigation?.root ?? defaultRootSegment}
+                      >
+                        <ProjectGate>
+                          <div className="flex h-full min-h-0 flex-col">
+                            <Toolbar />
+                            <div className="min-h-0 flex-1">
+                              <StudioBody>{children}</StudioBody>
+                            </div>
+                          </div>
+                        </ProjectGate>
+                      </NavigationProvider>
+                    </FieldComponentsProvider>
+                    <Toaster
+                      position="bottom-right"
+                      theme={dark ? 'dark' : 'light'}
+                    />
+                  </FieldClipboardProvider>
+                </StudioErrorProvider>
+              </StudioProvider>
+            )}
+          </AuthGate>
         </div>
       </PortalContainerProvider>
     </div>

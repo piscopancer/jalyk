@@ -1,8 +1,68 @@
+# Деплой MVP в продакшн (первый боевой сайт)
+
+Цель: поднять инфраструктуру Jalyk на бесплатных тарифах и подключить к ней свой сайт, который живёт в отдельном репозитории и тянет `@jalyk/*` из публичного npm. Деплоим по частям: сначала база и хранилище, потом api, потом платформа web, потом публикация пакетов, и только в конце — сам сайт-потребитель.
+
+Архитектура в проде состоит из четырёх кусков, которые надо разместить: платформа `apps/web` (SSR на TanStack Start — аккаунты, проекты, API-ключи, OAuth), сервер контента `apps/api` (долгоживущий Effect-процесс с CRUD, SSE и ассетами), управляемый Postgres с расширениями `pgvector` и `pg_trgm`, и S3-совместимое объектное хранилище для ассетов. Пятый кусок — npm-пакеты, которые ставит сам сайт.
+
+## 0. Общие развилки хостинга (выбрать перед стартом)
+
+- **Postgres**: Neon (serverless, free, есть `pgvector`; `pg_trgm` ставится `CREATE EXTENSION`) — либо Supabase (free, Postgres + S3-совместимое Storage в одном тарифе, оба расширения есть из коробки). Рекомендация: Supabase, потому что закрывает сразу и БД, и хранилище ассетов одним аккаунтом.
+- **Объектное хранилище**: Cloudflare R2 (free 10 ГБ, S3 API) либо Supabase Storage. Если БД на Supabase — берём его же Storage и не плодим сервисы.
+- **apps/web (SSR)**: Vercel Hobby (free) — TanStack Start собирается под Nitro и едет на Vercel из коробки. Альтернатива — Netlify free или Cloudflare.
+- **apps/api (долгоживущий Node + SSE)**: НЕ serverless — нужен процесс, который держит соединение для SSE. Render (free web service, засыпает при простое) либо Fly.io. Рекомендация: Fly.io (нет принудительного засыпания в той же мере), запасной — Render.
+
+## 1. Postgres (управляемая БД) — СДЕЛАНО (инициализация)
+
+- [x] Заведён проект Supabase (ref `oudszegzoytgphexuhdh`, eu-north-1).
+- [x] Выбор окружения БД через `DB_TARGET` (local/supabase) реализован как Effect-стратегия в [packages/db/src/config.ts](packages/db/src/config.ts): `DbConfig` + слои `DbConfigLocal`/`DbConfigSupabase`. Строки Supabase — `SUPABASE_DATABASE_URL` (transaction pooler :6543, рантайм) и `SUPABASE_DIRECT_URL` (session pooler :5432) в корневом `.env`.
+- [x] Схема накатана на Supabase. Prisma CLI (`db push`/`migrate`) через пулер падает с P1017, а прямой хост `db.<ref>.supabase.co` — только IPv6 (у машины его нет). Обход: DDL применяется драйвером `pg` через transaction pooler — команда `pnpm --filter @jalyk/db run ddl:push` ([packages/db/scripts/apply-ddl.mjs](packages/db/scripts/apply-ddl.mjs), берёт `prisma/schema.sql`).
+- Осталось: включить расширения `CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS pg_trgm;` (для поиска, позже).
+- На будущее: `ddl:push` — init-only (валит на непустой базе, т.к. `schema.sql` генерится `migrate diff --from-empty`). Для обновлений схемы на живой базе перейти на инкрементальный `prisma migrate diff` от текущего состояния БД к схеме.
+
+## 2. Объектное хранилище ассетов — СДЕЛАНО (код)
+
+- [x] В [packages/core/src/storage.ts](packages/core/src/storage.ts) заглушка `YandexAssetStorageLive` заменена на `S3AssetStorageLive` через `@aws-sdk/client-s3` (write/read/remove по ключу `projectId/uuid`, `forcePathStyle: true`). Конфиг читается Effect Config: `JALYK_S3_ENDPOINT/REGION/BUCKET/ACCESS_KEY_ID/SECRET_ACCESS_KEY` (секрет через `Config.redacted`).
+- [x] Драйвер выбирается `JALYK_STORAGE` = `local`|`s3` ([apps/api/src/config.ts](apps/api/src/config.ts), [apps/api/src/server.ts](apps/api/src/server.ts)).
+- [x] Раздача байтов остаётся проксированием через api (handler `serve` читает `Uint8Array` и стримит) — бакет приватный, presigned-URL не нужны.
+- [x] Supabase: бакет `vedro` (приватный) создан, S3 Access Key выписан, `JALYK_S3_*` заполнены в `.env` (endpoint `https://oudszegzoytgphexuhdh.storage.supabase.co/storage/v1/s3`, region `eu-north-1`). Smoke-тест write→read→remove через `S3AssetStorageLive` прошёл успешно.
+
+## 3. apps/api (сервер контента)
+
+- Прод-runtime: собрать слой с `DatabaseLive` + новым S3-`AssetStorage` (а не Local/Yandex-заглушкой).
+- CORS: разрешить origin будущего сайта и web-платформы (сейчас сервер локальный, политики нет) — проверить, что preflight и `X-Api-Key`/`Authorization` проходят.
+- Энв на хостинге: `DATABASE_URL`, `BETTER_AUTH_SECRET` (обязан совпадать с web), `PORT`, креды S3. `start` уже есть (`tsx --env-file-if-exists`).
+- Проверить, что выбранный хост держит SSE-поток `/projects/:id/events` без обрыва по таймауту; keepalive в коде есть (`Stream.tick` 25с).
+
+## 4. apps/web (платформа)
+
+- Выбрать Nitro-preset под хост (Vercel/Netlify/Cloudflare) и проверить прод-билд `pnpm --filter @jalyk/web build` + `start`.
+- Энв: `DATABASE_URL` (та же прод-база), `BETTER_AUTH_SECRET` (== api), `BETTER_AUTH_URL=https://<домен-платформы>`, креды GitHub/Google.
+- OAuth: в настройках GitHub/Google прописать прод-callback `https://<домен>/api/auth/callback/{github,google}`; **отозвать и перевыпустить** скомпрометированные легаси-секреты (лежали в git-истории, см. заметку про env/oauth).
+- Завести первый проект и выпустить read/write API-ключ для своего сайта.
+
+## 5. Публикация npm-пакетов (публичный npm)
+
+- Публикуемый граф для сайта: `@jalyk/client`, `@jalyk/studio`, `@jalyk/schema`, плюс их зависимости из workspace — как минимум `@jalyk/ui`, `@jalyk/contract` (проверить полный граф).
+- Сейчас к публикации готов только `@jalyk/studio` (есть `tsup` + `publishConfig`). У `@jalyk/client`/`@jalyk/schema`/`@jalyk/ui` `exports` смотрит в `src`, стоит `private: true`, нет билда и `.d.ts` — добавить сборку (tsup/tsc), `files`, `publishConfig`, снять `private`.
+- Заменить внутренние `workspace:*` на реальные диапазоны версий при публикации (Changesets или `pnpm publish -r` решают это; выбрать инструмент версионирования).
+- Учесть Tailwind у `@jalyk/studio`: потребителю нужен экспорт стилей (`./styles.css` уже есть) и инструкция по подключению пресета/слоёв.
+- React в peerDeps — проверить, что сайт даёт React 19.
+
+## 6. Сайт-потребитель (отдельный репо)
+
+- Поставить `@jalyk/client` (+ `@jalyk/schema`) для чтения контента по API-ключу, направить на прод-URL `apps/api`.
+- Встроить `@jalyk/studio` (админка) с тем же API и bearer/ключом; подключить стили.
+- Задеплоить сайт на free-хост (тот же Vercel/Netlify) с переменными: URL api и публичный read-ключ.
+
+## Порядок выполнения
+
+БД+расширения → S3-драйвер (раздел 2, блокер) → деплой api → деплой web и выпуск ключа → публикация пакетов → сайт.
+
 # Фичи
 
-- спросить как в превью альбома можно показывать обложку альбома.
+<!-- - спросить как в превью альбома можно показывать обложку альбома.
 
-- компонент показывающий связи для кастомных форм разраба - документов, в которых этот документ упоминается. будет полезно для визуализации в кастомных формах. или поле "ссылки", как в призме. то есть это вью, где видно какой документ на каком поле ссылается на текущий документ, и можно из этого компонента его безопасно удалить (создаст черновик).
+- компонент показывающий связи для кастомных форм разраба - документов, в которых этот документ упоминается. будет полезно для визуализации в кастомных формах. или поле "ссылки", как в призме. то есть это вью, где видно какой документ на каком поле ссылается на текущий документ, и можно из этого компонента его безопасно удалить (создаст черновик). -->
 
 <!-- - "скопировать" и "вставить" -->
 

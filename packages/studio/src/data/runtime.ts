@@ -14,15 +14,32 @@ export const makeRuntime = () => ManagedRuntime.make(FetchHttpClient.layer)
 
 export type StudioRuntime = ReturnType<typeof makeRuntime>
 
-/** Строит клиент из общего контракта Api. baseUrl — адрес apps/api, ключ проекта добавляется в каждый запрос заголовком X-Api-Key (клиентский режим авторизации, см. middleware Authorization в @jalyk/contract). */
-export const makeClient = (options: { apiUrl: string; apiKey: string }) =>
+/** Строит клиент из общего контракта Api. baseUrl — адрес apps/api, ключ проекта
+ * добавляется в каждый запрос заголовком X-Api-Key (клиентский режим авторизации).
+ * Если хост передал token (bearer-токен сессии Jalyk-редактора), добавляем и
+ * Authorization: Bearer — тогда сервер опознаёт принципала-пользователя (для
+ * presence и /me), сохраняя ключ для проектной авторизации. */
+export const makeClient = (options: {
+  apiUrl: string
+  apiKey: string
+  token?: string
+}) =>
   HttpApiClient.make(Api, {
     baseUrl: options.apiUrl,
     transformClient: (client) =>
       client.pipe(
-        HttpClient.mapRequest(
-          HttpClientRequest.setHeader('x-api-key', options.apiKey),
-        ),
+        HttpClient.mapRequest((request) => {
+          const withKey = HttpClientRequest.setHeader(
+            'x-api-key',
+            options.apiKey,
+          )(request)
+          return options.token
+            ? HttpClientRequest.setHeader(
+                'authorization',
+                `Bearer ${options.token}`,
+              )(withKey)
+            : withKey
+        }),
       ),
   })
 

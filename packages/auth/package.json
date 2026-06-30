@@ -6,7 +6,8 @@
   "author": "piscopancer",
   "license": "ISC",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
@@ -14,6 +15,14 @@
   "dependencies": {
     "@jalyk/db": "workspace:^",
     "better-auth": "^1.6.18"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "typescript": "^6.0.3"

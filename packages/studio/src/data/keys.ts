@@ -15,4 +15,7 @@ export const studioKeys = {
   assets: (projectId: string) => ['jalyk', projectId, 'assets'] as const,
   assetUsage: (projectId: string) =>
     ['jalyk', projectId, 'asset-usage'] as const,
+  members: (projectId: string) => ['jalyk', projectId, 'members'] as const,
+  // Текущий пользователь не привязан к проекту — отдельный префикс.
+  me: () => ['jalyk', 'me'] as const,
 }

@@ -11,6 +11,15 @@ const apiKey = import.meta.env.VITE_JALYK_API_KEY as string | undefined
 const apiUrl =
   (import.meta.env.VITE_JALYK_API_URL as string | undefined) ??
   'http://localhost:3001'
+// Центральный домен Jalyk (apps/web), куда студия уводит редактора на вход. Из него
+// возвращается bearer-токен. По умолчанию — тот же хост, что открыт сейчас, но на
+// порту web (:3000): так dev работает и через localhost, и через LAN-IP при VPN,
+// когда localhost недоступен. Явный VITE_JALYK_AUTH_URL перекрывает.
+const authUrl =
+  (import.meta.env.VITE_JALYK_AUTH_URL as string | undefined) ??
+  (typeof window !== 'undefined'
+    ? `${window.location.protocol}//${window.location.hostname}:3000`
+    : 'http://localhost:3000')
 
 export const Route = createFileRoute('/studio')({
   component: StudioPage,
@@ -24,6 +33,7 @@ function StudioPage() {
       projectId={projectId}
       apiKey={apiKey}
       apiUrl={apiUrl}
+      authUrl={authUrl}
       config={config}
       layout={'miller'}
       navigation={{ root: customRootSegment }}

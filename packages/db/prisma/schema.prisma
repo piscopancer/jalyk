@@ -25,7 +25,7 @@ model User {
 
   sessions      Session[]
   accounts      Account[]
-  memberships   Member[]
+  invited       Invited[]
   ownedProjects Project[]     @relation("ProjectOwner")
   invitations   Invitation[]  @relation("InvitedBy")
   subscription  Subscription?
@@ -99,10 +99,14 @@ model Project {
   name      String
   ownerId   String
   owner     User     @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  // Доверенные origin'ы, на которые центральный вход (apps/web) вправе вернуть
+  // bearer-токен встроенной студии. По модели Sanity ими ограничены сайты клиента,
+  // где разрешено открывать студию этого проекта; пустой список — вход запрещён.
+  allowedOrigins String[] @default([])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  members     Member[]
+  invited     Invited[]
   invitations Invitation[]
   apiKeys     ApiKey[]
   documents   Document[]
@@ -130,7 +134,10 @@ model ApiKey {
   @@map("api_key")
 }
 
-model Member {
+// Приглашённый в проект участник-редактор. Владелец сюда НЕ попадает: он живёт
+// только в Project.ownerId и подмешивается в список участников на чтении. Поэтому
+// строки этой таблицы — всегда не-владельцы (роль по умолчанию editor).
+model Invited {
   id        String   @id @default(cuid())
   projectId String
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -141,7 +148,7 @@ model Member {
 
   @@unique([projectId, userId])
   @@index([userId])
-  @@map("member")
+  @@map("invited")
 }
 
 model Invitation {

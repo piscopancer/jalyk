@@ -2,9 +2,26 @@ import babel from '@rolldown/plugin-babel'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact, { reactCompilerPreset } from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import fs from 'node:fs'
+import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig, loadEnv } from 'vite'
+
+// Опциональный локальный https: если в окружении заданы пути к сертификату и ключу
+// (HTTPS_CERT_FILE/HTTPS_KEY_FILE, относительно корня монорепы), dev-сервер
+// поднимается по https. Нужно для входа через стабильный домен jalyk.local.dev
+// (Google OAuth требует https; студия по https не может звать api по http —
+// mixed content). В проде переменные не заданы — остаётся обычный http за прокси.
+function devHttps(root: string) {
+  const cert = process.env.HTTPS_CERT_FILE
+  const key = process.env.HTTPS_KEY_FILE
+  if (!cert || !key) return undefined
+  return {
+    cert: fs.readFileSync(path.resolve(root, cert)),
+    key: fs.readFileSync(path.resolve(root, key)),
+  }
+}
 
 // Секреты (BETTER_AUTH_*, OAuth-креды) лежат в общем .env в корне монорепы.
 // Vite сам по себе в process.env ничего не кладёт и видит только VITE_-префикс,
@@ -15,7 +32,7 @@ const monorepoRoot = fileURLToPath(new URL('../../', import.meta.url))
 export default defineConfig(({ mode }) => {
   Object.assign(process.env, loadEnv(mode, monorepoRoot, ''))
   return {
-    server: { port: 3000, host: true },
+    server: { port: 3000, host: true, https: devHttps(monorepoRoot) },
     plugins: [
       tsconfigPaths(),
       tailwindcss(),

@@ -33,12 +33,29 @@ export type ProjectAccess =
       readonly canWrite: boolean
     }
 
-/** Членство пользователя в проекте, либо null. */
-export const getMembership = (projectId: string, userId: string) =>
+/** Роль пользователя в проекте, либо null, если он к нему не причастен. Владелец
+ * (project.ownerId) роли в таблице invited не имеет — он всегда owner; остальные
+ * берут роль из своей строки invited. */
+export const getUserProjectRole = (
+  projectId: string,
+  userId: string,
+): Effect.Effect<Role | null, DbError, Database> =>
   query((db) =>
-    db.member.findUnique({
-      where: { projectId_userId: { projectId, userId } },
+    db.project.findUnique({
+      where: { id: projectId },
+      select: {
+        ownerId: true,
+        invited: { where: { userId }, select: { role: true } },
+      },
     }),
+  ).pipe(
+    Effect.map((project) =>
+      project
+        ? project.ownerId === userId
+          ? ('owner' as Role)
+          : (project.invited[0]?.role ?? null)
+        : null,
+    ),
   )
 
 // Проверка доступа принципала к проекту. Это и есть ядро изоляции: пользователь
@@ -51,14 +68,14 @@ export const getProjectAccess = (
   projectId: string,
 ): Effect.Effect<ProjectAccess, NotFoundError | DbError, Database> => {
   if (principal.kind === 'user') {
-    return getMembership(projectId, principal.userId).pipe(
-      Effect.flatMap((member) =>
-        member
+    return getUserProjectRole(projectId, principal.userId).pipe(
+      Effect.flatMap((role) =>
+        role
           ? Effect.succeed({
               kind: 'user' as const,
               projectId,
               userId: principal.userId,
-              role: member.role,
+              role,
               canWrite: true,
             })
           : Effect.fail(new NotFoundError({ what: 'project' })),

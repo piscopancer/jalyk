@@ -18,11 +18,11 @@
     "@jalyk/core": "workspace:^",
     "@jalyk/db": "workspace:^",
     "better-auth": "^1.6.18",
-    "effect": "^3.21.3"
+    "effect": "^3.21.3",
+    "tsx": "^4.22.4"
   },
   "devDependencies": {
     "@types/node": "^25.9.3",
-    "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }
 }

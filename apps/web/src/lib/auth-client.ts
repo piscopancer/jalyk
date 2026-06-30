@@ -1,5 +1,7 @@
-import { createAuthClient } from 'better-auth/react'
+import { makeAuthClient } from '@jalyk/auth/client'
 
-export const authClient = createAuthClient()
+// Клиент авторизации сайта: same-origin /api/auth, cookie-режим (без bearer-
+// хранилища) — общий фабричный клиент из @jalyk/auth, тот же, что использует студия.
+export const authClient = makeAuthClient()
 
 export const { signIn, signOut, useSession } = authClient
