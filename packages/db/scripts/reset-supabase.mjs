@@ -7,11 +7,11 @@ import pg from 'pg'
 // со всем содержимым, пересоздаём её, возвращаем расширения (как в docker/initdb)
 // и применяем prisma/schema.sql. ВНИМАНИЕ: стирает все данные в public.
 //
-// SUPABASE_DATABASE_URL подхватывается из корневого .env через `node --env-file`.
+// SUPABASE_DATABASE_URL подхватывается из .env.production через `node --env-file`.
 
 const url = process.env.SUPABASE_DATABASE_URL
 if (!url) {
-  console.error('SUPABASE_DATABASE_URL не задан (ожидается в корневом .env)')
+  console.error('SUPABASE_DATABASE_URL не задан (ожидается в .env.production)')
   process.exit(1)
 }
 

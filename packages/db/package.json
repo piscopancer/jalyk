@@ -17,9 +17,9 @@
     "studio": "prisma studio",
     "push": "prisma db push",
     "ddl": "prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script --output prisma/schema.sql",
-    "ddl:push": "pnpm run ddl && node --env-file=../../.env scripts/apply-ddl.mjs",
-    "ddl:reset": "pnpm run ddl && node --env-file=../../.env scripts/reset-supabase.mjs",
-    "migrate:local": "node --env-file-if-exists=../../.env scripts/apply-migration.mjs"
+    "ddl:push": "pnpm run ddl && node --env-file=../../.env.production scripts/apply-ddl.mjs",
+    "ddl:reset": "pnpm run ddl && node --env-file=../../.env.production scripts/reset-supabase.mjs",
+    "migrate:local": "node --env-file-if-exists=../../.env --env-file-if-exists=../../.env.development scripts/apply-migration.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.8.0",

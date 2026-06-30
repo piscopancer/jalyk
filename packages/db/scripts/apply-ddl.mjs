@@ -7,11 +7,11 @@ import pg from 'pg'
 // что и рантайм приложения, — драйвером pg через transaction pooler (:6543).
 // Источник DDL — prisma/schema.sql (генерируется командой `ddl`).
 //
-// SUPABASE_DATABASE_URL подхватывается из корневого .env через `node --env-file`.
+// SUPABASE_DATABASE_URL подхватывается из .env.production через `node --env-file`.
 
 const url = process.env.SUPABASE_DATABASE_URL
 if (!url) {
-  console.error('SUPABASE_DATABASE_URL не задан (ожидается в корневом .env)')
+  console.error('SUPABASE_DATABASE_URL не задан (ожидается в .env.production)')
   process.exit(1)
 }
 
