@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1075.0",
+    "@jalyk/contract": "workspace:^",
     "@jalyk/db": "workspace:^",
     "effect": "^3.21.3"
   },

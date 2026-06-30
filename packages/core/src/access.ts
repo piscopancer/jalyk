@@ -1,19 +1,14 @@
+import type { Principal } from '@jalyk/contract'
 import type { Role, Scope } from '@jalyk/db'
 import { Effect } from 'effect'
 import { type Database, query } from './db.ts'
 import { type DbError, NotFoundError } from './errors.ts'
 
-// Принципал — тот, от чьего имени пришёл запрос. Студия-редактор приходит сессией
-// (kind 'user'), клиентское приложение пользователя — api-ключом (kind 'key').
-// Ключ уже привязан к проекту, поэтому несёт projectId и scope.
-export type Principal =
-  | { readonly kind: 'user'; readonly userId: string }
-  | {
-      readonly kind: 'key'
-      readonly keyId: string
-      readonly projectId: string
-      readonly scope: Scope
-    }
+// Principal — общий тип контракта (субъект запроса). Определён в @jalyk/contract,
+// чтобы его декларации были самодостаточны (на него ссылается тип Api, который
+// импортирует студия). Реэкспортируем для серверного кода, исторически берущего его
+// из @jalyk/core.
+export type { Principal }
 
 // Разрешённый доступ к конкретному проекту — результат проверки принципала против
 // projectId. canWrite сводит роль/скоуп к одному флагу для операций записи.

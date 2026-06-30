@@ -1,8 +1,9 @@
+/* Переменные шрифты Geist с Google Fonts (веса 100–900): 'Geist' для текста и
+   'Geist Mono' для кода (pre/code/kbd/samp). Удалённый @import по спецификации CSS
+   обязан идти первым — до @import 'tailwindcss'. Шрифты раздаёт CDN Google, поэтому
+   прекомпилированный CSS пакета остаётся самодостаточным без вшитых файлов. */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
 @import 'tailwindcss';
-/* Переменные шрифты Geist (как на сайте shadcn). Семейства — 'Geist Variable'
-   для текста и 'Geist Mono Variable' для кода (pre/code/kbd/samp). */
-@import '@fontsource-variable/geist/index.css';
-@import '@fontsource-variable/geist-mono/index.css';
 
 /* Пакет резолвится через симлинк в node_modules, который Tailwind по умолчанию
    не сканирует. Явный @source заставляет собирать классы из компонентов ui у
@@ -43,9 +44,8 @@
 }
 
 @theme {
-  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-mono:
-    'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 :root {

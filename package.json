@@ -11,7 +11,10 @@
     "db:down": "docker compose down",
     "db:reset": "docker compose down -v && docker compose up -d --wait",
     "format": "prettier --write .",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "build:packages": "pnpm --filter @jalyk/schema --filter @jalyk/contract --filter @jalyk/ui --filter @jalyk/studio build",
+    "version:bump": "pnpm --filter @jalyk/schema --filter @jalyk/contract --filter @jalyk/ui --filter @jalyk/studio exec npm version patch --no-git-tag-version",
+    "release": "pnpm run version:bump && pnpm run build:packages && pnpm --filter @jalyk/schema --filter @jalyk/contract --filter @jalyk/ui --filter @jalyk/studio publish --access public --no-git-checks"
   },
   "keywords": [
     "cms"

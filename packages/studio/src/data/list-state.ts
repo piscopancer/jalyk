@@ -1,3 +1,4 @@
+import type { Draft } from 'immer'
 import { useAtom, useAtomValue } from 'jotai'
 import { atomFamily, atomWithStorage, selectAtom } from 'jotai/utils'
 import { withImmer } from 'jotai-immer'
@@ -101,7 +102,9 @@ const listStateFamily = atomFamily((key: string) =>
 )
 
 /** Состояние списка с immer-сеттером: setState((draft) => { draft.filter... }). */
-export function useListState(key: string) {
+export function useListState(
+  key: string,
+): [ListState, (fn: (draft: Draft<ListState>) => void) => void] {
   const base = listStateFamily(key)
   const immer = useMemo(() => withImmer(base), [base])
   return useAtom(immer)

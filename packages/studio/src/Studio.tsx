@@ -3,6 +3,7 @@ import { PortalContainerProvider, Toaster } from '@jalyk/ui'
 import { useState, type ReactNode } from 'react'
 import { FieldClipboardProvider } from './data/clipboard.tsx'
 import { StudioProvider } from './data/context.tsx'
+import { JALYK_API_URL, JALYK_SITE_URL } from './data/site.ts'
 import { StudioErrorProvider } from './data/error-context.tsx'
 import { useLiveInvalidation } from './data/events-hooks.ts'
 import {
@@ -31,12 +32,14 @@ export type StudioLayout = keyof typeof layouts
 export type StudioProps = {
   projectId: string
   apiKey: string
-  /** Адрес apps/api, например http://localhost:3001. */
-  apiUrl: string
+  /** Адрес apps/api. По умолчанию — боевой Jalyk (JALYK_API_URL); задавать вручную
+   * нужно только для локальной разработки (http://localhost:3001) или self-host. */
+  apiUrl?: string
   /** База центрального домена Jalyk (apps/web), куда студия уводит редактора на вход
-   * (GitHub/Google) и откуда получает bearer-токен. Например http://localhost:3000.
-   * Домены клиентов в OAuth-приложениях не регистрируются — вход всегда на этом
-   * домене, а возврат токена разрешён только на доверенные origin'ы проекта. */
+   * (GitHub/Google) и откуда получает bearer-токен. По умолчанию — боевой Jalyk
+   * (JALYK_SITE_URL); задавать вручную нужно только для локалки (http://localhost:3000)
+   * или self-host. Домены клиентов в OAuth-приложениях не регистрируются — вход
+   * всегда на этом домене, а возврат токена разрешён только на доверенные origin'ы. */
   authUrl?: string
   /** Конфигурация схемы проекта (defineConfig). */
   config: AnyConfig
@@ -70,6 +73,10 @@ function StudioShell({
   children,
 }: StudioProps) {
   const dark = useStudioDark()
+  // По умолчанию студия обращается к боевой платформе Jalyk; пропы перекрывают
+  // адреса для локальной разработки и self-host.
+  const resolvedApiUrl = apiUrl ?? JALYK_API_URL
+  const resolvedAuthUrl = authUrl ?? JALYK_SITE_URL
   // Корневой элемент студии становится контейнером для порталов Base UI, чтобы всплывающие слои рендерились внутри `.dark` и наследовали тему и шрифт.
   const [root, setRoot] = useState<HTMLDivElement | null>(null)
   return (
@@ -79,12 +86,12 @@ function StudioShell({
           {/* Сначала вход редактора: без сессии — форма входа вместо студии;
               с сессией — её bearer-токен уходит в StudioProvider (presence, профиль,
               доступ по членству). */}
-          <AuthGate authUrl={authUrl} projectId={projectId}>
+          <AuthGate authUrl={resolvedAuthUrl} projectId={projectId}>
             {({ token }) => (
               <StudioProvider
                 projectId={projectId}
                 apiKey={apiKey}
-                apiUrl={apiUrl}
+                apiUrl={resolvedApiUrl}
                 token={token}
                 config={config}
               >
