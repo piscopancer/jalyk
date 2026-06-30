@@ -1,4 +1,5 @@
 import babel from '@rolldown/plugin-babel'
+import { nitroV2Plugin } from '@tanstack/nitro-v2-vite-plugin'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact, { reactCompilerPreset } from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -37,6 +38,11 @@ export default defineConfig(({ mode }) => {
       tsconfigPaths(),
       tailwindcss(),
       tanstackStart(),
+      // Прод-сборка Start больше не пакует Nitro сама — без этого плагина
+      // `vite build` останавливается на dist/ (только fetch-хендлер) и не создаёт
+      // запускаемый сервер. Пресет node-server даёт .output/server/index.mjs,
+      // на который указывает start-скрипт; нужно для деплоя на Railway (Node-хост).
+      nitroV2Plugin({ preset: 'node-server' }),
       viteReact(),
       // React Compiler автоматически мемоизирует рендеры. В plugin-react v6 (oxc/
       // rolldown) старый способ `viteReact({ babel: { plugins: [...] } })` не
