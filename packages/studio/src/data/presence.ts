@@ -21,22 +21,16 @@ export type PresenceUser = {
   /** URL аватарки; если нет — рисуем кружок с первой буквой имени. */
   image?: string
   /** Роль в проекте. */
-  role: 'owner' | 'editor'
+  role: MemberInfo['role']
   /** Когда присоединился к проекту (ISO-строка). */
   joinedAt: string
   /** Сейчас в студии онлайн. Оффлайн-участники показываются приглушённо в конце списка. */
   online: boolean
 }
 
-/** Детерминированный приглушённый HSL-цвет из id: один id всегда даёт один цвет — фон плейсхолдера аватарки либо обводку, если аватарка есть. */
-export function colorFromId(id: string) {
-  let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = (Math.imul(hash, 31) + id.charCodeAt(i)) | 0
-  }
-  const hue = ((hash % 360) + 360) % 360
-  return `hsl(${hue} 30% 55%)`
-}
+/** Цвет-из-id теперь живёт в @jalyk/ui вместе с аватаркой; ре-экспорт для
+ * обратной совместимости публичного входа студии. */
+export { colorFromId } from '@jalyk/ui'
 
 /** MemberInfo с провода → PresenceUser (image null → undefined). */
 function toPresenceUser(m: MemberInfo): PresenceUser {

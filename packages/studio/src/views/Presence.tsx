@@ -1,4 +1,6 @@
 import {
+  Avatar,
+  AvatarStack,
   Button,
   cn,
   Dialog,
@@ -23,11 +25,14 @@ import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { useEffect, useRef, useState } from 'react'
 import {
-  colorFromId,
   usePresence,
   useUpdateProfile,
   type PresenceUser,
 } from '../data/presence.ts'
+
+// Avatar переехал в @jalyk/ui (общий с сайтом); ре-экспорт держит публичный вход
+// студии стабильным для внешних потребителей.
+export { Avatar } from '@jalyk/ui'
 
 // Индикатор присутствия (см. схему тулбара): аватарки-кружочки, фон плейсхолдера
 // (первая буква имени) генерируется из id и потому постоянен; если аватарка есть,
@@ -38,44 +43,11 @@ import {
 
 /** Человекочитаемая роль участника. */
 function roleLabel(role: PresenceUser['role']) {
-  return role === 'owner' ? 'Владелец' : 'Редактор'
-}
-
-/** Кружок участника фиксированного размера. У фото: 1px тёмная обводка вплотную к снимку, затем цветной контур из id, чтобы цвет не сливался с фото. Без фото: фон того же цвета и первая буква имени. */
-export function Avatar({
-  user,
-  className,
-}: {
-  user: PresenceUser
-  className?: string
-}) {
-  const color = colorFromId(user.id)
-  const initial = user.name.trim().slice(0, 1).toUpperCase()
-  return (
-    <span
-      title={user.name}
-      style={{
-        outlineColor: color,
-        ...(user.image ? null : { backgroundColor: color }),
-      }}
-      className={cn(
-        'relative inline-flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full text-[0.625rem] font-medium text-white outline outline-2 select-none',
-        user.image && 'border border-black/40',
-        className,
-      )}
-    >
-      {user.image ? (
-        <img
-          src={user.image}
-          alt={user.name}
-          className="size-full object-cover"
-          referrerPolicy="no-referrer"
-        />
-      ) : (
-        initial
-      )}
-    </span>
-  )
+  return role === 'owner'
+    ? 'Владелец'
+    : role === 'reader'
+      ? 'Читатель'
+      : 'Редактор'
 }
 
 /** Сколько человек в проекте, относительной фразой (date-fns, русская локаль). */
@@ -232,9 +204,6 @@ export function OnlineUsers() {
   const me = users.find((user) => user.id === meId)
   const [editing, setEditing] = useState(false)
   const online = users.filter((user) => user.online)
-  const maxShown = 5
-  const shown = online.slice(0, maxShown)
-  const extra = online.length - shown.length
 
   return (
     <>
@@ -248,25 +217,7 @@ export function OnlineUsers() {
             />
           }
         >
-          <span className="flex items-center">
-            {shown.map((user, index) => (
-              <span
-                key={user.id}
-                className={cn(
-                  'relative flex rounded-full bg-background p-1',
-                  index > 0 && '-ml-4',
-                )}
-                style={{ zIndex: shown.length - index }}
-              >
-                <Avatar user={user} />
-              </span>
-            ))}
-            {extra > 0 ? (
-              <span className="ml-1 text-xs font-medium text-muted-foreground">
-                +{extra}
-              </span>
-            ) : null}
-          </span>
+          <AvatarStack users={online} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-60">
           <DropdownMenuGroup>

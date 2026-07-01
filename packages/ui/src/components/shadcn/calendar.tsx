@@ -10,7 +10,7 @@ import {
   type DayButton,
 } from 'react-day-picker'
 
-import { cn } from '../lib/cn.ts'
+import { cn } from '../../lib/cn.ts'
 import { Button, buttonVariants } from './button.tsx'
 
 /** Календарь на react-day-picker, перекрашенный под токены jalyk. Вендорнут из реестра shadcn (new-york-v4) с заменой путей cn/Button; пропсы — как у DayPicker (mode: 'single' | 'range' и т.д.) плюс buttonVariant для навигации. */

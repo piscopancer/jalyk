@@ -6,15 +6,38 @@ import { ForbiddenError, NotFoundError, PlanLimitError } from '../errors'
 import { planOf } from './subscription'
 
 /** Проекты, в которых пользователь состоит: собственные (ownerId) и те, куда он
- * приглашён (invited). _count.invited — число приглашённых редакторов (без
- * владельца). */
+ * приглашён (invited). Для карточки на сайте отдаём разрешённые origin и список
+ * участников (владелец первым, затем приглашённые) в лёгком виде id/имя/аватарка —
+ * этого хватает стопке аватарок AvatarStack. */
 export const listForUser = (userId: string) =>
   query((db) =>
     db.project.findMany({
       where: { OR: [{ ownerId: userId }, { invited: { some: { userId } } }] },
       orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { invited: true } } },
+      include: {
+        owner: { select: { id: true, name: true, image: true } },
+        invited: {
+          include: { user: { select: { id: true, name: true, image: true } } },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
     }),
+  ).pipe(
+    Effect.map((projects) =>
+      projects.map((p) => ({
+        id: p.id,
+        name: p.name,
+        allowedOrigins: p.allowedOrigins,
+        members: [
+          { id: p.owner.id, name: p.owner.name, image: p.owner.image },
+          ...p.invited.map((m) => ({
+            id: m.user.id,
+            name: m.user.name,
+            image: m.user.image,
+          })),
+        ],
+      })),
+    ),
   )
 
 /** Роль пользователя в проекте, либо ошибка доступа (владелец или приглашённый). */

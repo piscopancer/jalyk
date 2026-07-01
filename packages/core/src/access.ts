@@ -71,7 +71,8 @@ export const getProjectAccess = (
               projectId,
               userId: principal.userId,
               role,
-              canWrite: true,
+              // reader — доступ только на чтение; editor и owner пишут.
+              canWrite: role !== 'reader',
             })
           : Effect.fail(new NotFoundError({ what: 'project' })),
       ),

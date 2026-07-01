@@ -1,8 +1,8 @@
 import * as React from 'react'
 import { Menu as MenuPrimitive } from '@base-ui/react/menu'
 
-import { cn } from '../lib/cn.ts'
-import { usePortalContainer } from '../lib/portal-container.tsx'
+import { cn } from '../../lib/cn.ts'
+import { usePortalContainer } from '../../lib/portal-container.tsx'
 import { ChevronRightIcon, CheckIcon } from 'lucide-react'
 
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {

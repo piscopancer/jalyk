@@ -43,13 +43,17 @@ export const MeGroup = HttpApiGroup.make('me')
   )
   .middleware(Authentication)
 
+// Роль участника в проекте — единый литерал для всех схем контракта. Совпадает с
+// enum Role в @jalyk/db: owner и editor пишут, reader — только читает.
+export const RoleLiteral = Schema.Literal('owner', 'editor', 'reader')
+
 // Доступ принципала к проекту — результат проверки изоляции. role есть только у
 // пользователя, scope — только у ключа; canWrite сводит права к флагу записи.
 export const ProjectAccessInfo = Schema.Struct({
   kind: Schema.Literal('user', 'key'),
   projectId: Schema.String,
   canWrite: Schema.Boolean,
-  role: Schema.optional(Schema.Literal('owner', 'editor')),
+  role: Schema.optional(RoleLiteral),
   scope: Schema.optional(Schema.Literal('read', 'write')),
 })
 
@@ -60,7 +64,7 @@ export const MemberInfo = Schema.Struct({
   userId: Schema.String,
   name: Schema.String,
   image: Schema.NullOr(Schema.String),
-  role: Schema.Literal('owner', 'editor'),
+  role: RoleLiteral,
   joinedAt: Schema.String,
   online: Schema.Boolean,
 })

@@ -6,11 +6,29 @@ import {
   useSuspenseQuery,
 } from '@tanstack/react-query'
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
-import { useState } from 'react'
-import { Button } from '@jalyk/ui'
+import { Fragment, useState } from 'react'
+import {
+  CopyIcon,
+  EyeIcon,
+  GlobeIcon,
+  KeyIcon,
+  PencilIcon,
+  PencilLineIcon,
+  SettingsIcon,
+  UsersIcon,
+  WrenchIcon,
+  type LucideIcon,
+} from 'lucide-react'
+import { Button, cn, Separator, toast } from '@jalyk/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@jalyk/ui'
 import { Input } from '@jalyk/ui'
-import { NativeSelect } from '@jalyk/ui'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@jalyk/ui'
 import { apiKeysQuery, projectQuery, qk } from '@/lib/queries'
 import { createApiKey, revokeApiKey } from '@/server/functions/apikeys'
 import {
@@ -40,6 +58,113 @@ function useInvalidateProject(projectId: string) {
     queryClient.invalidateQueries({ queryKey: qk.project(projectId) })
 }
 
+type SelectOption<T extends string> = {
+  value: T
+  label: string
+  icon: LucideIcon
+}
+
+/** Роли участника/приглашения с иконками — единый источник для селектов и подписей. */
+const roleOptions = [
+  { value: 'editor', label: 'Редактор', icon: PencilIcon },
+  { value: 'reader', label: 'Читатель', icon: EyeIcon },
+] as const satisfies readonly SelectOption<Role>[]
+
+/** Области доступа API-ключа с иконками. */
+const scopeOptions = [
+  { value: 'read', label: 'Чтение', icon: EyeIcon },
+  { value: 'write', label: 'Чтение и запись', icon: PencilLineIcon },
+] as const satisfies readonly SelectOption<Scope>[]
+
+const roleLabel = (role: Role) =>
+  roleOptions.find((o) => o.value === role)!.label
+
+/** Селект из пакета ui с иконкой у каждого значения и в самом триггере. */
+function IconSelect<T extends string>({
+  value,
+  onValueChange,
+  options,
+  disabled,
+  className,
+}: {
+  value: T
+  onValueChange: (value: T) => void
+  options: readonly SelectOption<T>[]
+  disabled?: boolean
+  className?: string
+}) {
+  const renderOption = (option: SelectOption<T>) => (
+    <>
+      <option.icon className="size-4 text-muted-foreground" />
+      {option.label}
+    </>
+  )
+  return (
+    <Select
+      value={value}
+      disabled={disabled}
+      onValueChange={(next) => next && onValueChange(next as T)}
+    >
+      <SelectTrigger className={className}>
+        {/* Ширину триггера (а значит и попапа, равного ей) фиксируем по самому
+            длинному пункту: невидимый «размерник» держит все варианты в одной
+            grid-ячейке, поэтому смена значения не двигает кнопку, а текст в
+            списке не налезает на галочку. */}
+        <span className="grid">
+          <span
+            aria-hidden
+            className="invisible col-start-1 row-start-1 grid"
+          >
+            {options.map((o) => (
+              <span
+                key={o.value}
+                className="col-start-1 row-start-1 flex items-center gap-1.5 whitespace-nowrap"
+              >
+                {renderOption(o)}
+              </span>
+            ))}
+          </span>
+          <SelectValue className="col-start-1 row-start-1 items-center gap-1.5">
+            {(selected) => {
+              const option = options.find((o) => o.value === selected)
+              return option ? renderOption(option) : null
+            }}
+          </SelectValue>
+        </span>
+      </SelectTrigger>
+      {/* min-w-0 снимает min-w-36 у попапа, иначе для коротких пунктов он шире
+          кнопки; так ширина попапа всегда равна ширине триггера. */}
+      <SelectContent className="min-w-0">
+        {options.map((o) => (
+          <SelectItem key={o.value} value={o.value}>
+            {renderOption(o)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
+/** Разделы страницы проекта: слева список, справа контент — как в настройках
+ * студии. ownerOnly-разделы видит только владелец; участник без прав видит
+ * только «Участники». Порядок здесь же задаёт порядок вкладок. */
+const SECTIONS = [
+  { id: 'settings', label: 'Настройки', icon: SettingsIcon, ownerOnly: true },
+  { id: 'members', label: 'Участники', icon: UsersIcon, ownerOnly: false },
+  { id: 'apikeys', label: 'API-ключи', icon: KeyIcon, ownerOnly: true },
+  { id: 'origins', label: 'Разрешённые адреса', icon: GlobeIcon, ownerOnly: true },
+  // divider — визуальный разделитель над разделом (деструктивное «Управление»).
+  { id: 'management', label: 'Управление', icon: WrenchIcon, ownerOnly: true, divider: true },
+] as const satisfies readonly {
+  id: string
+  label: string
+  icon: LucideIcon
+  ownerOnly: boolean
+  divider?: boolean
+}[]
+
+type SectionId = (typeof SECTIONS)[number]['id']
+
 function ProjectPage() {
   const { projectId } = Route.useParams()
   const { session } = Route.useRouteContext()
@@ -49,37 +174,135 @@ function ProjectPage() {
     (m) => m.userId === myId && m.role === 'owner',
   )
 
+  const sections = SECTIONS.filter((s) => isOwner || !s.ownerOnly)
+  const [section, setSection] = useState<SectionId>(
+    isOwner ? 'settings' : 'members',
+  )
+
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-2xl font-semibold">{project.name}</h1>
 
-      {isOwner && <RenameCard projectId={project.id} name={project.name} />}
+      <div className="flex min-h-0 flex-1 gap-8">
+        <ul className="flex w-52 shrink-0 flex-col gap-1">
+          {sections.map((item) => {
+            const Icon = item.icon
+            return (
+              <Fragment key={item.id}>
+                {'divider' in item && item.divider && (
+                  <li aria-hidden>
+                    <Separator className="my-1" />
+                  </li>
+                )}
+                <li>
+                  <button
+                    type="button"
+                    className={cn(
+                      'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm hover:bg-accent/50',
+                      section === item.id && 'bg-accent font-medium hover:bg-accent',
+                    )}
+                    onClick={() => setSection(item.id)}
+                  >
+                    <Icon className="size-4 text-muted-foreground" />
+                    {item.label}
+                  </button>
+                </li>
+              </Fragment>
+            )
+          })}
+        </ul>
 
-      <MembersCard
-        projectId={project.id}
-        members={project.members}
-        myId={myId}
-        canManage={isOwner}
-      />
+        <div className="flex min-w-0 flex-1 flex-col gap-8">
+          {section === 'settings' && (
+            <>
+              <RenameCard projectId={project.id} name={project.name} />
+              <ProjectIdCard projectId={project.id} />
+            </>
+          )}
 
-      {isOwner && (
-        <InvitationsCard
-          projectId={project.id}
-          invitations={project.invitations}
-        />
-      )}
+          {section === 'members' && (
+            <>
+              <MembersCard
+                projectId={project.id}
+                members={project.members}
+                myId={myId}
+                canManage={isOwner}
+              />
+              {isOwner && (
+                <InvitationsCard
+                  projectId={project.id}
+                  invitations={project.invitations}
+                />
+              )}
+            </>
+          )}
 
-      {isOwner && <ApiKeysCard projectId={project.id} />}
+          {section === 'apikeys' && <ApiKeysCard projectId={project.id} />}
 
-      {isOwner && (
-        <AllowedOriginsCard
-          projectId={project.id}
-          origins={project.allowedOrigins}
-        />
-      )}
+          {section === 'origins' && (
+            <AllowedOriginsCard
+              projectId={project.id}
+              origins={project.allowedOrigins}
+            />
+          )}
 
-      {isOwner && <DangerCard projectId={project.id} />}
+          {section === 'management' && (
+            <>
+              <TransferOwnershipCard />
+              <DangerCard projectId={project.id} />
+            </>
+          )}
+        </div>
+      </div>
     </div>
+  )
+}
+
+/** Id проекта с кнопкой копирования — живёт в «Настройках» рядом с названием. */
+function ProjectIdCard({ projectId }: { projectId: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Id проекта</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between gap-2 rounded-md border px-2 py-1.5">
+          <code className="min-w-0 truncate font-mono text-xs text-muted-foreground">
+            {projectId}
+          </code>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              void navigator.clipboard?.writeText(projectId)
+              toast('Id проекта скопирован')
+            }}
+          >
+            <CopyIcon />
+            Скопировать
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+/** Передача владения проектом другому участнику — запланирована, пока заглушка. */
+function TransferOwnershipCard() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Передача владения</CardTitle>
+      </CardHeader>
+      <CardContent className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          Сделать владельцем другого участника проекта.
+        </p>
+        <Button variant="outline" size="sm" disabled>
+          Скоро
+        </Button>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -203,19 +426,14 @@ function MembersCard({
               <span className="text-xs text-muted-foreground">владелец</span>
             ) : canManage ? (
               <div className="flex items-center gap-2">
-                <NativeSelect
+                <IconSelect
                   value={m.role}
                   disabled={changeRole.isPending}
-                  onChange={(e) =>
-                    changeRole.mutate({
-                      memberId: m.id,
-                      role: e.target.value as Role,
-                    })
+                  options={roleOptions}
+                  onValueChange={(role) =>
+                    changeRole.mutate({ memberId: m.id, role })
                   }
-                >
-                  <option value="editor">редактор</option>
-                  <option value="owner">владелец</option>
-                </NativeSelect>
+                />
                 <Button
                   variant="ghost"
                   size="sm"
@@ -226,7 +444,9 @@ function MembersCard({
                 </Button>
               </div>
             ) : (
-              <span className="text-xs text-muted-foreground">редактор</span>
+              <span className="text-xs text-muted-foreground">
+                {roleLabel(m.role)}
+              </span>
             )}
           </div>
         ))}
@@ -267,13 +487,11 @@ function InvitationsCard({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex gap-2">
-          <NativeSelect
+          <IconSelect
             value={role}
-            onChange={(e) => setRole(e.target.value as Role)}
-          >
-            <option value="editor">редактор</option>
-            <option value="owner">владелец</option>
-          </NativeSelect>
+            options={roleOptions}
+            onValueChange={setRole}
+          />
           <Button
             disabled={create.isPending}
             onClick={() => create.mutate(role)}
@@ -304,7 +522,7 @@ function InvitationsCard({
                     {inviteUrl(inv.token)}
                   </button>
                   <div className="text-xs text-muted-foreground">
-                    роль: {inv.role === 'owner' ? 'владелец' : 'редактор'} · до{' '}
+                    роль: {roleLabel(inv.role)} · до{' '}
                     {new Date(inv.expiresAt).toLocaleDateString('ru')}
                   </div>
                 </div>
@@ -326,7 +544,7 @@ function InvitationsCard({
 }
 
 const scopeLabel = (scope: Scope) =>
-  scope === 'write' ? 'Чтение и запись' : 'Чтение'
+  scopeOptions.find((o) => o.value === scope)!.label
 
 function ApiKeysCard({ projectId }: { projectId: string }) {
   const queryClient = useQueryClient()
@@ -372,13 +590,11 @@ function ApiKeysCard({ projectId }: { projectId: string }) {
             onChange={(e) => setName(e.target.value)}
             placeholder="Название ключа"
           />
-          <NativeSelect
+          <IconSelect
             value={scope}
-            onChange={(e) => setScope(e.target.value as Scope)}
-          >
-            <option value="read">Чтение</option>
-            <option value="write">Чтение и запись</option>
-          </NativeSelect>
+            options={scopeOptions}
+            onValueChange={setScope}
+          />
           <Button type="submit" disabled={create.isPending || !name.trim()}>
             {create.isPending ? 'Создание…' : 'Создать ключ'}
           </Button>

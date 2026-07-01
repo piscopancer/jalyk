@@ -82,6 +82,7 @@ model Verification {
 enum Role {
   owner
   editor
+  reader
 }
 
 enum Plan {

@@ -8,6 +8,7 @@ import {
   Scripts,
   Link,
 } from '@tanstack/react-router'
+import { JalykLogo } from '@jalyk/ui'
 import { getSession } from '@/server/functions/auth'
 import { AccountMenu } from '@/components/account-menu'
 import styles from '@/styles.css?url'
@@ -25,7 +26,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { title: 'Jalyk' },
       ],
-      links: [{ rel: 'stylesheet', href: styles }],
+      links: [
+        { rel: 'stylesheet', href: styles },
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+      ],
     }),
     beforeLoad: async () => {
       const session = await getSession()
@@ -63,7 +67,8 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       <body>
         <header className="border-b">
           <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-            <Link to="/" className="font-semibold">
+            <Link to="/" className="flex items-center gap-2 font-semibold">
+              <JalykLogo className="size-5" />
               Jalyk
             </Link>
             <nav className="flex items-center gap-4 text-sm">

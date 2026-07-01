@@ -2,7 +2,7 @@
 CREATE SCHEMA IF NOT EXISTS "public";
 
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('owner', 'editor');
+CREATE TYPE "Role" AS ENUM ('owner', 'editor', 'reader');
 
 -- CreateEnum
 CREATE TYPE "Plan" AS ENUM ('free', 'paid');

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { createHighlighterCore, type HighlighterCore } from 'shiki/core'
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
 
-import { cn } from '../lib/cn.ts'
+import { cn } from '../../lib/cn.ts'
 
 /** Подсветка кода через Shiki на JS-движке регулярок (createJavaScriptRegexEngine), без Oniguruma/WASM. Темы как у shadcn: github-light/github-dark, двойной режим (defaultColor: false) выводит на токенах --shiki-dark, активируемый под `.dark`. Highlighter создаётся один раз и кешируется на модуле; грамматики и темы тянутся динамическими импортами, поэтому в основной бандл почти ничего не добавляется. */
 let highlighterPromise: Promise<HighlighterCore> | null = null

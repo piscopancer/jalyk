@@ -41,7 +41,11 @@ function InvitePage() {
             {invalid
               ? 'Приглашение недействительно или просрочено.'
               : `Вас приглашают в проект «${invitation.project.name}» как ${
-                  invitation.role === 'owner' ? 'владельца' : 'редактора'
+                  invitation.role === 'owner'
+                    ? 'владельца'
+                    : invitation.role === 'reader'
+                      ? 'читателя'
+                      : 'редактора'
                 }.`}
           </CardDescription>
         </CardHeader>
@@ -51,7 +55,11 @@ function InvitePage() {
               На главную
             </Link>
           ) : !session ? (
-            <Link to="/login" className={buttonVariants()}>
+            <Link
+              to="/login"
+              search={{ redirect: `/invite/${token}` }}
+              className={buttonVariants()}
+            >
               Войдите, чтобы принять
             </Link>
           ) : (

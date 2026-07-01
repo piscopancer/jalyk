@@ -9,16 +9,29 @@ import {
 } from '@jalyk/ui'
 import { signIn } from '@/lib/auth-client'
 
+/** Куда вернуть после входа. Принимаем только внутренний путь (начинается с
+ * одного «/»), чтобы через ?redirect нельзя было увести на чужой сайт
+ * (open-redirect). Иначе — на список проектов. */
+function safeRedirect(redirect: string | undefined) {
+  return redirect && redirect.startsWith('/') && !redirect.startsWith('//')
+    ? redirect
+    : '/projects'
+}
+
 export const Route = createFileRoute('/login')({
-  beforeLoad: ({ context }) => {
-    if (context.session) throw redirect({ to: '/projects' })
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
+  }),
+  beforeLoad: ({ context, search }) => {
+    if (context.session) throw redirect({ href: safeRedirect(search.redirect) })
   },
   component: Login,
 })
 
 function Login() {
+  const { redirect: redirectTo } = Route.useSearch()
   const social = (provider: 'github' | 'google') =>
-    signIn.social({ provider, callbackURL: '/projects' })
+    signIn.social({ provider, callbackURL: safeRedirect(redirectTo) })
 
   return (
     <div className="mx-auto max-w-sm py-16">

@@ -1,8 +1,8 @@
 import * as React from 'react'
 import { ContextMenu as ContextMenuPrimitive } from '@base-ui/react/context-menu'
 
-import { cn } from '../lib/cn.ts'
-import { usePortalContainer } from '../lib/portal-container.tsx'
+import { cn } from '../../lib/cn.ts'
+import { usePortalContainer } from '../../lib/portal-container.tsx'
 
 /**
  * Контекстное меню по правому клику. Построено на base-ui context-menu, который

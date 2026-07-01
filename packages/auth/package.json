@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@jalyk/db": "workspace:^",
-    "better-auth": "^1.6.18"
+    "better-auth": "^1.6.18",
+    "effect": "^3.21.3"
   },
   "peerDependencies": {
     "react": "^19.0.0"

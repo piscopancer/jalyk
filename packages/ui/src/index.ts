@@ -1,9 +1,13 @@
 export { cn } from './lib/cn.ts'
 export {
+  JalykLogo,
+  type JalykLogoTheme,
+} from './components/custom/jalyk-logo.tsx'
+export {
   PortalContainerProvider,
   usePortalContainer,
 } from './lib/portal-container.tsx'
-export { Button, buttonVariants } from './components/button.tsx'
+export { Button, buttonVariants } from './components/shadcn/button.tsx'
 export {
   Card,
   CardHeader,
@@ -12,9 +16,14 @@ export {
   CardDescription,
   CardContent,
   CardFooter,
-} from './components/card.tsx'
-export { Input } from './components/input.tsx'
-export { NativeSelect } from './components/native-select.tsx'
+} from './components/shadcn/card.tsx'
+export { Input } from './components/shadcn/input.tsx'
+export {
+  Avatar,
+  AvatarStack,
+  colorFromId,
+  type AvatarUser,
+} from './components/custom/avatar.tsx'
 export {
   Select,
   SelectGroup,
@@ -26,7 +35,7 @@ export {
   SelectSeparator,
   SelectScrollUpButton,
   SelectScrollDownButton,
-} from './components/select.tsx'
+} from './components/shadcn/select.tsx'
 export {
   DropdownMenu,
   DropdownMenuPortal,
@@ -44,7 +53,7 @@ export {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
-} from './components/dropdown-menu.tsx'
+} from './components/shadcn/dropdown-menu.tsx'
 export {
   ContextMenu,
   ContextMenuTrigger,
@@ -54,7 +63,7 @@ export {
   ContextMenuSeparator,
   ContextMenuGroup,
   ContextMenuLabel,
-} from './components/context-menu.tsx'
+} from './components/shadcn/context-menu.tsx'
 export {
   Dialog,
   DialogClose,
@@ -66,7 +75,7 @@ export {
   DialogPortal,
   DialogTitle,
   DialogTrigger,
-} from './components/dialog.tsx'
+} from './components/shadcn/dialog.tsx'
 export {
   Popover,
   PopoverTrigger,
@@ -74,7 +83,7 @@ export {
   PopoverHeader,
   PopoverTitle,
   PopoverDescription,
-} from './components/popover.tsx'
+} from './components/shadcn/popover.tsx'
 export {
   Command,
   CommandDialog,
@@ -85,7 +94,7 @@ export {
   CommandItem,
   CommandShortcut,
   CommandSeparator,
-} from './components/command.tsx'
+} from './components/shadcn/command.tsx'
 export {
   Sheet,
   SheetClose,
@@ -95,11 +104,12 @@ export {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from './components/sheet.tsx'
-export { Calendar, CalendarDayButton } from './components/calendar.tsx'
-export { Checkbox } from './components/checkbox.tsx'
-export { Switch } from './components/switch.tsx'
-export { CodeBlock } from './components/code-block.tsx'
-export { Textarea } from './components/textarea.tsx'
-export { Toaster } from './components/sonner.tsx'
+} from './components/shadcn/sheet.tsx'
+export { Calendar, CalendarDayButton } from './components/shadcn/calendar.tsx'
+export { Checkbox } from './components/shadcn/checkbox.tsx'
+export { Switch } from './components/shadcn/switch.tsx'
+export { CodeBlock } from './components/custom/code-block.tsx'
+export { Textarea } from './components/shadcn/textarea.tsx'
+export { Separator } from './components/shadcn/separator.tsx'
+export { Toaster } from './components/shadcn/sonner.tsx'
 export { toast } from 'sonner'

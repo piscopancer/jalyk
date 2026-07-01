@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-/** Куда Base UI порталит всплывающие слои (popover/select/menu/dialog/sheet). По умолчанию контент идёт в document.body, выпадая из контейнера с `.dark` и теряя тему и шрифт; студия задаёт сюда свой корневой элемент (на нём висит `.dark`), и порталы наследуют тему. null — поведение по умолчанию (document.body). */
+/** Куда Base UI порталит всплывающие слои (popover/select/menu/dialog/sheet). По умолчанию контент идёт в document.body, выпадая из контейнера с `.dark` и теряя тему и шрифт; студия задаёт сюда свой корневой элемент (на нём висит `.dark`), и порталы наследуют тему. */
 const PortalContainerContext = React.createContext<HTMLElement | null>(null)
 
 export function PortalContainerProvider({
@@ -18,5 +18,8 @@ export function PortalContainerProvider({
 }
 
 export function usePortalContainer() {
-  return React.useContext(PortalContainerContext)
+  // base-ui FloatingPortal трактует явный `null` как «контейнер ещё не готов» и
+  // не рендерит попап; чтобы без провайдера падать в document.body, отдаём
+  // `undefined` (только оно даёт фолбэк на body).
+  return React.useContext(PortalContainerContext) ?? undefined
 }

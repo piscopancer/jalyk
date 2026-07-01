@@ -76,7 +76,8 @@ export function StringField({ path, field, invalid }: FieldComponentProps) {
   if (field.input?.type === 'multiline') {
     return (
       <Textarea
-        className={cn('min-h-24', invalid && invalidText)}
+        // w-0 + min-w-full: с field-sizing:content textarea растёт вширь от своего текста и распирает колонку. Обнуляем её вклад в ширину (width:0), но растягиваем до колонки (min-width:100%) — растёт только высота, ширину задаёт колонка.
+        className={cn('min-h-24 w-0 min-w-full', invalid && invalidText)}
         value={local}
         onChange={(e) => setLocal(e.target.value)}
         onBlur={commit}

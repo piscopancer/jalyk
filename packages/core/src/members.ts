@@ -1,3 +1,4 @@
+import type { Role } from '@jalyk/db'
 import { query } from './db.ts'
 
 // Участники проекта и редактирование собственного профиля. Используется presence
@@ -10,7 +11,7 @@ export type ProjectMember = {
   userId: string
   name: string
   image: string | null
-  role: 'owner' | 'editor'
+  role: Role
   joinedAt: Date
 }
 

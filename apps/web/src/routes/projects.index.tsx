@@ -5,8 +5,8 @@ import {
 } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Button } from '@jalyk/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@jalyk/ui'
+import { Avatar, AvatarStack, Button } from '@jalyk/ui'
+import { Card, CardFooter, CardHeader, CardTitle } from '@jalyk/ui'
 import { Input } from '@jalyk/ui'
 import { projectsQuery, qk } from '@/lib/queries'
 import { createProject } from '@/server/functions/projects'
@@ -69,13 +69,31 @@ function Projects() {
               to="/projects/$projectId"
               params={{ projectId: p.id }}
             >
-              <Card className="transition-colors hover:bg-accent">
-                <CardHeader>
-                  <CardTitle>{p.name}</CardTitle>
+              <Card className="h-full transition-colors hover:bg-accent">
+                <CardHeader className="flex-1 gap-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      user={{ id: p.id, name: p.name }}
+                      className="size-7"
+                    />
+                    <CardTitle className="truncate">{p.name}</CardTitle>
+                  </div>
+                  {p.allowedOrigins.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {p.allowedOrigins.map((origin) => (
+                        <span
+                          key={origin}
+                          className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                        >
+                          {origin}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
-                  Участников: {p._count.invited + 1}
-                </CardContent>
+                <CardFooter className="bg-transparent">
+                  <AvatarStack users={p.members} />
+                </CardFooter>
               </Card>
             </Link>
           ))}

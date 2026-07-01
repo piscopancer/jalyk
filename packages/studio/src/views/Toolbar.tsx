@@ -9,9 +9,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  JalykLogo,
 } from '@jalyk/ui'
 import {
-  BoxIcon,
   ExternalLinkIcon,
   HomeIcon,
   SettingsIcon,
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { useStudio } from '../data/context.tsx'
+import { useStudioDark } from '../data/theme.tsx'
 import { usePresence } from '../data/presence.ts'
 import { asComponent, DynamicIcon } from '../data/react-bridge.tsx'
 import { JALYK_SITE_URL } from '../data/site.ts'
@@ -33,10 +34,15 @@ import { SettingsDialog } from './SettingsDialog.tsx'
 /** Бейдж проекта: иконка и имя из config.project. Имя и иконку переопределяет defineProjectBadge, весь рендер — defineProjectBadgeComponent (project.badgeComponent). */
 function ProjectBadge() {
   const { config } = useStudio()
+  const dark = useStudioDark()
   const project = config.project
   const name = project?.name ?? 'Проект'
-  const iconNode: ReactNode = (
-    <DynamicIcon icon={project?.icon} fallback={BoxIcon} className="size-4" />
+  // Иконка из конфига студии; если её нет — дефолтный логотип продукта Jalyk
+  // вместо голого имени. Тему логотипа берём из контекста темы студии.
+  const iconNode: ReactNode = project?.icon ? (
+    <DynamicIcon icon={project.icon} className="size-4" />
+  ) : (
+    <JalykLogo theme={dark ? 'dark' : 'light'} className="size-4" />
   )
   const Custom = asComponent<ProjectBadgeComponentProps<ReactNode>>(
     project?.badgeComponent,
