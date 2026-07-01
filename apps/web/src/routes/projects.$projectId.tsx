@@ -18,7 +18,11 @@ import {
   revokeInvitation,
 } from '@/server/functions/invitations'
 import { removeMember, setMemberRole } from '@/server/functions/members'
-import { deleteProject, renameProject } from '@/server/functions/projects'
+import {
+  deleteProject,
+  renameProject,
+  setAllowedOrigins,
+} from '@/server/functions/projects'
 
 export const Route = createFileRoute('/projects/$projectId')({
   beforeLoad: ({ context }) => {
@@ -66,6 +70,13 @@ function ProjectPage() {
       )}
 
       {isOwner && <ApiKeysCard projectId={project.id} />}
+
+      {isOwner && (
+        <AllowedOriginsCard
+          projectId={project.id}
+          origins={project.allowedOrigins}
+        />
+      )}
 
       {isOwner && <DangerCard projectId={project.id} />}
     </div>
@@ -443,6 +454,94 @@ function ApiKeysCard({ projectId }: { projectId: string }) {
                   }}
                 >
                   Отозвать
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function AllowedOriginsCard({
+  projectId,
+  origins,
+}: {
+  projectId: string
+  origins: string[]
+}) {
+  const [value, setValue] = useState('')
+  const invalidate = useInvalidateProject(projectId)
+  const save = useMutation({
+    mutationFn: (next: string[]) =>
+      setAllowedOrigins({ data: { projectId, origins: next } }),
+    onSuccess: invalidate,
+  })
+  const add = () => {
+    const origin = value.trim()
+    if (!origin) return
+    save.mutate([...origins, origin], { onSuccess: () => setValue('') })
+  }
+  const remove = (origin: string) =>
+    save.mutate(origins.filter((o) => o !== origin))
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Разрешённые origin</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <p className="text-sm text-muted-foreground">
+          Адреса сайтов, которым разрешено встраивать студию этого проекта и
+          получать токен входа. Указывайте origin целиком, со схемой и портом,
+          например <code>https://site.com</code> или{' '}
+          <code>http://192.168.1.192:3100</code>.
+        </p>
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            add()
+          }}
+        >
+          <Input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="https://site.com"
+          />
+          <Button type="submit" disabled={save.isPending || !value.trim()}>
+            {save.isPending ? 'Сохранение…' : 'Добавить'}
+          </Button>
+        </form>
+
+        {save.isError && (
+          <p className="text-sm text-destructive">
+            {save.error instanceof Error
+              ? save.error.message
+              : 'Не удалось сохранить'}
+          </p>
+        )}
+
+        {origins.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Разрешённых origin нет — вход из встроенной студии будет отклонён.
+          </p>
+        ) : (
+          <div className="flex flex-col divide-y">
+            {origins.map((origin) => (
+              <div
+                key={origin}
+                className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+              >
+                <code className="min-w-0 truncate text-sm">{origin}</code>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={save.isPending}
+                  onClick={() => remove(origin)}
+                >
+                  Удалить
                 </Button>
               </div>
             ))}

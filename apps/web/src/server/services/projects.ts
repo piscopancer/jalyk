@@ -113,6 +113,39 @@ export const rename = (projectId: string, userId: string, name: string) =>
     ),
   )
 
+/** Замена списка разрешённых origin — только владелец. Каждый вход прогоняется
+ * через URL и сводится к каноничному origin (схема+хост+порт), дубли убираются;
+ * невалидные адреса отбрасываются. Эти origin студия предъявляет при входе
+ * (см. apps/web/src/routes/studio-auth.tsx), поэтому формат должен совпадать. */
+export const setAllowedOrigins = (
+  projectId: string,
+  userId: string,
+  origins: ReadonlyArray<string>,
+) =>
+  requireOwner(projectId, userId).pipe(
+    Effect.zipRight(
+      query((db) =>
+        db.project.update({
+          where: { id: projectId },
+          data: { allowedOrigins: normalizeOrigins(origins) },
+          select: { allowedOrigins: true },
+        }),
+      ),
+    ),
+  )
+
+/** Сводит произвольные строки к уникальным каноничным origin, отбрасывая мусор. */
+const normalizeOrigins = (origins: ReadonlyArray<string>) => {
+  const canonical = origins.flatMap((raw) => {
+    try {
+      return [new URL(raw.trim()).origin]
+    } catch {
+      return []
+    }
+  })
+  return [...new Set(canonical)]
+}
+
 /** Удаление проекта — только владелец. */
 export const remove = (projectId: string, userId: string) =>
   requireOwner(projectId, userId).pipe(

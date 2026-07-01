@@ -39,6 +39,15 @@ export const renameProject = createServerFn({ method: 'POST' })
     return runtime.runPromise(Projects.rename(data.projectId, uid, data.name))
   })
 
+export const setAllowedOrigins = createServerFn({ method: 'POST' })
+  .validator((d: { projectId: string; origins: string[] }) => d)
+  .handler(async ({ data }) => {
+    const uid = await currentUserId()
+    return runtime.runPromise(
+      Projects.setAllowedOrigins(data.projectId, uid, data.origins),
+    )
+  })
+
 export const deleteProject = createServerFn({ method: 'POST' })
   .validator((d: { projectId: string }) => d)
   .handler(async ({ data }) => {
