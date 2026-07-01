@@ -49,6 +49,8 @@ export type StudioProps = {
   layout?: StudioLayout
   /** Навигация студии: ключ персиста пути в localStorage (для нескольких студий на странице) и корневой сегмент дерева. По умолчанию ключ `default` и встроенное дерево типы→документы→редактор. */
   navigation?: { key?: string; root?: AnyPathSegment }
+  /** Адрес, на который ведёт кнопка-домик в тулбаре (слева от бейджа проекта) — обычно главная сайта-потребителя. Не задан — кнопка не рисуется. */
+  homeUrl?: string
   /** Полная замена вида студии. Если не задано — выбранный `layout`. */
   children?: ReactNode
 }
@@ -70,6 +72,7 @@ function StudioShell({
   config,
   fieldComponents,
   navigation,
+  homeUrl,
   children,
 }: StudioProps) {
   const dark = useStudioDark()
@@ -105,7 +108,7 @@ function StudioShell({
                       >
                         <ProjectGate>
                           <div className="flex h-full min-h-0 flex-col">
-                            <Toolbar />
+                            <Toolbar homeUrl={homeUrl} />
                             <div className="min-h-0 flex-1">
                               <StudioBody>{children}</StudioBody>
                             </div>

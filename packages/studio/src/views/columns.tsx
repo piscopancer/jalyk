@@ -1,9 +1,9 @@
-import type { DocumentPreviewState } from '@jalyk/schema'
+import type { DocumentPreviewState, DocumentTypeKey } from '@jalyk/schema'
 import { worstSeverity } from '@jalyk/schema'
 import { cn } from '@jalyk/ui'
 import { FileTextIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
 import { useStudio } from '../data/context.tsx'
+import { useSegmentNav } from '../data/navigation.tsx'
 import { jsonEqual } from '../data/json-equal.ts'
 import { PreviewStateProvider } from '../data/preview-state.tsx'
 import { asIcon } from '../data/react-bridge.tsx'
@@ -35,36 +35,56 @@ function TypeStatus({ type }: { type: string }) {
   )
 }
 
-/** Колонка типов документов (левая). Берёт типы из конфига, рядом — счётчик документов из useDocumentCounts. Выбор типа поднимается наверх через onSelect. Необязательный footer прижимается к низу колонки (например, кнопка кастомного сегмента). */
+/** Колонка типов документов (левая). Берёт типы из конфига, рядом — счётчик документов из useDocumentCounts. По умолчанию сама навигируется из контекста сегмента: подсветка по открытому потомку `documents`, клик открывает его для выбранного типа. selected/onSelect переопределяют это поведение; filter скрывает типы (например, singleton, вынесенный в отдельную кнопку). */
 export function TypesColumn({
   selected,
   onSelect,
-  footer,
+  filter,
 }: {
-  selected?: string
-  onSelect: (type: string) => void
-  footer?: ReactNode
+  selected?: DocumentTypeKey
+  onSelect?: (type: DocumentTypeKey) => void
+  /** Предикат видимости типа в списке: вернул false — тип скрыт. По умолчанию видны все. Тип type — union ключей из дополненного потребителем SchemaRegistry (DocumentTypeKey), поэтому фильтр по несуществующему типу — ошибка компиляции. */
+  filter?: (type: DocumentTypeKey) => boolean
 }) {
   const { config } = useStudio()
+  const nav = useSegmentNav()
   const counts = useDocumentCounts()
   const countByType = new Map(
     (counts.data ?? []).map((row) => [row.type, row.count]),
   )
+  // Дефолтная навигация из контекста сегмента: выделен тип открытого потомка documents, клик открывает этот сегмент. Пропсы selected/onSelect перекрывают.
+  const openType =
+    nav?.next?.key === 'documents' && typeof nav.next.params.type === 'string'
+      ? (nav.next.params.type as DocumentTypeKey)
+      : undefined
+  const activeType = selected ?? openType
+  const selectType =
+    onSelect ??
+    ((type: DocumentTypeKey) => {
+      const target = nav?.open.documents?.({ type })
+      if (target) nav?.go(target)
+    })
+  // AnyConfig из контекста стирает union ключей до string; реестр SchemaRegistry (DocumentTypeKey) знает их точно, поэтому фиксируем тип ключей на границе рантайма.
+  const entries = Object.entries(config.documents) as [
+    DocumentTypeKey,
+    (typeof config.documents)[string],
+  ][]
+  const types = entries.filter(([type]) => filter?.(type) ?? true)
 
   return (
     <div className="flex min-h-0 w-56 flex-1 flex-col overflow-hidden">
       <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-1">
-        {Object.entries(config.documents).map(([type, definition]) => {
+        {types.map(([type, definition]) => {
           const Icon = asIcon(definition.icon)
           return (
             <li key={type}>
               <button
                 className={cn(
                   'flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-muted/50',
-                  selected === type &&
+                  activeType === type &&
                     'bg-accent font-medium hover:bg-accent dark:hover:bg-accent',
                 )}
-                onClick={() => onSelect(type)}
+                onClick={() => selectType(type)}
               >
                 <span className="flex items-center gap-2">
                   {Icon ? (
@@ -85,7 +105,6 @@ export function TypesColumn({
           )
         })}
       </ul>
-      {footer ? <div className="border-t p-1">{footer}</div> : null}
     </div>
   )
 }

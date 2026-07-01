@@ -184,12 +184,16 @@ function useNavigation() {
 }
 
 type SegmentNav = {
+  /** Конструкторы переходов в объявленных потомков текущего сегмента (те же, что в view-ctx.open) — чтобы встроенные колонки навигировались из контекста, а не из пропсов. */
+  open: Record<string, (params: SegmentParams) => OpenTarget>
   go: (target: OpenTarget) => void
   close: () => void
   /** Заголовок текущего сегмента (из definePathSegment). */
   title: string | undefined
   /** Можно ли закрыть сегмент: корень закрыть нельзя. */
   canClose: boolean
+  /** Открытый сейчас дочерний сегмент (следующее звено стека) — для подсветки выбора. */
+  next: PathEntry | undefined
   /** Переход к сегменту документа, если текущий сегмент объявляет потомка 'document' (инлайн-создание/редактирование в поле ссылки). */
   openDocument: ((type: string, docId: string) => OpenTarget) | undefined
 }
@@ -292,7 +296,15 @@ export function useNavStack() {
       key: `${depth}:${r.entry.key}`,
       node: (
         <SegmentNavContext.Provider
-          value={{ go, close, title: r.segment.title, canClose, openDocument }}
+          value={{
+            open,
+            go,
+            close,
+            title: r.segment.title,
+            canClose,
+            next: entries[depth + 1],
+            openDocument,
+          }}
         >
           <div className="flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-r">
             <SegmentHeader />

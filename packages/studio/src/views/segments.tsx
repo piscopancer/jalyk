@@ -51,19 +51,10 @@ export const documentsSegment = definePathSegment({
   ),
 })
 
-/** Корень дефолтной навигации: колонка типов документов. */
+/** Корень дефолтной навигации: колонка типов документов. Навигацию TypesColumn берёт из контекста сегмента сам. */
 export const defaultRootSegment = definePathSegment({
   key: 'types',
   title: 'Типы',
   children: { documents: documentsSegment },
-  view: ({ open, go, next }) => (
-    <TypesColumn
-      selected={
-        next?.key === 'documents'
-          ? paramString(next.params, 'type')
-          : undefined
-      }
-      onSelect={(type) => go(open.documents({ type }))}
-    />
-  ),
+  view: () => <TypesColumn />,
 })

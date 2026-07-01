@@ -10,7 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@jalyk/ui'
-import { BoxIcon, ExternalLinkIcon, SettingsIcon, UserIcon } from 'lucide-react'
+import {
+  BoxIcon,
+  ExternalLinkIcon,
+  HomeIcon,
+  SettingsIcon,
+  UserIcon,
+} from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { useStudio } from '../data/context.tsx'
 import { usePresence } from '../data/presence.ts'
@@ -104,11 +110,27 @@ function AccountMenu() {
   )
 }
 
+/** Кнопка-домик слева от бейджа: возвращает на сайт-потребитель (homeUrl). Обычный переход по ссылке — студия не знает о роутере хоста. */
+function HomeButton({ homeUrl }: { homeUrl: string }) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      aria-label="На главную сайта"
+      nativeButton={false}
+      render={<a href={homeUrl} />}
+    >
+      <HomeIcon />
+    </Button>
+  )
+}
+
 /** Верхняя панель управления студией. Монтируется в StudioShell над лейаутом. */
-export function Toolbar() {
+export function Toolbar({ homeUrl }: { homeUrl?: string }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   return (
     <div className="flex h-12 shrink-0 items-center gap-2 border-b px-2">
+      {homeUrl && <HomeButton homeUrl={homeUrl} />}
       <ProjectBadge />
       <Button
         variant="ghost"
