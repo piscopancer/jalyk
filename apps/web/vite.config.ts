@@ -40,9 +40,12 @@ export default defineConfig(({ mode }) => {
       tanstackStart(),
       // Прод-сборка Start больше не пакует Nitro сама — без этого плагина
       // `vite build` останавливается на dist/ (только fetch-хендлер) и не создаёт
-      // запускаемый сервер. Пресет node-server даёт .output/server/index.mjs,
-      // на который указывает start-скрипт; нужно для деплоя на Railway (Node-хост).
-      nitroV2Plugin({ preset: 'node-server' }),
+      // запускаемый сервер. Пресет по умолчанию node-server — даёт
+      // .output/server/index.mjs, на который указывает start-скрипт (Node-хост:
+      // Render/Railway). На Vercel пресет переопределяется через NITRO_PRESET=vercel:
+      // тогда Nitro собирает в .vercel/output (Build Output API) и Vercel сам его
+      // подхватывает — отдельный start-скрипт не нужен.
+      nitroV2Plugin({ preset: process.env.NITRO_PRESET ?? 'node-server' }),
       viteReact(),
       // React Compiler автоматически мемоизирует рендеры. В plugin-react v6 (oxc/
       // rolldown) старый способ `viteReact({ babel: { plugins: [...] } })` не
