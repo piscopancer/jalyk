@@ -14,8 +14,11 @@ if (!file) {
   process.exit(1)
 }
 
-const url =
-  process.env.DATABASE_URL ?? 'postgresql://jalyk:jalyk@localhost:5432/jalyk'
+const url = process.env.DATABASE_URL
+if (!url) {
+  console.error('Не задан DATABASE_URL')
+  process.exit(1)
+}
 const sql = readFileSync(new URL(file, `file://${process.cwd()}/`), 'utf8')
 
 const client = new pg.Client({ connectionString: url })

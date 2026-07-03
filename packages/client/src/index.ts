@@ -13,7 +13,7 @@ import type {
 // createStudio, а вся «мясная» логика живёт на сервере (queryPublished).
 
 /** Боевой адрес apps/api Jalyk — дефолт, если потребитель не задал baseUrl. Совпадает с адресом, зашитым в @jalyk/studio. */
-export const JALYK_API_URL = 'https://jalyk-api.up.railway.app'
+export const JALYK_API_URL = 'https://jalyk-api.onrender.com'
 
 /** Параметры подключения: проект и api-ключ со scope read (или read+write). Адрес
  * api потребителю задавать не нужно — по модели платформы он зашит дефолтом
@@ -52,7 +52,10 @@ export const createClient = <const C extends AnyConfig>(
       `${baseUrl}/projects/${options.projectId}/published/${type}/query`,
       {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-api-key': options.apiKey },
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': options.apiKey,
+        },
         body: JSON.stringify(body),
       },
     )

@@ -6,8 +6,17 @@ import tailwindcss from '@tailwindcss/vite'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { Config, Effect } from 'effect'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig, loadEnv } from 'vite'
+
+// Пресет сборки Nitro. Читается через Effect Config литералом и обязателен: без
+// NITRO_PRESET или при неверной строке конфигурация падает, а не собирается
+// «мимо». Локально задаётся node-server (.output/server), на Vercel — vercel
+// (сборка в .vercel/output, Build Output API). Резолвится ВНУТРИ defineConfig,
+// после loadEnv — иначе переменная из корневого .env ещё не в process.env.
+const resolveNitroPreset = () =>
+  Effect.runSync(Config.literal('node-server', 'vercel')('NITRO_PRESET'))
 
 // Опциональный локальный https: если в окружении заданы пути к сертификату и ключу
 // (HTTPS_CERT_FILE/HTTPS_KEY_FILE, относительно корня монорепы), dev-сервер
@@ -40,12 +49,8 @@ export default defineConfig(({ mode }) => {
       tanstackStart(),
       // Прод-сборка Start больше не пакует Nitro сама — без этого плагина
       // `vite build` останавливается на dist/ (только fetch-хендлер) и не создаёт
-      // запускаемый сервер. Пресет по умолчанию node-server — даёт
-      // .output/server/index.mjs, на который указывает start-скрипт (Node-хост:
-      // Render/Railway). На Vercel пресет переопределяется через NITRO_PRESET=vercel:
-      // тогда Nitro собирает в .vercel/output (Build Output API) и Vercel сам его
-      // подхватывает — отдельный start-скрипт не нужен.
-      nitroV2Plugin({ preset: process.env.NITRO_PRESET ?? 'node-server' }),
+      // запускаемый сервер. Пресет берётся из nitroPreset (см. выше).
+      nitroV2Plugin({ preset: resolveNitroPreset() }),
       viteReact(),
       // React Compiler автоматически мемоизирует рендеры. В plugin-react v6 (oxc/
       // rolldown) старый способ `viteReact({ babel: { plugins: [...] } })` не

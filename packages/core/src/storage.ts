@@ -4,10 +4,11 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3'
-import { Config, Context, Effect, Layer, Redacted } from 'effect'
+import { Config, ConfigError, Context, Effect, Layer, Redacted } from 'effect'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { StorageError } from './errors.ts'
+import { storageStateNames, type StorageState } from './storage-states.ts'
 
 // Абстракция хранилища ассетов: общий Effect-слой, за которым прячется конкретный
 // бэкенд. Тег несёт две операции по ключу (внутренний путь объекта) — запись и
@@ -27,10 +28,9 @@ export class AssetStorage extends Context.Tag('AssetStorage')<
 >() {}
 
 // Папка для тестового хранилища. Путь относительный резолвится от cwd процесса
-// api (apps/api), что в деве кладёт файлы в apps/api/uploads.
-const uploadsDir = Config.string('JALYK_UPLOADS_DIR').pipe(
-  Config.withDefault('uploads'),
-)
+// api (apps/api). Обязателен: без JALYK_UPLOADS_DIR слой local-хранилища падает,
+// а не пишет в неявную папку uploads.
+const uploadsDir = Config.string('JALYK_UPLOADS_DIR')
 
 /** Тестовая реализация: ассеты как файлы в локальной папке. Ключ — относительный
  * путь вида `projectId/uuid`; родительские каталоги создаются при записи. */
@@ -66,10 +66,10 @@ export const LocalAssetStorageLive = Layer.effect(
 )
 
 // Конфиг S3-совместимого хранилища (Supabase Storage, Cloudflare R2, Yandex —
-// различаются лишь endpoint). Все значения обязательны при JALYK_STORAGE=s3.
+// различаются лишь endpoint). Все значения обязательны при storage-состоянии s3.
 const s3Config = Config.all({
   endpoint: Config.string('JALYK_S3_ENDPOINT'),
-  region: Config.string('JALYK_S3_REGION').pipe(Config.withDefault('auto')),
+  region: Config.string('JALYK_S3_REGION'),
   bucket: Config.string('JALYK_S3_BUCKET'),
   accessKeyId: Config.string('JALYK_S3_ACCESS_KEY_ID'),
   secretAccessKey: Config.redacted('JALYK_S3_SECRET_ACCESS_KEY'),
@@ -129,4 +129,39 @@ export const S3AssetStorageLive = Layer.effect(
         }).pipe(Effect.asVoid),
     })
   }),
+)
+
+/** Тестовая реализация: ассеты в оперативной памяти процесса (Map ключ → байты).
+ * Ничего не пишет на диск и в сеть, при рестарте пусто. Удобно гонять сценарии,
+ * где важна БД-часть (много записей Asset), а сами байты неважны. */
+export const InMemoryAssetStorageLive = Layer.sync(AssetStorage, () => {
+  const store = new Map<string, Uint8Array>()
+  return AssetStorage.of({
+    write: (key, bytes) => Effect.sync(() => void store.set(key, bytes)),
+    read: (key) => {
+      const bytes = store.get(key)
+      return bytes === undefined
+        ? Effect.fail(new StorageError({ cause: new Error(`нет объекта ${key}`) }))
+        : Effect.succeed(bytes)
+    },
+    remove: (key) => Effect.sync(() => void store.delete(key)),
+  })
+})
+
+/** Реестр состояний хранилища: имя → Layer<AssetStorage>. files/s3 — боевые
+ * (локальные файлы / S3-совместимое), memory — тестовое in-memory. Добавить новую
+ * реализацию = дописать сюда ещё одну пару (ключи сверяются с storageStateNames). */
+export const storageStates = {
+  files: LocalAssetStorageLive,
+  s3: S3AssetStorageLive,
+  memory: InMemoryAssetStorageLive,
+} satisfies Record<StorageState, Layer.Layer<AssetStorage, ConfigError.ConfigError>>
+
+// Активное состояние выбирается переменной JALYK_STORAGE_STATE (литерал по именам
+// из storage-states — неизвестное или отсутствующее имя падает с ConfigError). В
+// деве её выставляет лаунчер из флага --storage, в проде — задаётся явно в дашборде.
+export const StorageStateLive = Layer.unwrapEffect(
+  Config.literal(...storageStateNames)('JALYK_STORAGE_STATE').pipe(
+    Effect.map((name) => storageStates[name]),
+  ),
 )

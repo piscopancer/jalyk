@@ -11,11 +11,11 @@
 /** Боевой домен сайта-платформы Jalyk (apps/web — ЛК и вход через OAuth). На него
  * студия уводит редактора за bearer-токеном; совпадает с BETTER_AUTH_URL web. */
 export const JALYK_SITE_URL =
-  import.meta.env?.VITE_JALYK_AUTH_URL ?? 'https://jalyk.up.railway.app'
+  import.meta.env?.VITE_JALYK_AUTH_URL ?? 'https://jalyk.vercel.app'
 
 /** Боевой адрес apps/api (контент документов, ассеты, поток событий, presence). */
 export const JALYK_API_URL =
-  import.meta.env?.VITE_JALYK_API_URL ?? 'https://jalyk-api.up.railway.app'
+  import.meta.env?.VITE_JALYK_API_URL ?? 'https://jalyk-api.onrender.com'
 
 /** Страница со списком проектов в ЛК — куда отправляем пользователя, если проект по переданным projectId и ключу недоступен. */
 export const JALYK_PROJECTS_URL = `${JALYK_SITE_URL}/projects`

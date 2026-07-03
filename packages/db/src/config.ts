@@ -1,86 +1,36 @@
-import { Config, Context, Effect, Layer } from 'effect'
+import { Config, Effect } from 'effect'
+import { dbStateNames, isSeedState, type DbState } from './states.ts'
 
-// Источник строк подключения к БД, организованный как стратегия окружений.
-// Активное окружение выбирается переменной DB_TARGET (по умолчанию `local`):
-//   - local    — локальный Docker-Postgres (тестовые данные при разработке);
-//   - supabase — боевая база Supabase (реальные данные).
-// Каждое окружение отдаёт пару URL: `runtimeUrl` для приложения (PrismaClient)
-// и `migrationUrl` для CLI Prisma (db push / migrate). У локального окружения
-// они совпадают; у Supabase различаются — рантайм идёт через transaction pooler
-// (порт 6543, pgbouncer), а миграции требуют session pooler (порт 5432).
+// Состояние БД выбирается переменной JALYK_DB_STATE. Это литерал по фиксированному
+// набору имён — неизвестное или отсутствующее значение падает с ConfigError, так
+// что прод не свалится молча в локальную базу. В деве переменную выставляет
+// лаунчер (scripts/dev.ts) из флага --db, в проде она задаётся явно в дашборде.
+//
+//   local          — локальный Docker-Postgres (DATABASE_URL);
+//   prod           — боевая Supabase (SUPABASE_DATABASE_URL / SUPABASE_DIRECT_URL);
+//   empty|many|demo — сид-профили: подключение к предзасеянной базе jalyk_seed
+//                     (SEED_DATABASE_URL). Сам сидинг делает лаунчер один раз
+//                     перед стартом, поэтому здесь это просто строка подключения.
 //
 // Намеренно НЕ читаем покомпонентные PG*-переменные: они часто заданы глобально
 // под чужой локальный Postgres и незаметно перебивали бы наш Docker.
 
-/** Пара строк подключения для одного окружения. */
-export interface DbConnection {
-  /** URL для рантайма приложения (PrismaClient / driver adapter). */
-  readonly runtimeUrl: string
-  /** URL для CLI Prisma (миграции, db push). */
-  readonly migrationUrl: string
-}
-
-/** Сервис конфигурации БД — за тегом прячется выбранное окружение-стратегия. */
-export class DbConfig extends Context.Tag('DbConfig')<
-  DbConfig,
-  DbConnection
->() {}
-
-/** Доступные окружения БД. */
-export type DbTarget = 'local' | 'supabase'
-
-const DEFAULT_LOCAL_URL = 'postgresql://jalyk:jalyk@localhost:5432/jalyk'
-const DEFAULT_SEED_URL = 'postgresql://jalyk:jalyk@localhost:5432/jalyk_seed'
-
-/**
- * Локальное окружение: одна строка DATABASE_URL (или дефолт под Docker),
- * рантайм и миграции ходят в одну и ту же базу.
- */
-export const DbConfigLocal = Layer.effect(
-  DbConfig,
-  Effect.gen(function* () {
-    const url = yield* Config.string('DATABASE_URL').pipe(
-      Config.withDefault(DEFAULT_LOCAL_URL),
-    )
-    return { runtimeUrl: url, migrationUrl: url }
-  }),
+/** Активное состояние БД. Резолвится синхронно при импорте (нужно client.ts на
+ * этапе загрузки модуля для создания PrismaClient). */
+export const dbState: DbState = Effect.runSync(
+  Config.literal(...dbStateNames)('JALYK_DB_STATE'),
 )
 
-/**
- * Боевое окружение Supabase: рантайм через transaction pooler
- * (SUPABASE_DATABASE_URL), миграции через session pooler (SUPABASE_DIRECT_URL).
- * Обе переменные обязательны — при отсутствии падаем громко, чтобы случайно не
- * уехать в локальную базу под видом прода.
- */
-export const DbConfigSupabase = Layer.effect(
-  DbConfig,
+/** Строка подключения к базе сид-профилей. Обязательна и резолвится при импорте:
+ * без SEED_DATABASE_URL процесс падает, а не подставляет локальный дефолт. */
+export const seedDatabaseUrl = Effect.runSync(Config.string('SEED_DATABASE_URL'))
+
+/** Строка подключения к рабочей БД для активного состояния (рантайм приложения).
+ * CLI Prisma (migrate / db push) свой URL берёт из prisma.config.ts напрямую. */
+export const runtimeUrl = Effect.runSync(
   Effect.gen(function* () {
-    const runtimeUrl = yield* Config.string('SUPABASE_DATABASE_URL')
-    const migrationUrl = yield* Config.string('SUPABASE_DIRECT_URL')
-    return { runtimeUrl, migrationUrl }
+    if (dbState === 'prod') return yield* Config.string('SUPABASE_DATABASE_URL')
+    if (isSeedState(dbState)) return seedDatabaseUrl
+    return yield* Config.string('DATABASE_URL')
   }),
-)
-
-/** Окружение, выбранное переменной DB_TARGET (по умолчанию `local`). */
-export const dbTarget: DbTarget =
-  process.env.DB_TARGET === 'supabase' ? 'supabase' : 'local'
-
-/** Слой DbConfig для активного окружения. */
-export const DbConfigLive =
-  dbTarget === 'supabase' ? DbConfigSupabase : DbConfigLocal
-
-// Разовое синхронное разрешение для потребителей, которым строка нужна на этапе
-// загрузки модуля (client.ts — создание PrismaClient; prisma.config.ts — CLI).
-// Effect-код приложения должен зависеть от сервиса DbConfig напрямую.
-const resolved = Effect.runSync(DbConfig.pipe(Effect.provide(DbConfigLive)))
-
-/** Строка подключения к рабочей БД (рантайм приложения). */
-export const runtimeUrl = resolved.runtimeUrl
-
-/** Строка подключения для миграций / db push. */
-export const migrationUrl = resolved.migrationUrl
-
-/** Строка подключения к базе сид/тестовых сред (всегда локальная отдельная база). */
-export const seedDatabaseUrl = Effect.runSync(
-  Config.string('SEED_DATABASE_URL').pipe(Config.withDefault(DEFAULT_SEED_URL)),
 )

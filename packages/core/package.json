@@ -6,7 +6,8 @@
   "author": "piscopancer",
   "license": "ISC",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./storage-states": "./src/storage-states.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

@@ -1,17 +1,13 @@
 import { HttpApiBuilder, HttpMiddleware, HttpServer } from '@effect/platform'
 import { NodeHttpServer, NodeRuntime } from '@effect/platform-node'
 import { Api } from '@jalyk/contract'
-import {
-  DatabaseLive,
-  LocalAssetStorageLive,
-  S3AssetStorageLive,
-} from '@jalyk/core'
+import { DatabaseLive, StorageStateLive } from '@jalyk/core'
 import { Effect, Layer } from 'effect'
 import fs from 'node:fs'
 import { createServer as createHttpServer } from 'node:http'
 import { createServer as createHttpsServer } from 'node:https'
 import { fileURLToPath } from 'node:url'
-import { port, storageDriver } from './config.ts'
+import { port } from './config.ts'
 
 // Опциональный локальный https (как в vite web/test-client): когда заданы
 // HTTPS_CERT_FILE/HTTPS_KEY_FILE (относительно корня монорепы), api поднимается по
@@ -64,13 +60,6 @@ const CorsLive = HttpApiBuilder.middlewareCors({
   ],
 })
 
-// Хранилище ассетов выбирается по конфигу: local (файлы) или s3 (прод).
-const StorageLive = Layer.unwrapEffect(
-  Effect.map(storageDriver, (driver) =>
-    driver === 's3' ? S3AssetStorageLive : LocalAssetStorageLive,
-  ),
-)
-
 const ApiLive = HttpApiBuilder.api(Api).pipe(
   Layer.provide(HealthLive),
   Layer.provide(MeLive),
@@ -86,7 +75,7 @@ const ApiLive = HttpApiBuilder.api(Api).pipe(
   Layer.provide(PresenceLive),
   Layer.provide(EventsLive),
   Layer.provide(DatabaseLive),
-  Layer.provide(StorageLive),
+  Layer.provide(StorageStateLive),
   Layer.provide(UploadGateLive),
   Layer.provide(CorsLive),
 )

@@ -2,10 +2,10 @@ import { prisma } from '@jalyk/db'
 import type { BetterAuthOptions } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { Config, Effect } from 'effect'
+import { authStateNames } from './states.ts'
 
-// Окружение авторизации выбирается переменной AUTH_TARGET (по умолчанию `local`),
-// по аналогии с DB_TARGET. От него зависит весь набор, завязанный на конкретный
-// домен и OAuth-приложения:
+// Состояние авторизации выбирается переменной JALYK_AUTH_STATE. От него зависит
+// весь набор, завязанный на конкретный домен и OAuth-приложения:
 //   - local — тестовая реализация на jalyk.local.dev:3000 (свои приложения GitHub/Google);
 //   - prod  — боевой домен платформы (свои, отдельные приложения GitHub/Google).
 // Это критично для OAuth: GitHub сверяет redirect_uri (= BETTER_AUTH_URL + путь
@@ -17,26 +17,25 @@ import { Config, Effect } from 'effect'
 // модуля: если обязательная переменная не задана (или BETTER_AUTH_URL не является
 // валидным URL), Config падает с ConfigError и процесс (pnpm dev / прод) не
 // стартует — ошибка видна сразу, а не превращается в невнятный сбой OAuth в рантайме.
-const authTarget = Effect.runSync(
-  Config.literal('local', 'prod')('AUTH_TARGET').pipe(
-    Config.withDefault('local' as const),
-  ),
+// В деве JALYK_AUTH_STATE выставляет лаунчер из флага --auth, в проде — задаётся явно.
+export const authState = Effect.runSync(
+  Config.literal(...authStateNames)('JALYK_AUTH_STATE'),
 )
 
-const suffix = authTarget === 'prod' ? '_PROD' : '_LOCAL'
+const suffix = authState === 'prod' ? '_PROD' : '_LOCAL'
 
-// Переменная активного окружения: сначала суффиксный вариант (NAME_LOCAL/NAME_PROD),
-// затем безсуффиксный (обратная совместимость и общие значения — например, когда на
-// Railway креды заданы плоскими именами в дашборде).
-const forTarget = <A>(make: (name: string) => Config.Config<A>, name: string) =>
-  make(`${name}${suffix}`).pipe(Config.orElse(() => make(name)))
+// Имя переменной активного состояния — ВСЕГДА с суффиксом (_LOCAL/_PROD). Плоского
+// фолбека нет: на проде переменные пишутся с явным суффиксом (BETTER_AUTH_URL_PROD),
+// это нагляднее и не даёт молча подхватить чужой набор.
+const forState = <A>(make: (name: string) => Config.Config<A>, name: string) =>
+  make(`${name}${suffix}`)
 
 // Обязательная непустая строка. Пустое значение ("" в .env) считается незаданным и
 // роняет загрузку — так пропущенный секрет OAuth-приложения виден сразу.
 const requiredSecret = (name: string) =>
-  forTarget(Config.string, name).pipe(
+  forState(Config.string, name).pipe(
     Config.validate({
-      message: `Переменная ${name}${suffix} (или ${name}) обязательна и не должна быть пустой`,
+      message: `Переменная ${name}${suffix} обязательна и не должна быть пустой`,
       validation: (value): value is string => value.trim().length > 0,
     }),
   )
@@ -46,13 +45,15 @@ const requiredSecret = (name: string) =>
 const env = Effect.runSync(
   Effect.gen(function* () {
     // Канонический адрес приложения. Валидируется как URL; baseURL задаём better-auth
-    // явно (без хвостового слэша), чтобы redirect_uri всегда следовал за AUTH_TARGET.
-    const baseURL = yield* forTarget(Config.url, 'BETTER_AUTH_URL').pipe(
+    // явно (без хвостового слэша), чтобы redirect_uri всегда следовал за JALYK_AUTH_STATE.
+    const baseURL = yield* forState(Config.url, 'BETTER_AUTH_URL').pipe(
       Config.map((url) => url.href.replace(/\/+$/, '')),
     )
 
     // Дополнительные доверенные origin'ы (адреса через запятую). Нужны лишь когда
     // вход инициируется с другого origin; сам baseURL better-auth доверяет всегда.
+    // Опциональна: отсутствие переменной = пустой список (не скрывает конфиг, а
+    // выражает «нет дополнительных origin'ов»).
     const trustedOrigins = yield* Config.string(
       'BETTER_AUTH_TRUSTED_ORIGINS',
     ).pipe(

@@ -8,6 +8,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
+    "./states": "./src/states.ts",
     "./schema.sql": "./prisma/schema.sql"
   },
   "scripts": {

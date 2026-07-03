@@ -1,11 +1,11 @@
 import { getRequestHeaders } from '@tanstack/react-start/server'
+import { seedActive, seedSessionUserId } from '@jalyk/db'
 import { auth } from '@/lib/auth'
-import { seedProfile, seedSessionUserId } from './seed/config'
 
 /** Достать id пользователя на сервере или бросить — для защищённых функций. */
 export async function currentUserId(): Promise<string> {
   // В сид-режиме OAuth не используется — логин подменяется фиксированным id.
-  if (seedProfile) {
+  if (seedActive) {
     if (!seedSessionUserId) throw new Error('UNAUTHORIZED')
     return seedSessionUserId
   }
